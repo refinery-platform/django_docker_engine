@@ -1,3 +1,5 @@
 from django.test import TestCase
 
-# Create your tests here.
+class DockerTests(TestCase):
+    def test_image_list(self):
+        self.assertEqual(42, 42)

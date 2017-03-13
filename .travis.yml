@@ -1,0 +1,21 @@
+language: python
+python:
+  - 2.7
+
+# Docker on Travis requires sudo.
+sudo: required
+services:
+  - docker # Is this good enough? Or do we need this install?
+install:
+#  # Docker 1.13 adds "--cache-from" which really speeds up our Travis builds.
+#  # Travis is currently several versions behind: When/if they catch up,
+#  # this can all go away, and we can stop sudoing docker.
+#  - sudo apt-get install libapparmor1
+#  - DEB=docker-engine_1.13.0-0~ubuntu-precise_amd64.deb
+#  - wget https://apt.dockerproject.org/repo/pool/main/d/docker-engine/$DEB
+#  - sudo dpkg -i $DEB
+#  - sudo docker --version
+  - pip install -r requirements.txt
+
+script:
+  - python manage.py test
