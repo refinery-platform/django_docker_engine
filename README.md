@@ -7,7 +7,7 @@ a reusable app which can be added to other Django projects.
 
 ## Install
 
-For development:
+For development, first install Docker, and then:
 ```bash
 pip install -r requirements.txt
 python manage.py migrate
@@ -26,5 +26,7 @@ long-running process.
 
 - [docker-py](https://github.com/docker/docker-py): The official
 Python SDK for Docker. It uses much the same vocabulary as the CLI,
-but with subtle differences in mean. Using it right now, but
-mixed feelings.
+but with [subtle differences](https://github.com/docker/docker-py/issues/1510)
+in meaning, and [bugs](https://github.com/docker/docker-py/issues/1380)
+in what should be basic functionality. But the alternatives are calling
+the CLI commands as subprocesses, or hitting the socket API directly.
