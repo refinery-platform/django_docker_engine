@@ -27,7 +27,7 @@ class DockerTests(unittest.TestCase):
 
     def test_hello_world(self):
         client = DockerClient()
-        output = client.run('alpine', 'echo hello world')
+        output = client.run('alpine:3.4', 'echo hello world')
         self.assertEqual(output, 'hello world\n')
 
     def test_volumes(self):
@@ -35,7 +35,7 @@ class DockerTests(unittest.TestCase):
             file.write('hello world')
         client = DockerClient()
         volume_spec = {DockerTests.tmp: {'bind': '/hello', 'mode': 'ro'}}
-        output = client.run('alpine', 'cat /hello/world.txt',
+        output = client.run('alpine:3.4', 'cat /hello/world.txt',
                             volumes=volume_spec)
         self.assertEqual(output, 'hello world')
 
