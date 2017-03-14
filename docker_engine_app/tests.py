@@ -1,10 +1,13 @@
-from django.test import TestCase
-import docker
+#from django.test import TestCase
 
-class DockerTests(TestCase):
+import unittest
+from docker_utils import DockerClient
+
+class DockerTests(unittest.TestCase):
     def test_hello_world(self):
-        # This seems to work, but it takes forever to download the image the first time.
-        # Is there something I should do differently?
-        client = docker.from_env()
-        output = client.containers.run("ubuntu", "echo hello world")
+        client = DockerClient()
+        output = client.run('ubuntu', 'echo hello world')
         self.assertEqual(output, 'hello world\n')
+
+    def test_mount(self):
+        pass
