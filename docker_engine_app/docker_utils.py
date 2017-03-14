@@ -2,7 +2,7 @@ import docker
 
 class DockerClient():
 
-    def run(self, image_name, cmd, **kwargs):
+    def run(self, image_name, cmd=None, **kwargs):
         if (not ':' in image_name):
             image_name += ':latest'
             # SDK pull without tag pulls every version; not what I expected.
