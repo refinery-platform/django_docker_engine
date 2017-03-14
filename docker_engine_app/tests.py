@@ -1,5 +1,7 @@
 #from django.test import TestCase
 
+import pprint
+
 import unittest
 import os
 import datetime
@@ -47,12 +49,13 @@ class DockerTests(unittest.TestCase):
         with open(os.path.join(DockerTests.tmp, 'index.html'), 'w') as file:
             file.write(hello_html)
         volume_spec = {DockerTests.tmp: {'bind': '/usr/share/nginx/html', 'mode': 'ro'}}
-        port = 9999
-        ports_spec = {'80/tcp': port} # TODO: 9999 -> None
+        ports_spec = {'80/tcp': None}
         container = DockerClient().run('nginx:1.10.3-alpine',
                                        detach=True,
                                        volumes=volume_spec,
                                        ports=ports_spec)
+        container.reload()
+        port = container.attrs['NetworkSettings']['Ports']['80/tcp'][0]['HostPort']
         while True:
             r = requests.get('http://localhost:{}/index.html'.format(port))
             if r.status_code == 200:
