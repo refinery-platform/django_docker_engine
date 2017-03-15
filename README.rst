@@ -38,7 +38,7 @@ Usage
 
 Add django_docker_engine to your dependencies, and then add something like this to your urls.py::
 
-    url(r'^docker/', include('django_docker_engine.urls')
+    url(r'^docker/', include('django_docker_engine.urls'))
     
 With that in place, incoming requests will be proxied to Docker containers by name. For instance::
 
