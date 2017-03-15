@@ -10,14 +10,30 @@ from time import sleep
 
 
 class DockerTests(unittest.TestCase):
+    def setUp(self):
+        # mkdtemp is the obvious way to do this, but
+        # the resulting directory is not visible to Docker.
+        base = '/tmp/django-docker-tests'
+        try:
+            os.mkdir(base)
+        except BaseException:
+            pass  # May already exist
+        self.tmp = os.path.join(
+            base,
+            re.sub(r'\W', '_', str(datetime.datetime.now())))
+        os.mkdir(self.tmp)
+
+    def tearDown(self):
+        rmtree(self.tmp)
+
     def timestamp(self):
         return re.sub(r'\W', '_', str(datetime.datetime.now()))
 
     def one_file_server(self, container_name, html):
-        with open(os.path.join(DockerTests.tmp, 'index.html'), 'w') as file:
+        with open(os.path.join(self.tmp, 'index.html'), 'w') as file:
             file.write(html)
         volume_spec = {
-            DockerTests.tmp: {
+            self.tmp: {
                 'bind': '/usr/share/nginx/html',
                 'mode': 'ro'}}
         ports_spec = {'80/tcp': None}
@@ -28,23 +44,6 @@ class DockerTests(unittest.TestCase):
                    volumes=volume_spec,
                    ports=ports_spec)
         return client.lookup_container_port(container_name)
-
-    # TODO: Plain setup should be fine
-    @classmethod
-    def setUpClass(cls):
-        # mkdtemp is the obvious way to do this, but
-        # the resulting directory is not visible to Docker.
-        base = '/tmp/django-docker-tests'
-        try:
-            os.mkdir(base)
-        except BaseException:
-            pass  # May already exist
-        cls.tmp = base + '/' + re.sub(r'\W', '_', str(datetime.datetime.now()))
-        os.mkdir(cls.tmp)
-
-    @classmethod
-    def tearDownClass(cls):
-        rmtree(cls.tmp)
 
     def assert_url_content(self, url, content, client=django.test.Client()):
         for i in xrange(10):
@@ -65,9 +64,9 @@ class DockerTests(unittest.TestCase):
 
     def test_volumes(self):
         input = 'hello world\n'
-        with open(os.path.join(DockerTests.tmp, 'world.txt'), 'w') as file:
+        with open(os.path.join(self.tmp, 'world.txt'), 'w') as file:
             file.write(input)
-        volume_spec = {DockerTests.tmp: {'bind': '/hello', 'mode': 'ro'}}
+        volume_spec = {self.tmp: {'bind': '/hello', 'mode': 'ro'}}
         output = DockerClient().run('alpine:3.4', 'cat /hello/world.txt',
                                     volumes=volume_spec)
         self.assertEqual(output, input)
@@ -88,7 +87,7 @@ class DockerTests(unittest.TestCase):
 
     def test_container_spec(self):
         input = 'hello world'
-        input_file = os.path.join(DockerTests.tmp, 'index.html')
+        input_file = os.path.join(self.tmp, 'index.html')
         with open(input_file, 'w') as file:
             file.write(input)
         container_name = self.timestamp()
