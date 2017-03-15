@@ -3,7 +3,9 @@ from httpproxy.views import HttpProxy
 from docker_engine_app import views
 
 urlpatterns = patterns('',
-    (r'^higlass/(?P<url>.*)$',
-        HttpProxy.as_view(base_url='http://higlass.io/')),
+    url(r'^proxy_any_host/(?P<host>[^/]*)/(?P<url>.*)$',
+        lambda request, host, url:
+            HttpProxy.as_view(base_url='http://{}/'.format(host))(request, url=url)
+        ),
 )
 

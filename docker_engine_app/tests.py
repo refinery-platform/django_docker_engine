@@ -65,9 +65,15 @@ class DockerTests(unittest.TestCase):
 
 class ProxyTests(unittest.TestCase):
 
-    def test_proxy(self):
+    def test_higlass_proxy(self):
         c = django.test.Client()
-        r = c.get('/docker/higlass/app/')
+        r = c.get('/docker/proxy_any_host/higlass.io/app/')
         self.assertEqual(200, r.status_code)
         self.assertRegexpMatches(r.content, r'HiGlass')
         # TODO: URLs for AJAX requests are not being rewritten, for example: /api/v1/tileset_info/...
+
+    def test_gehlenborg_proxy(self):
+        c = django.test.Client()
+        r = c.get('/docker/proxy_any_host/gehlenborg.com/research/')
+        self.assertEqual(200, r.status_code)
+        self.assertRegexpMatches(r.content, r'Refinery Platform')
