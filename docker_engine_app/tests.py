@@ -85,7 +85,7 @@ class DockerTests(unittest.TestCase):
             sleep(1)
         self.fail('Never got 200')
 
-class ProxyTests(unittest.TestCase):
+class ProxyOnlyTests(unittest.TestCase):
 
     def test_higlass_proxy(self):
         c = django.test.Client()
