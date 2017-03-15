@@ -1,22 +1,34 @@
 # django_docker_engine
 
-Through Django, manage docker images and route requests to
-running containers. This repo defines a minimal project, and
-a reusable app which can be added to other Django projects.
-(TODO!)
+A Django app which manages and proxies requests to Docker containers.
 
 ## Install
 
-For development, first install Docker, and then:
+In either environment, Docker Engine needs to be installed and running.
+
+### via pip
+
 ```bash
+pip install git+https://github.com/mccalluc/django_docker_engine.git@master
+```
+
+TODO: tag releases, and push to pypi when reasonably stable.
+
+### for development
+
+```bash
+git clone https://github.com/mccalluc/django_docker_engine.git
+cd django_docker_engine
 pip install -r requirements.txt
 python manage.py migrate
 python manage.py test --verbosity=2
-python manage.py runserver &
+# python manage.py runserver &
 # TODO: What does the server do?
 ```
 
-For use in other projects: TODO
+## Usage
+
+TODO
 
 ## Dependencies
 
