@@ -78,24 +78,16 @@ class DockerTests(unittest.TestCase):
         self.one_file_server(container_name, hello_html)
         c = django.test.Client()
         for i in xrange(10):
-            r = c.get('/docker/container/{}/'.format(container_name))
+            r = c.get('/docker/{}/'.format(container_name))
             if r.status_code == 200:
                 self.assertEqual(r.content, hello_html)
                 return
             sleep(1)
         self.fail('Never got 200')
 
-class ProxyOnlyTests(unittest.TestCase):
-
-    def test_higlass_proxy(self):
-        c = django.test.Client()
-        r = c.get('/docker/proxy_any_host/higlass.io/app/')
-        self.assertEqual(200, r.status_code)
-        self.assertRegexpMatches(r.content, r'HiGlass')
-        # TODO: URLs for AJAX requests are not being rewritten, for example: /api/v1/tileset_info/...
-
-    def test_gehlenborg_proxy(self):
-        c = django.test.Client()
-        r = c.get('/docker/proxy_any_host/gehlenborg.com/research/')
-        self.assertEqual(200, r.status_code)
-        self.assertRegexpMatches(r.content, r'Refinery Platform')
+    # def test_higlass_proxy(self):
+    #     c = django.test.Client()
+    #     r = c.get('/docker/proxy_any_host/higlass.io/app/')
+    #     self.assertEqual(200, r.status_code)
+    #     self.assertRegexpMatches(r.content, r'HiGlass')
+    #     # TODO: URLs for AJAX requests are not being rewritten, for example: /api/v1/tileset_info/...
