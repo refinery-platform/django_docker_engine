@@ -55,6 +55,9 @@ class DockerTests(unittest.TestCase):
             sleep(1)
         self.fail('Never got 200')
 
+    # Tests at the top are low level;
+    # Tests at the bottom are at higher levels of abstraction.
+
     def test_hello_world(self):
         input = 'hello world'
         output = DockerClient().run('alpine:3.4', 'echo ' + input)
@@ -73,13 +76,8 @@ class DockerTests(unittest.TestCase):
         container_name = self.timestamp()
         hello_html = '<html><body>hello direct</body></html>'
         port = self.one_file_server(container_name, hello_html)
-        for i in xrange(10):
-            r = requests.get('http://localhost:{}/'.format(port))
-            if r.status_code == 200:
-                self.assertEqual(r.text, hello_html)
-                return
-            sleep(1)
-        self.fail('Never got 200')
+        url = 'http://localhost:{}/'.format(port)
+        self.assert_url_content(url, hello_html, client=requests)
 
     def test_docker_proxy(self):
         container_name = self.timestamp()
