@@ -4,7 +4,7 @@ import datetime
 import re
 import requests
 import django
-from docker_utils import DockerClient
+from docker_utils import DockerClient, DockerContainerSpec
 from shutil import rmtree
 from time import sleep
 
@@ -85,8 +85,23 @@ class DockerTests(unittest.TestCase):
             sleep(1)
         self.fail('Never got 200')
 
-    # def test_higlass_proxy(self):
-    #     c = django.test.Client()
-    #     r = c.get('/docker/proxy_any_host/higlass.io/app/')
-    #     self.assertEqual(200, r.status_code)
-    #     self.assertRegexpMatches(r.content, r'HiGlass')
+    def test_container_spec(self):
+        input = 'hello world'
+        input_file = os.path.join(DockerTests.tmp, 'index.html')
+        with open(input_file, 'w') as file:
+            file.write(input)
+        container_name = self.timestamp()
+        spec = DockerContainerSpec(
+            image_name='nginx:1.10.3-alpine',
+            container_name=container_name,
+            input_mount='/usr/share/nginx/html',
+            input_files=[input_file])
+        spec.run()
+        c = django.test.Client()
+        for i in xrange(10):
+            r = c.get('/docker/{}/'.format(container_name))
+            if r.status_code == 200:
+                self.assertEqual(r.content, input)
+                return
+            sleep(1)
+        self.fail('Never got 200')
