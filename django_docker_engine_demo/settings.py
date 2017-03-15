@@ -36,7 +36,7 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'docker_engine_app'
+    'django_docker_engine'
 )
 
 MIDDLEWARE_CLASSES = (
@@ -49,9 +49,9 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 )
 
-ROOT_URLCONF = 'django_docker_engine.urls'
+ROOT_URLCONF = 'django_docker_engine_demo.urls'
 
-WSGI_APPLICATION = 'django_docker_engine.wsgi.application'
+WSGI_APPLICATION = 'django_docker_engine_demo.wsgi.application'
 
 
 # Database
