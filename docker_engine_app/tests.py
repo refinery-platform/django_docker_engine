@@ -52,7 +52,7 @@ class DockerTests(unittest.TestCase):
         self.assertEqual(output, input + '\n')
 
     def test_volumes(self):
-        input = 'hello world'
+        input = 'hello world\n'
         with open(os.path.join(DockerTests.tmp , 'world.txt'), 'w') as file:
             file.write(input)
         volume_spec = {DockerTests.tmp: {'bind': '/hello', 'mode': 'ro'}}
