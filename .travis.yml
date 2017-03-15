@@ -18,4 +18,6 @@ install:
   - pip install -r requirements.txt
 
 script:
+  - set -o errexit
   - python manage.py test --verbosity=2
+  - flake8

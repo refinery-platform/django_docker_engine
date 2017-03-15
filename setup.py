@@ -13,7 +13,8 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     license='MIT License',  # example license
-    description='Django app which manages and proxies requests to Docker containers',
+    description='Django app that manages the creation of, ' +
+                'and proxies requests to, Docker containers',
     long_description=README,
     url='https://github.com/mccalluc/django_docker_engine/',
     author='Chuck McCallum',
