@@ -1,7 +1,3 @@
-#from django.test import TestCase
-
-import pprint
-
 import unittest
 import os
 import datetime
@@ -12,6 +8,7 @@ from docker_utils import DockerClient
 from shutil import rmtree
 from time import sleep
 
+
 class DockerTests(unittest.TestCase):
     def timestamp(self):
         return re.sub(r'\W', '_', str(datetime.datetime.now()))
@@ -19,14 +16,17 @@ class DockerTests(unittest.TestCase):
     def one_file_server(self, container_name, html):
         with open(os.path.join(DockerTests.tmp, 'index.html'), 'w') as file:
             file.write(html)
-        volume_spec = {DockerTests.tmp: {'bind': '/usr/share/nginx/html', 'mode': 'ro'}}
+        volume_spec = {
+            DockerTests.tmp: {
+                'bind': '/usr/share/nginx/html',
+                'mode': 'ro'}}
         ports_spec = {'80/tcp': None}
         client = DockerClient()
         client.run('nginx:1.10.3-alpine',
-                                       name=container_name,
-                                       detach=True,
-                                       volumes=volume_spec,
-                                       ports=ports_spec)
+                   name=container_name,
+                   detach=True,
+                   volumes=volume_spec,
+                   ports=ports_spec)
         return client.lookup_container_port(container_name)
 
     # TODO: Plain setup should be fine
@@ -37,8 +37,8 @@ class DockerTests(unittest.TestCase):
         base = '/tmp/django-docker-tests'
         try:
             os.mkdir(base)
-        except:
-            pass # May already exist
+        except BaseException:
+            pass  # May already exist
         cls.tmp = base + '/' + re.sub(r'\W', '_', str(datetime.datetime.now()))
         os.mkdir(cls.tmp)
 
@@ -48,16 +48,16 @@ class DockerTests(unittest.TestCase):
 
     def test_hello_world(self):
         input = 'hello world'
-        output = DockerClient().run('alpine:3.4', 'echo '+input)
+        output = DockerClient().run('alpine:3.4', 'echo ' + input)
         self.assertEqual(output, input + '\n')
 
     def test_volumes(self):
         input = 'hello world\n'
-        with open(os.path.join(DockerTests.tmp , 'world.txt'), 'w') as file:
+        with open(os.path.join(DockerTests.tmp, 'world.txt'), 'w') as file:
             file.write(input)
         volume_spec = {DockerTests.tmp: {'bind': '/hello', 'mode': 'ro'}}
         output = DockerClient().run('alpine:3.4', 'cat /hello/world.txt',
-                            volumes=volume_spec)
+                                    volumes=volume_spec)
         self.assertEqual(output, input)
 
     def test_httpd(self):
@@ -90,4 +90,3 @@ class DockerTests(unittest.TestCase):
     #     r = c.get('/docker/proxy_any_host/higlass.io/app/')
     #     self.assertEqual(200, r.status_code)
     #     self.assertRegexpMatches(r.content, r'HiGlass')
-    #     # TODO: URLs for AJAX requests are not being rewritten, for example: /api/v1/tileset_info/...
