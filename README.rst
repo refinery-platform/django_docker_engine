@@ -36,7 +36,19 @@ for development
 Usage
 -----
 
-TODO
+Add django_docker_engine to your dependencies, and then add something like this to your urls.py::
+
+    url(r'^docker/', include('django_docker_engine.urls')
+    
+With that in place, incoming requests will be proxied to Docker containers by name. For instance::
+
+    http://locahost:8080/docker/your-container-name/your-path?your=parameter
+    
+The server will try to locate a Docker container with the name "your-container-name", and will
+proxy to it on port 80 a request for "/your-path?your=parameter".
+
+When to start and stop containers is left to your application, but DockerContainerSpec may make
+it easier: Look at test_container_spec for an example.
 
 ------------
 Dependencies
