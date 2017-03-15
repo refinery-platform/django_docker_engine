@@ -3,6 +3,7 @@ import os
 import re
 import datetime
 
+
 class DockerClient():
 
     def run(self, image_name, cmd=None, **kwargs):
@@ -27,7 +28,8 @@ class DockerClient():
 
 
 class DockerContainerSpec():
-    def __init__(self, image_name, container_name, input_mount=None, input_files=[]):
+    def __init__(self, image_name, container_name,
+                 input_mount=None, input_files=[]):
         self.image_name = image_name
         self.container_name = container_name
         self.input_mount = input_mount
@@ -50,7 +52,8 @@ class DockerContainerSpec():
     def run(self):
         input_dir = self.__mkdtemp()
         for file in self.input_files:
-            # Would be more robust to assign random names, but also more confusing
+            # Would be more robust to assign random names,
+            # but also more confusing
             link_name = os.path.join(input_dir, os.path.basename(file))
             if os.path.exists(link_name):
                 message = '{} already exists; basenames are not unique'.\
@@ -70,5 +73,5 @@ class DockerContainerSpec():
                    volumes=volume_spec,
                    ports=ports_spec)
         # Metadata on the returned container object (like the assigned port)
-        # is not complete, so we do a separate lookup.
+        # is not complete, so we do a redundant lookup.
         return client.lookup_container_port(self.container_name)
