@@ -1,8 +1,9 @@
 from django.conf.urls import patterns, url
-
+from httpproxy.views import HttpProxy
 from docker_engine_app import views
 
 urlpatterns = patterns('',
-    url(r'^$', views.index, name='index'),
-    url(r'^(?P<image_id>\d+)/$', views.detail, name='detail'),
+    (r'^higlass/(?P<url>.*)$',
+        HttpProxy.as_view(base_url='http://higlass.io/')),
 )
+

@@ -7,8 +7,8 @@ import os
 import datetime
 import re
 import requests
+import django
 from docker_utils import DockerClient
-from tempfile import mkdtemp
 from shutil import rmtree
 from time import sleep
 
@@ -62,4 +62,12 @@ class DockerTests(unittest.TestCase):
                 self.assertEqual(r.text, hello_html)
                 break
             sleep(1) # It seems to be up on the first request, but this is safer.
-        pass
+
+class ProxyTests(unittest.TestCase):
+
+    def test_proxy(self):
+        c = django.test.Client()
+        r = c.get('/docker/higlass/app/')
+        self.assertEqual(200, r.status_code)
+        self.assertRegexpMatches(r.content, r'HiGlass')
+        # TODO: URLs for AJAX requests are not being rewritten, for example: /api/v1/tileset_info/...
