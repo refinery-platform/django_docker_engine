@@ -4,3 +4,4 @@ django-http-proxy==0.4.3
 
 # for development:
 requests==2.12.3
+flake8==3.3.0
