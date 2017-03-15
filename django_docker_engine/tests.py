@@ -46,6 +46,15 @@ class DockerTests(unittest.TestCase):
     def tearDownClass(cls):
         rmtree(cls.tmp)
 
+    def assert_url_content(self, url, content, client=django.test.Client()):
+        for i in xrange(10):
+            response = client.get(url)
+            if response.status_code == 200:
+                self.assertEqual(response.content, content)
+                return
+            sleep(1)
+        self.fail('Never got 200')
+
     def test_hello_world(self):
         input = 'hello world'
         output = DockerClient().run('alpine:3.4', 'echo ' + input)
@@ -76,14 +85,8 @@ class DockerTests(unittest.TestCase):
         container_name = self.timestamp()
         hello_html = '<html><body>hello proxy</body></html>'
         self.one_file_server(container_name, hello_html)
-        c = django.test.Client()
-        for i in xrange(10):
-            r = c.get('/docker/{}/'.format(container_name))
-            if r.status_code == 200:
-                self.assertEqual(r.content, hello_html)
-                return
-            sleep(1)
-        self.fail('Never got 200')
+        url = '/docker/{}/'.format(container_name)
+        self.assert_url_content(url, hello_html)
 
     def test_container_spec(self):
         input = 'hello world'
@@ -91,17 +94,10 @@ class DockerTests(unittest.TestCase):
         with open(input_file, 'w') as file:
             file.write(input)
         container_name = self.timestamp()
-        spec = DockerContainerSpec(
+        DockerContainerSpec(
             image_name='nginx:1.10.3-alpine',
             container_name=container_name,
             input_mount='/usr/share/nginx/html',
-            input_files=[input_file])
-        spec.run()
-        c = django.test.Client()
-        for i in xrange(10):
-            r = c.get('/docker/{}/'.format(container_name))
-            if r.status_code == 200:
-                self.assertEqual(r.content, input)
-                return
-            sleep(1)
-        self.fail('Never got 200')
+            input_files=[input_file]).run()
+        url = '/docker/{}/'.format(container_name)
+        self.assert_url_content(url, input)
