@@ -13,6 +13,22 @@ from shutil import rmtree
 from time import sleep
 
 class DockerTests(unittest.TestCase):
+    def timestamp(self):
+        return re.sub(r'\W', '_', str(datetime.datetime.now()))
+
+    def one_file_server(self, container_name, html):
+        with open(os.path.join(DockerTests.tmp, 'index.html'), 'w') as file:
+            file.write(html)
+        volume_spec = {DockerTests.tmp: {'bind': '/usr/share/nginx/html', 'mode': 'ro'}}
+        ports_spec = {'80/tcp': None}
+        client = DockerClient()
+        client.run('nginx:1.10.3-alpine',
+                                       name=container_name,
+                                       detach=True,
+                                       volumes=volume_spec,
+                                       ports=ports_spec)
+        return client.lookup_container_port(container_name)
+
     # TODO: Plain setup should be fine
     @classmethod
     def setUpClass(cls):
@@ -45,23 +61,29 @@ class DockerTests(unittest.TestCase):
         self.assertEqual(output, input)
 
     def test_httpd(self):
-        hello_html = '<html><body>hello world</body></html>'
-        with open(os.path.join(DockerTests.tmp, 'index.html'), 'w') as file:
-            file.write(hello_html)
-        volume_spec = {DockerTests.tmp: {'bind': '/usr/share/nginx/html', 'mode': 'ro'}}
-        ports_spec = {'80/tcp': None}
-        container = DockerClient().run('nginx:1.10.3-alpine',
-                                       detach=True,
-                                       volumes=volume_spec,
-                                       ports=ports_spec)
-        container.reload()
-        port = container.attrs['NetworkSettings']['Ports']['80/tcp'][0]['HostPort']
-        while True:
-            r = requests.get('http://localhost:{}/index.html'.format(port))
+        container_name = self.timestamp()
+        hello_html = '<html><body>hello direct</body></html>'
+        port = self.one_file_server(container_name, hello_html)
+        for i in xrange(10):
+            r = requests.get('http://localhost:{}/'.format(port))
             if r.status_code == 200:
                 self.assertEqual(r.text, hello_html)
-                break
-            sleep(1) # It seems to be up on the first request, but this is safer.
+                return
+            sleep(1)
+        self.fail('Never got 200')
+
+    def test_docker_proxy(self):
+        container_name = self.timestamp()
+        hello_html = '<html><body>hello proxy</body></html>'
+        self.one_file_server(container_name, hello_html)
+        c = django.test.Client()
+        for i in xrange(10):
+            r = c.get('/docker/container/{}/'.format(container_name))
+            if r.status_code == 200:
+                self.assertEqual(r.content, hello_html)
+                return
+            sleep(1)
+        self.fail('Never got 200')
 
 class ProxyTests(unittest.TestCase):
 
