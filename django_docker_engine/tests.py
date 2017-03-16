@@ -27,7 +27,7 @@ class DockerTests(unittest.TestCase):
 
     def tearDown(self):
         rmtree(self.tmp)
-        DockerClientWrapper().purge(DockerTests.TEST_LABEL)
+        DockerClientWrapper().purge_by_label(DockerTests.TEST_LABEL)
         final_containers = docker.from_env().containers.list()
         self.assertEqual(self.initial_containers, final_containers)
 
@@ -115,3 +115,22 @@ class DockerTests(unittest.TestCase):
             labels={DockerTests.TEST_LABEL: 'true'}).run()
         url = '/docker/{}/'.format(container_name)
         self.assert_url_content(url, input)
+
+    def count_containers(self):
+        return len(docker.from_env().containers.list(filters={'label': DockerTests.TEST_LABEL}))
+
+    def test_container_active(self):
+        container_name = self.timestamp()
+        DockerContainerSpec(
+            image_name='nginx:1.10.3-alpine',
+            container_name=container_name,
+            labels={DockerTests.TEST_LABEL: 'true'}).run()
+        self.assertEqual(1, self.count_containers())
+
+        DockerClientWrapper().purge_inactive(5)
+        # TODO: It's being purged at this point.
+        self.assertEqual(1, self.count_containers())
+
+        DockerClientWrapper().purge_inactive(0)
+        self.assertEqual(0, self.count_containers())
+

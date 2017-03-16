@@ -2,6 +2,7 @@ import docker
 import os
 import re
 import datetime
+from time import time
 
 
 class DockerClientWrapper():
@@ -30,14 +31,29 @@ class DockerClientWrapper():
         return container.\
             attrs['NetworkSettings']['Ports']['80/tcp'][0]['HostPort']
 
-    def purge(self, label):
+    def purge_by_label(self, label):
         """
         Removes all containers matching the label.
         """
         client = docker.from_env()
         for container in client.containers.list(filters={'label': label}):
+            # TODO: Confirm that it belongs to me
             container.remove(force=True)
 
+    def purge_inactive(self, seconds):
+        """
+        Removes containers which do not have log entries in the specified time span.
+        """
+        client = docker.from_env()
+        for container in client.containers.list():
+            # TODO: Confirm that it belongs to me
+            if not self.__is_active(container, seconds):
+                container.remove(force=True)
+
+    def __is_active(self, container, seconds):
+        recent_log = container.logs(since=time()-seconds)
+        print(recent_log)
+        return recent_log != ''
 
 class DockerContainerSpec():
     def __init__(self, image_name, container_name,
@@ -74,10 +90,12 @@ class DockerContainerSpec():
                 raise BaseException(message)
             # Symlinks run into permissions problems
             os.link(file, os.path.join(input_dir, os.path.basename(file)))
-        volume_spec = {
-            input_dir: {
-                'bind': self.input_mount,
-                'mode': 'ro'}}
+        volume_spec = None
+        if self.input_mount:
+            volume_spec = {
+                input_dir: {
+                    'bind': self.input_mount,
+                    'mode': 'ro'}}
         ports_spec = {'80/tcp': None}
         client = DockerClientWrapper()
         client.run(self.image_name,
