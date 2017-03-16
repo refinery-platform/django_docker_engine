@@ -11,12 +11,14 @@ install:
   - pip install -r requirements-dev.txt
 
 script:
+  # Exit on first failure.
   - set -o errexit
+  # Looping here is probably more clear than setting up a Travis build matrix.
   - |-
       for VERSION in '1.7.1' '1.8.17' '1.9.12' '1.10.6'; do
-        echo "travis_fold:start:$VERSION"
+        echo "travis_fold:start:django-$VERSION"
         pip install django==$VERSION
         python manage.py test --verbosity=2
-        echo "travis_fold:end:$VERSION"
+        echo "travis_fold:end:django-$VERSION"
       done
   - flake8

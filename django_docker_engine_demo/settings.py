@@ -36,7 +36,8 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'django_docker_engine'
+    'django_docker_engine',
+    'httpproxy'
 )
 
 MIDDLEWARE_CLASSES = (
