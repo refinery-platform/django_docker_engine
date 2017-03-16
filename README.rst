@@ -43,7 +43,23 @@ and has proxied your request.
 Usage: Launching Containers
 -------
 
-TODO
+``DockerContainerSpec`` exposes a subset of Docker functionality so your application can easily launch containers as needed.
+This is under active development and for now the best demonstrations of the functionality are in the test suite,
+but here's a basic example::
+
+    $ echo 'Hello World' > /tmp/hello.txt
+    $ python
+    >>> from django_docker_engine.docker_utils import DockerContainerSpec
+    >>> DockerContainerSpec(
+          image_name='nginx:1.10.3-alpine',
+          container_name='my-content-server',
+          input_mount='/usr/share/nginx/html',
+          input_files=['/tmp/hello.txt']
+       ).run()
+    $ curl http://localhost:8000/docker/my-content-server/hello.txt
+    Hello World
+
+Note that this is only a Docker utility: it does not touch any Django models to record information about containers.
 
 -----------
 Development
@@ -54,6 +70,7 @@ Development
     git clone https://github.com/mccalluc/django_docker_engine.git
     cd django_docker_engine
     pip install -r requirements.txt
+    pip install -r requirements-dev.txt
     python manage.py migrate
     python manage.py test --verbosity=2
 
