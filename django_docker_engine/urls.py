@@ -1,9 +1,8 @@
-from django.conf.urls import patterns, url
+from django.conf.urls import url
 from httpproxy.views import HttpProxy
 from docker_utils import DockerClient
 
-urlpatterns = patterns(
-    '',
+urlpatterns = [
     # During development, it's useful to be able to test proxying,
     # without also needing to start a container.
     # url(r'^proxy_any_host/(?P<host>[^/]*)/(?P<url>.*)$',
@@ -20,5 +19,5 @@ urlpatterns = patterns(
                 DockerClient().lookup_container_port(container_name)
             )
         )(request, url=url)
-        ),
-)
+        )
+]
