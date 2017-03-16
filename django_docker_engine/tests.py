@@ -25,6 +25,7 @@ class DockerTests(unittest.TestCase):
 
     def tearDown(self):
         rmtree(self.tmp)
+        DockerContainerSpec.purge(DockerClient.TEST_LABEL)
 
     def timestamp(self):
         return re.sub(r'\W', '_', str(datetime.datetime.now()))
@@ -42,7 +43,8 @@ class DockerTests(unittest.TestCase):
                    name=container_name,
                    detach=True,
                    volumes=volume_spec,
-                   ports=ports_spec)
+                   ports=ports_spec,
+                   labels={DockerClient.TEST_LABEL: 'true'})
         return client.lookup_container_port(container_name)
 
     def assert_url_content(self, url, content, client=django.test.Client()):
@@ -59,7 +61,11 @@ class DockerTests(unittest.TestCase):
 
     def test_hello_world(self):
         input = 'hello world'
-        output = DockerClient().run('alpine:3.4', 'echo ' + input)
+        output = DockerClient().run(
+            'alpine:3.4',
+            'echo ' + input,
+            labels={DockerClient.TEST_LABEL: 'true'}
+        )
         self.assertEqual(output, input + '\n')
 
     def test_volumes(self):
@@ -67,8 +73,12 @@ class DockerTests(unittest.TestCase):
         with open(os.path.join(self.tmp, 'world.txt'), 'w') as file:
             file.write(input)
         volume_spec = {self.tmp: {'bind': '/hello', 'mode': 'ro'}}
-        output = DockerClient().run('alpine:3.4', 'cat /hello/world.txt',
-                                    volumes=volume_spec)
+        output = DockerClient().run(
+            'alpine:3.4',
+            'cat /hello/world.txt',
+            labels={DockerClient.TEST_LABEL: 'true'},
+            volumes=volume_spec
+        )
         self.assertEqual(output, input)
 
     def test_httpd(self):
@@ -95,6 +105,7 @@ class DockerTests(unittest.TestCase):
             image_name='nginx:1.10.3-alpine',
             container_name=container_name,
             input_mount='/usr/share/nginx/html',
-            input_files=[input_file]).run()
+            input_files=[input_file],
+            labels={DockerClient.TEST_LABEL: 'true'}).run()
         url = '/docker/{}/'.format(container_name)
         self.assert_url_content(url, input)

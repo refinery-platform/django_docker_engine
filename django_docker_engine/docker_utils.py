@@ -5,6 +5,8 @@ import datetime
 
 
 class DockerClient():
+    ROOT_LABEL = 'io.github.mccalluc.django_docker_engine'
+    TEST_LABEL = ROOT_LABEL + '.test'
 
     def run(self, image_name, cmd=None, **kwargs):
         """
@@ -14,6 +16,9 @@ class DockerClient():
             image_name += ':latest'
             # Without tag the SDK pulls every version; not what I expected.
             # https://github.com/docker/docker-py/issues/1510
+        labels = kwargs.get('labels') or {}
+        labels.update({DockerClient.ROOT_LABEL: 'true'})
+        kwargs['labels'] = labels
         client = docker.from_env()
         return client.containers.run(image_name, cmd, **kwargs)
 
@@ -29,11 +34,12 @@ class DockerClient():
 
 class DockerContainerSpec():
     def __init__(self, image_name, container_name,
-                 input_mount=None, input_files=[]):
+                 input_mount=None, input_files=[], labels={}):
         self.image_name = image_name
         self.container_name = container_name
         self.input_mount = input_mount
         self.input_files = input_files
+        self.labels = labels
 
     def __mkdtemp(self):
         # mkdtemp is the obvious way to do this, but
@@ -71,7 +77,17 @@ class DockerContainerSpec():
                    name=self.container_name,
                    detach=True,
                    volumes=volume_spec,
-                   ports=ports_spec)
+                   ports=ports_spec,
+                   labels=self.labels)
         # Metadata on the returned container object (like the assigned port)
         # is not complete, so we do a redundant lookup.
         return client.lookup_container_port(self.container_name)
+
+    @classmethod
+    def purge(cls, label):
+        """
+        Removes all containers matching the label.
+        """
+        client = docker.from_env()
+        for container in client.containers.list(filters={'label': label}):
+            container.remove(force=True)
