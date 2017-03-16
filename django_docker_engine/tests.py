@@ -7,6 +7,7 @@ import django
 from docker_utils import DockerClientWrapper, DockerContainerSpec
 from shutil import rmtree
 from time import sleep
+import docker # Only to be used in setUp and tearDown
 
 
 class DockerTests(unittest.TestCase):
@@ -22,11 +23,14 @@ class DockerTests(unittest.TestCase):
             base,
             re.sub(r'\W', '_', str(datetime.datetime.now())))
         os.mkdir(self.tmp)
+        self.initial_containers = docker.from_env().containers.list()
 
     def tearDown(self):
         rmtree(self.tmp)
         DockerClientWrapper().purge(DockerTests.TEST_LABEL)
-        
+        final_containers = docker.from_env().containers.list()
+        self.assertEqual(self.initial_containers, final_containers)
+
     TEST_LABEL = DockerClientWrapper.ROOT_LABEL + '.test'
 
     def timestamp(self):
