@@ -4,7 +4,7 @@ import datetime
 import re
 import requests
 import django
-from docker_utils import DockerClient, DockerContainerSpec
+from docker_utils import DockerClientWrapper, DockerContainerSpec
 from shutil import rmtree
 from time import sleep
 
@@ -25,7 +25,9 @@ class DockerTests(unittest.TestCase):
 
     def tearDown(self):
         rmtree(self.tmp)
-        DockerContainerSpec.purge(DockerClient.TEST_LABEL)
+        DockerClientWrapper().purge(DockerTests.TEST_LABEL)
+        
+    TEST_LABEL = DockerClientWrapper.ROOT_LABEL + '.test'
 
     def timestamp(self):
         return re.sub(r'\W', '_', str(datetime.datetime.now()))
@@ -38,13 +40,13 @@ class DockerTests(unittest.TestCase):
                 'bind': '/usr/share/nginx/html',
                 'mode': 'ro'}}
         ports_spec = {'80/tcp': None}
-        client = DockerClient()
+        client = DockerClientWrapper()
         client.run('nginx:1.10.3-alpine',
                    name=container_name,
                    detach=True,
                    volumes=volume_spec,
                    ports=ports_spec,
-                   labels={DockerClient.TEST_LABEL: 'true'})
+                   labels={DockerTests.TEST_LABEL: 'true'})
         return client.lookup_container_port(container_name)
 
     def assert_url_content(self, url, content, client=django.test.Client()):
@@ -61,10 +63,10 @@ class DockerTests(unittest.TestCase):
 
     def test_hello_world(self):
         input = 'hello world'
-        output = DockerClient().run(
+        output = DockerClientWrapper().run(
             'alpine:3.4',
             'echo ' + input,
-            labels={DockerClient.TEST_LABEL: 'true'}
+            labels={DockerTests.TEST_LABEL: 'true'}
         )
         self.assertEqual(output, input + '\n')
 
@@ -73,10 +75,10 @@ class DockerTests(unittest.TestCase):
         with open(os.path.join(self.tmp, 'world.txt'), 'w') as file:
             file.write(input)
         volume_spec = {self.tmp: {'bind': '/hello', 'mode': 'ro'}}
-        output = DockerClient().run(
+        output = DockerClientWrapper().run(
             'alpine:3.4',
             'cat /hello/world.txt',
-            labels={DockerClient.TEST_LABEL: 'true'},
+            labels={DockerTests.TEST_LABEL: 'true'},
             volumes=volume_spec
         )
         self.assertEqual(output, input)
@@ -106,6 +108,6 @@ class DockerTests(unittest.TestCase):
             container_name=container_name,
             input_mount='/usr/share/nginx/html',
             input_files=[input_file],
-            labels={DockerClient.TEST_LABEL: 'true'}).run()
+            labels={DockerTests.TEST_LABEL: 'true'}).run()
         url = '/docker/{}/'.format(container_name)
         self.assert_url_content(url, input)

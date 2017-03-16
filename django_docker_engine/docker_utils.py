@@ -4,9 +4,8 @@ import re
 import datetime
 
 
-class DockerClient():
+class DockerClientWrapper():
     ROOT_LABEL = 'io.github.mccalluc.django_docker_engine'
-    TEST_LABEL = ROOT_LABEL + '.test'
 
     def run(self, image_name, cmd=None, **kwargs):
         """
@@ -17,7 +16,7 @@ class DockerClient():
             # Without tag the SDK pulls every version; not what I expected.
             # https://github.com/docker/docker-py/issues/1510
         labels = kwargs.get('labels') or {}
-        labels.update({DockerClient.ROOT_LABEL: 'true'})
+        labels.update({DockerClientWrapper.ROOT_LABEL: 'true'})
         kwargs['labels'] = labels
         client = docker.from_env()
         return client.containers.run(image_name, cmd, **kwargs)
@@ -30,6 +29,14 @@ class DockerClient():
         container = client.containers.get(container_name)
         return container.\
             attrs['NetworkSettings']['Ports']['80/tcp'][0]['HostPort']
+
+    def purge(self, label):
+        """
+        Removes all containers matching the label.
+        """
+        client = docker.from_env()
+        for container in client.containers.list(filters={'label': label}):
+            container.remove(force=True)
 
 
 class DockerContainerSpec():
@@ -72,7 +79,7 @@ class DockerContainerSpec():
                 'bind': self.input_mount,
                 'mode': 'ro'}}
         ports_spec = {'80/tcp': None}
-        client = DockerClient()
+        client = DockerClientWrapper()
         client.run(self.image_name,
                    name=self.container_name,
                    detach=True,
@@ -82,12 +89,3 @@ class DockerContainerSpec():
         # Metadata on the returned container object (like the assigned port)
         # is not complete, so we do a redundant lookup.
         return client.lookup_container_port(self.container_name)
-
-    @classmethod
-    def purge(cls, label):
-        """
-        Removes all containers matching the label.
-        """
-        client = docker.from_env()
-        for container in client.containers.list(filters={'label': label}):
-            container.remove(force=True)

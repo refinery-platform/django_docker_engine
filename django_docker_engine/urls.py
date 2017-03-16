@@ -1,6 +1,6 @@
 from django.conf.urls import url
 from httpproxy.views import HttpProxy
-from docker_utils import DockerClient
+from docker_utils import DockerClientWrapper
 
 urlpatterns = [
     # During development, it's useful to be able to test proxying,
@@ -16,7 +16,7 @@ urlpatterns = [
         lambda request, container_name, url:
         HttpProxy.as_view(
             base_url='http://localhost:{}/'.format(
-                DockerClient().lookup_container_port(container_name)
+                DockerClientWrapper().lookup_container_port(container_name)
             )
         )(request, url=url)
         )
