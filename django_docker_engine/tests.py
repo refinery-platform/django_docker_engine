@@ -4,9 +4,10 @@ import datetime
 import re
 import requests
 import django
-from docker_utils import DockerClient, DockerContainerSpec
+from docker_utils import DockerClientWrapper, DockerContainerSpec
 from shutil import rmtree
 from time import sleep
+import docker  # Only to be used in setUp and tearDown
 
 
 class DockerTests(unittest.TestCase):
@@ -22,12 +23,24 @@ class DockerTests(unittest.TestCase):
             base,
             re.sub(r'\W', '_', str(datetime.datetime.now())))
         os.mkdir(self.tmp)
+        self.initial_containers = docker.from_env().containers.list()
+        self.assertEqual(0, self.count_my_containers())
 
     def tearDown(self):
         rmtree(self.tmp)
+        DockerClientWrapper().purge_by_label(DockerTests.TEST_LABEL)
+        final_containers = docker.from_env().containers.list()
+        self.assertEqual(self.initial_containers, final_containers)
+
+    TEST_LABEL = DockerClientWrapper.ROOT_LABEL + '.test'
 
     def timestamp(self):
         return re.sub(r'\W', '_', str(datetime.datetime.now()))
+
+    def count_my_containers(self):
+        return len(docker.from_env().containers.list(
+            filters={'label': DockerTests.TEST_LABEL}
+        ))
 
     def one_file_server(self, container_name, html):
         with open(os.path.join(self.tmp, 'index.html'), 'w') as file:
@@ -37,12 +50,13 @@ class DockerTests(unittest.TestCase):
                 'bind': '/usr/share/nginx/html',
                 'mode': 'ro'}}
         ports_spec = {'80/tcp': None}
-        client = DockerClient()
+        client = DockerClientWrapper()
         client.run('nginx:1.10.3-alpine',
                    name=container_name,
                    detach=True,
                    volumes=volume_spec,
-                   ports=ports_spec)
+                   ports=ports_spec,
+                   labels={DockerTests.TEST_LABEL: 'true'})
         return client.lookup_container_port(container_name)
 
     def assert_url_content(self, url, content, client=django.test.Client()):
@@ -59,7 +73,11 @@ class DockerTests(unittest.TestCase):
 
     def test_hello_world(self):
         input = 'hello world'
-        output = DockerClient().run('alpine:3.4', 'echo ' + input)
+        output = DockerClientWrapper().run(
+            'alpine:3.4',
+            'echo ' + input,
+            labels={DockerTests.TEST_LABEL: 'true'}
+        )
         self.assertEqual(output, input + '\n')
 
     def test_volumes(self):
@@ -67,8 +85,12 @@ class DockerTests(unittest.TestCase):
         with open(os.path.join(self.tmp, 'world.txt'), 'w') as file:
             file.write(input)
         volume_spec = {self.tmp: {'bind': '/hello', 'mode': 'ro'}}
-        output = DockerClient().run('alpine:3.4', 'cat /hello/world.txt',
-                                    volumes=volume_spec)
+        output = DockerClientWrapper().run(
+            'alpine:3.4',
+            'cat /hello/world.txt',
+            labels={DockerTests.TEST_LABEL: 'true'},
+            volumes=volume_spec
+        )
         self.assertEqual(output, input)
 
     def test_httpd(self):
@@ -95,6 +117,34 @@ class DockerTests(unittest.TestCase):
             image_name='nginx:1.10.3-alpine',
             container_name=container_name,
             input_mount='/usr/share/nginx/html',
-            input_files=[input_file]).run()
+            input_files=[input_file],
+            labels={DockerTests.TEST_LABEL: 'true'}).run()
         url = '/docker/{}/'.format(container_name)
         self.assert_url_content(url, input)
+
+    def test_container_active(self):
+        container_name = self.timestamp()
+        DockerContainerSpec(
+            image_name='nginx:1.10.3-alpine',
+            container_name=container_name,
+            labels={DockerTests.TEST_LABEL: 'true'}).run()
+        self.assertEqual(1, self.count_my_containers())
+
+        DockerClientWrapper().purge_inactive(5)
+        self.assertEqual(1, self.count_my_containers())
+        # Even without activity, it should not be purged if younger than the limit.
+
+        sleep(2)
+
+        url = '/docker/{}/'.format(container_name)
+        django.test.Client().get(url)
+
+        DockerClientWrapper().purge_inactive(1)
+        self.assertEqual(1, self.count_my_containers())
+        # With a tighter time limit, recent activity should keep it alive.
+
+        sleep(1)
+
+        DockerClientWrapper().purge_inactive(0)
+        self.assertEqual(0, self.count_my_containers())
+        # But with an even tighter limit, it should be purged.
