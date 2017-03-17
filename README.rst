@@ -18,7 +18,7 @@ or on the commandline::
 
 You will need to decide on a path that should be routed to Docker. A minimal ``urls.py`` could look like::
 
-    from django.conf.urls import patterns, include, url
+    from django.conf.urls import include, url
     import django_docker_engine
     
     urlpatterns = [ url(r'^docker/', include('django_docker_engine.urls')) ]
