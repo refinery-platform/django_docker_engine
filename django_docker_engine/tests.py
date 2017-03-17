@@ -128,18 +128,21 @@ class DockerTests(unittest.TestCase):
             labels={DockerTests.TEST_LABEL: 'true'}).run()
         self.assertEqual(1, self.count_my_containers())
 
-        # TODO: Log is initially empty, so it's purged here
-        # DockerClientWrapper().purge_inactive(5)
-        # self.assertEqual(1, self.count_my_containers())
-
-        url = '/docker/{}/'.format(container_name)
-        django.test.Client().get(url) # 404 is fine: we just want something in the log
-
         DockerClientWrapper().purge_inactive(5)
         self.assertEqual(1, self.count_my_containers())
+        # Even without activity, it should not be purged if younger than the limit.
+
+        sleep(2)
+
+        url = '/docker/{}/'.format(container_name)
+        django.test.Client().get(url)
+
+        DockerClientWrapper().purge_inactive(1)
+        self.assertEqual(1, self.count_my_containers())
+        # With a tighter time limit, recent activity should keep it alive.
 
         sleep(1)
 
         DockerClientWrapper().purge_inactive(0)
         self.assertEqual(0, self.count_my_containers())
-
+        # But with an even tighter limit, it should be purged.
