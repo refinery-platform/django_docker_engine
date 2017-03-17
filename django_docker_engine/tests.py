@@ -24,6 +24,7 @@ class DockerTests(unittest.TestCase):
             re.sub(r'\W', '_', str(datetime.datetime.now())))
         os.mkdir(self.tmp)
         self.initial_containers = docker.from_env().containers.list()
+        self.assertEqual(0, self.count_my_containers())
 
     def tearDown(self):
         rmtree(self.tmp)
@@ -35,6 +36,9 @@ class DockerTests(unittest.TestCase):
 
     def timestamp(self):
         return re.sub(r'\W', '_', str(datetime.datetime.now()))
+
+    def count_my_containers(self):
+        return len(docker.from_env().containers.list(filters={'label': DockerTests.TEST_LABEL}))
 
     def one_file_server(self, container_name, html):
         with open(os.path.join(self.tmp, 'index.html'), 'w') as file:
@@ -116,21 +120,26 @@ class DockerTests(unittest.TestCase):
         url = '/docker/{}/'.format(container_name)
         self.assert_url_content(url, input)
 
-    def count_containers(self):
-        return len(docker.from_env().containers.list(filters={'label': DockerTests.TEST_LABEL}))
-
     def test_container_active(self):
         container_name = self.timestamp()
         DockerContainerSpec(
             image_name='nginx:1.10.3-alpine',
             container_name=container_name,
             labels={DockerTests.TEST_LABEL: 'true'}).run()
-        self.assertEqual(1, self.count_containers())
+        self.assertEqual(1, self.count_my_containers())
+
+        # TODO: Log is initially empty, so it's purged here
+        # DockerClientWrapper().purge_inactive(5)
+        # self.assertEqual(1, self.count_my_containers())
+
+        url = '/docker/{}/'.format(container_name)
+        django.test.Client().get(url) # 404 is fine: we just want something in the log
 
         DockerClientWrapper().purge_inactive(5)
-        # TODO: It's being purged at this point.
-        self.assertEqual(1, self.count_containers())
+        self.assertEqual(1, self.count_my_containers())
+
+        sleep(1)
 
         DockerClientWrapper().purge_inactive(0)
-        self.assertEqual(0, self.count_containers())
+        self.assertEqual(0, self.count_my_containers())
 

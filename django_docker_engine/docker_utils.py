@@ -51,8 +51,9 @@ class DockerClientWrapper():
                 container.remove(force=True)
 
     def __is_active(self, container, seconds):
-        recent_log = container.logs(since=time()-seconds)
-        print(recent_log)
+        recent_log = container.logs(since=int(time()-seconds))
+        # Doesn't work with non-integer values:
+        # https://github.com/docker/docker-py/issues/1515
         return recent_log != ''
 
 class DockerContainerSpec():
