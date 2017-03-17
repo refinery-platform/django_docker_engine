@@ -43,7 +43,7 @@ and has proxied your request.
 Usage: Launching Containers
 -------
 
-``DockerContainerSpec`` exposes a subset of Docker functionality so your application can easily launch containers as needed.
+``DockerContainerSpec`` exposes a subset of Docker functionality so your application can launch containers as needed.
 This is under active development and for now the best demonstrations of the functionality are in the test suite,
 but here's a basic example::
 
@@ -60,6 +60,8 @@ but here's a basic example::
     Hello World
 
 Note that this is only a Docker utility: it does not touch any Django models to record information about containers.
+
+For more detail, consult the `generated documentation <docs.md>`_.
 
 -----------
 Development
