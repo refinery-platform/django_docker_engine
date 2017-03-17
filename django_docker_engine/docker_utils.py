@@ -42,7 +42,7 @@ class DockerClientWrapper():
 
     def purge_inactive(self, seconds):
         """
-        Removes containers which do not have log entries in the specified time span.
+        Removes containers which do not have recent log entries.
         """
         client = docker.from_env()
         for container in client.containers.list():
@@ -62,6 +62,7 @@ class DockerClientWrapper():
             # Doesn't work with non-integer values:
             # https://github.com/docker/docker-py/issues/1515
             return recent_log != ''
+
 
 class DockerContainerSpec():
     def __init__(self, image_name, container_name,

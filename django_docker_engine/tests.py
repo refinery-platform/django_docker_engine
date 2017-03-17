@@ -7,7 +7,7 @@ import django
 from docker_utils import DockerClientWrapper, DockerContainerSpec
 from shutil import rmtree
 from time import sleep
-import docker # Only to be used in setUp and tearDown
+import docker  # Only to be used in setUp and tearDown
 
 
 class DockerTests(unittest.TestCase):
@@ -38,7 +38,9 @@ class DockerTests(unittest.TestCase):
         return re.sub(r'\W', '_', str(datetime.datetime.now()))
 
     def count_my_containers(self):
-        return len(docker.from_env().containers.list(filters={'label': DockerTests.TEST_LABEL}))
+        return len(docker.from_env().containers.list(
+            filters={'label': DockerTests.TEST_LABEL}
+        ))
 
     def one_file_server(self, container_name, html):
         with open(os.path.join(self.tmp, 'index.html'), 'w') as file:
