@@ -68,7 +68,7 @@ class DockerClientWrapper():
 
 
 @deconstructible
-class DockerContainerSpec():
+class DockerContainerSpec(object):
 
     def __init__(self, image_name, container_name,
                  input_mount=None, input_files=[], labels={}):
