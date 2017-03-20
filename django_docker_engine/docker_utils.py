@@ -4,6 +4,8 @@ import re
 from datetime import datetime
 from time import time
 
+from django.utils.deconstruct import deconstructible
+
 
 class DockerClientWrapper():
     ROOT_LABEL = 'io.github.mccalluc.django_docker_engine'
@@ -52,19 +54,22 @@ class DockerClientWrapper():
 
     def __is_active(self, container, seconds):
         utc_start_string = container.attrs['State']['StartedAt']
-        utc_start = datetime.strptime(utc_start_string[:19], '%Y-%m-%dT%H:%M:%S')
+        utc_start = datetime.strptime(
+            utc_start_string[:19], '%Y-%m-%dT%H:%M:%S')
         utc_now = datetime.utcnow()
         seconds_since_start = (utc_now - utc_start).total_seconds()
         if seconds_since_start < seconds:
             return True
         else:
-            recent_log = container.logs(since=int(time()-seconds))
+            recent_log = container.logs(since=int(time() - seconds))
             # Doesn't work with non-integer values:
             # https://github.com/docker/docker-py/issues/1515
             return recent_log != ''
 
 
+@deconstructible
 class DockerContainerSpec():
+
     def __init__(self, image_name, container_name,
                  input_mount=None, input_files=[], labels={}):
         self.image_name = image_name
