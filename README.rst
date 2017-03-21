@@ -3,6 +3,18 @@ django_docker_engine
 ====================
 
 A Django app which manages and proxies requests to Docker containers.
+The primary goal has been to provide a visualization framework for the
+`Refinery Project <https://github.com/refinery-platform/refinery-platform>`_,
+but nothing should prevent its use in other contexts, as well.
+
+In order for a Docker container to work with this package it must:
+
+- listen on port 80 for HTTP connections, and
+- have a single directory where input files can be dropped.
+
+The following Docker projects have been designed to work with ``django_docker_engine``:
+
+- `docker_igv_js <https://github.com/refinery-platform/docker_igv_js>`_
 
 -----
 Usage: Configuring Django
@@ -14,7 +26,7 @@ Read their `docs <https://docs.docker.com/engine/installation/>`_ for more infor
 Use pip to install ``django_docker_engine``, either adding a line to ``requirements.txt``
 or on the commandline::
 
-    $ pip install git+https://github.com/mccalluc/django_docker_engine.git@master
+    $ pip install git+https://github.com/refinery-platform/django_docker_engine.git@master
 
 You will need to decide on a path that should be routed to Docker. A minimal ``urls.py`` could look like::
 
