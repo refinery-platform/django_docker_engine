@@ -1,3 +1,2 @@
-django==1.7.1 # Any version up to 1.10.6 should also work.
-docker==2.1.0
-django-http-proxy==0.4.3
+--index-url https://pypi.python.org/simple/
+-e .
