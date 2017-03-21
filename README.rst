@@ -2,7 +2,7 @@
 django_docker_engine
 ====================
 
-A Django app which manages and proxies requests to Docker containers.
+This is a Django app which manages and proxies requests to Docker containers.
 The primary goal has been to provide a visualization framework for the
 `Refinery Project <https://github.com/refinery-platform/refinery-platform>`_,
 but nothing should prevent its use in other contexts, as well.
@@ -21,7 +21,13 @@ Usage: Configuring Django
 -----
 
 Typically, Docker Engine will be installed and running on the same machine as Django:
-Read their `docs <https://docs.docker.com/engine/installation/>`_ for more information on Docker installation.
+Review their `docs <https://docs.docker.com/engine/installation/>`_ for the best information,
+but here is one way to install on Linux::
+
+    $ sudo apt-get install libapparmor1
+    $ DEB=docker-engine_1.13.0-0~ubuntu-precise_amd64.deb
+    $ wget https://apt.dockerproject.org/repo/pool/main/d/docker-engine/$DEB
+    $ sudo dpkg -i $DEB
 
 Use pip to install ``django_docker_engine``, either adding a line to ``requirements.txt``
 or on the commandline::
@@ -69,7 +75,7 @@ but here's a basic example::
     $ curl http://localhost:8000/docker/my-content-server/hello.txt
     Hello World
 
-Note that this is only a Docker utility: it does not touch any Django models to record information about containers.
+Note that this is only a Docker utility: You could persist this information in a database, but that is not a requirement.
 
 For more detail, consult the `generated documentation <docs.md>`_.
 
