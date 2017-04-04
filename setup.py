@@ -12,7 +12,7 @@ setup(
     version='0.0.1',
     install_requires=[
         'django',
-        'docker',
+        'docker==2.1.0',
         'django-http-proxy'
     ],
     packages=find_packages(exclude=['*_demo']),
