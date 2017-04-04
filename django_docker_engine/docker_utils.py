@@ -73,9 +73,11 @@ class DockerContainerSpec(object):
 
     def __init__(self, image_name, container_name,
                  input={},
+                 container_input_path='/tmp/input.json',
                  labels={}):
         self.image_name = image_name
         self.container_name = container_name
+        self.container_input_path = container_input_path
         self.input = input
         self.labels = labels
 
@@ -102,7 +104,7 @@ class DockerContainerSpec(object):
         volume_spec = {
             host_input_path: {
                 # Path inside container might need to be configurable?
-                'bind': '/tmp/input.json',
+                'bind': self.container_input_path,
                 'mode': 'ro'}}
         ports_spec = {'80/tcp': None}
         client = DockerClientWrapper()

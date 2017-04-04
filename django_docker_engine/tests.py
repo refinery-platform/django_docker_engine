@@ -122,10 +122,11 @@ class DockerTests(unittest.TestCase):
             image_name='nginx:1.10.3-alpine',
             container_name=container_name,
             input={'foo': 'bar'},
-            labels={DockerTests.TEST_LABEL: 'true'}).run()
+            container_input_path='/usr/share/nginx/html/index.html',
+            labels={DockerTests.TEST_LABEL: 'true'}
+        ).run()
         url = '/docker/{}/'.format(container_name)
-        self.assert_url_content(url, 'Welcome to nginx!')
-        # TODO: do something that depends on input
+        self.assert_url_content(url, '{"foo": "bar"}')
 
     def test_container_active(self):
         container_name = self.timestamp()
