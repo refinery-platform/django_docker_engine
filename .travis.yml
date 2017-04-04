@@ -14,7 +14,7 @@ script:
   # Exit on first failure.
   - set -o errexit
   # Looping here is probably more clear than setting up a Travis build matrix.
-  # (Without the ':' Travis tries to fold on the script itself, in addition to the output.)
+  # (Without the quoted ':' Travis tries to fold on the script itself, in addition to the output.)
   - |-
       for VERSION in '1.7.1' '1.8.17' '1.9.12' '1.10.6'; do
         echo travis_fold':'start:django-$VERSION
@@ -22,4 +22,5 @@ script:
         python manage.py test --verbosity=2
         echo travis_fold':'end:django-$VERSION
       done
+  - python setup.py bdist_egg
   - flake8
