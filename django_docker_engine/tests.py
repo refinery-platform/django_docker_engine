@@ -63,7 +63,7 @@ class DockerTests(unittest.TestCase):
         for i in xrange(10):
             response = client.get(url)
             if response.status_code == 200:
-                self.assertEqual(response.content, content)
+                self.assertIn(content, response.content)
                 return
             sleep(1)
         self.fail('Never got 200')
@@ -107,20 +107,26 @@ class DockerTests(unittest.TestCase):
         url = '/docker/{}/'.format(container_name)
         self.assert_url_content(url, hello_html)
 
-    def test_container_spec(self):
-        input = 'hello world'
-        input_file = os.path.join(self.tmp, 'index.html')
-        with open(input_file, 'w') as file:
-            file.write(input)
+    def test_container_spec_no_input(self):
         container_name = self.timestamp()
         DockerContainerSpec(
             image_name='nginx:1.10.3-alpine',
             container_name=container_name,
-            input_mount='/usr/share/nginx/html',
-            input_files=[input_file],
             labels={DockerTests.TEST_LABEL: 'true'}).run()
         url = '/docker/{}/'.format(container_name)
-        self.assert_url_content(url, input)
+        self.assert_url_content(url, 'Welcome to nginx!')
+
+    def test_container_spec_with_input(self):
+        container_name = self.timestamp()
+        DockerContainerSpec(
+            image_name='nginx:1.10.3-alpine',
+            container_name=container_name,
+            input={'foo': 'bar'},
+            container_input_path='/usr/share/nginx/html/index.html',
+            labels={DockerTests.TEST_LABEL: 'true'}
+        ).run()
+        url = '/docker/{}/'.format(container_name)
+        self.assert_url_content(url, '{"foo": "bar"}')
 
     def test_container_active(self):
         container_name = self.timestamp()
@@ -143,7 +149,7 @@ class DockerTests(unittest.TestCase):
         self.assertEqual(1, self.count_my_containers())
         # With a tighter time limit, recent activity should keep it alive.
 
-        sleep(1)
+        sleep(2)
 
         DockerClientWrapper().purge_inactive(0)
         self.assertEqual(0, self.count_my_containers())
