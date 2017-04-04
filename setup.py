@@ -13,7 +13,8 @@ setup(
     install_requires=[
         'django',
         'docker==2.1.0',
-        'django-http-proxy'
+        'django-http-proxy',
+        'boto3'
     ],
     packages=find_packages(exclude=['*_demo']),
     include_package_data=True,
