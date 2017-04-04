@@ -7,7 +7,7 @@ Removes all containers matching the label.
 Removes containers which do not have recent log entries.
 ### run(self, image_name, cmd=None, **kwargs)
 Wraps the SDK's run() method.
-### ROOT_LABEL = 'io.github.mccalluc.django_docker_engine'
+### ROOT_LABEL = 'io.github.refinery-project.django_docker_engine'
 ## class DockerContainerSpec
-### __init__(self, image_name, container_name, input_mount=None, input_files=[], labels={})
+### __init__(self, image_name, container_name, input={}, container_input_path='/tmp/input.json', labels={})
 ### run(self)

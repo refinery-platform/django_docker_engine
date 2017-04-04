@@ -5,8 +5,6 @@ import re
 from datetime import datetime
 from time import time
 
-from django.utils.deconstruct import deconstructible
-
 
 class DockerClientWrapper():
     ROOT_LABEL = 'io.github.refinery-project.django_docker_engine'
@@ -68,8 +66,7 @@ class DockerClientWrapper():
             return recent_log != ''
 
 
-@deconstructible
-class DockerContainerSpec(object):
+class DockerContainerSpec():
 
     def __init__(self, image_name, container_name,
                  input={},
