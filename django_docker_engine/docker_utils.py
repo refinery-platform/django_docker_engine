@@ -1,4 +1,5 @@
 import docker
+import json
 import os
 import re
 from datetime import datetime
@@ -8,7 +9,7 @@ from django.utils.deconstruct import deconstructible
 
 
 class DockerClientWrapper():
-    ROOT_LABEL = 'io.github.mccalluc.django_docker_engine'
+    ROOT_LABEL = 'io.github.refinery-project.django_docker_engine'
 
     def run(self, image_name, cmd=None, **kwargs):
         """
@@ -71,11 +72,11 @@ class DockerClientWrapper():
 class DockerContainerSpec(object):
 
     def __init__(self, image_name, container_name,
-                 input_mount=None, input_files=[], labels={}):
+                 input={},
+                 labels={}):
         self.image_name = image_name
         self.container_name = container_name
-        self.input_mount = input_mount
-        self.input_files = input_files
+        self.input = input
         self.labels = labels
 
     def __mkdtemp(self):
@@ -93,23 +94,16 @@ class DockerContainerSpec(object):
         return dir
 
     def run(self):
-        input_dir = self.__mkdtemp()
-        for file in self.input_files:
-            # Would be more robust to assign random names,
-            # but also more confusing
-            link_name = os.path.join(input_dir, os.path.basename(file))
-            if os.path.exists(link_name):
-                message = '{} already exists; basenames are not unique'.\
-                    format(link_name)
-                raise BaseException(message)
-            # Symlinks run into permissions problems
-            os.link(file, os.path.join(input_dir, os.path.basename(file)))
-        volume_spec = None
-        if self.input_mount:
-            volume_spec = {
-                input_dir: {
-                    'bind': self.input_mount,
-                    'mode': 'ro'}}
+        host_input_dir = self.__mkdtemp()
+        # Host filename is arbitrary.
+        host_input_path = os.path.join(host_input_dir, 'input.json')
+        with open(host_input_path, 'w') as file:
+            file.write(json.dumps(self.input))
+        volume_spec = {
+            host_input_path: {
+                # Path inside container might need to be configurable?
+                'bind': '/tmp/input.json',
+                'mode': 'ro'}}
         ports_spec = {'80/tcp': None}
         client = DockerClientWrapper()
         client.run(self.image_name,
