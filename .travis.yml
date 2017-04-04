@@ -1,26 +1,24 @@
 language: python
 python:
-  - 2.7
-
+- 2.7
 sudo: required
 services:
-  - docker
-
+- docker
 install:
-  - pip install -r requirements.txt
-  - pip install -r requirements-dev.txt
-
+- pip install -r requirements.txt
+- pip install -r requirements-dev.txt
 script:
-  # Exit on first failure.
-  - set -o errexit
-  # Looping here is probably more clear than setting up a Travis build matrix.
-  # (Without the quoted ':' Travis tries to fold on the script itself, in addition to the output.)
-  - |-
-      for VERSION in '1.7.1' '1.8.17' '1.9.12' '1.10.6'; do
-        echo travis_fold':'start:django-$VERSION
-        pip install django==$VERSION
-        python manage.py test --verbosity=2
-        echo travis_fold':'end:django-$VERSION
-      done
-  - python setup.py bdist_egg
-  - flake8
+- set -o errexit
+- |-
+  for VERSION in '1.7.1' '1.8.17' '1.9.12' '1.10.6'; do
+    echo travis_fold':'start:django-$VERSION
+    pip install django==$VERSION
+    python manage.py test --verbosity=2
+    echo travis_fold':'end:django-$VERSION
+  done
+- python setup.py bdist_egg
+- flake8
+env:
+  global:
+  - secure: bx64101bJl67Zm5ErlWXDnsna3Mp/joaUJkErG+YBQ/q/33iMX0znIrmC0kixtWF2HL7VRwM34wsdUY2Q6rnkRpa/7Rjchk6IrW2Cf2aBX/5B/ocftU5Uzg74maDUPwGOMnfQVJfVWhil9/dm2tvYZby0SG8BD1wDvrGXWwdEaQu6cDeeFZKfj17Z7dxPs4vKsmyAUYSC6hwqdwGbq8+ol9lKuRsuzKM1Zo6sthpjsbxFT7GED3ckhtXSRYHWPVHM7D0l+y82Pe8/wLuteS3lClV+MEgE1kCnynh9NhAv0YBq7M0loWVOotT/dY2GEGpBvhB2aIHH8aYHRCu70Cq2w5JCQZPU0UTu2Q1G3pZON3TdU3+4L/MdwGfEENOSp+pGrra1+tUvLKPFQNze3HgGDZ4Uh3uKULT+ftfC747TmU6p8mbkr18mQVrJZFpaIm5RNt2kAbUpX42zRlNmpZNzDR9yjSByotF2kyEVnhQ9y9Mx1AXMsnvSK3FYzDHnPqikN4bOSw+qeggqlUSGwAJFBPwVF3sG+DxN7pM61ihbHQMLNiafP/q+lInkXvwzwebRQ1MUUmSH//9BH/+CyHXaL5KXMaadQjoozPRB6pL8wI23DXPZXo7kTv9DfXdEYKm31avdGIaXZqMiWt9khnABgfBG9rPL+P8YjKNGRCpBTw=
+  - secure: axqanOAb06tfR60qyHwqW1uvH32wUbdT1yGasUg3CCaGx+S6wxuPLBBBIh8+Ef/uzKWAsPk6yrh2DSkPbh4lc6G725I/ybd+WWbhR7tjGc9cythr00zIktaBQF/KgOEwU8eIYNqO02wYRZj29RU1MbwahJ0Is6HVRxt3hD3Lxu4sHM4WjSjI7yhiQQ8tseggo8CSKSosjFRPTUClzgvSSmwBVn/qcBqPBv7Ebr1X+gahuZKw39T5Kwek4X2Dl9O4noiUvhQptGLXr+FVlQvxirIol6gr5J1ooOaSZU/37BcgPlmqCdX3oafZzF0duvdgeITE+sYFNEHIBurZCPAwjK7sO7qEqNt5X31WmMduVvZYZwic87yC3SaxM1DlZhUGbeDGzmTjgWM2ZMtbv06uz1QizBLv/aOqiW7PW8uno5NuRil0FWHLuEhtao3Nyb+eea8fEZqPBw/zQROp6BUafOrE5hDJELEwLENsovpKahKLSfIp3zPDrsuNj4dFy3Zm8RinnRi5Vz0pcnYNXZQ8OYORnT5rkhtgd88ki6SN18kID4AZHKthmKO8QjPQMgRsqWi0FqcldRDG8rupl4iUPtHRyuxYnVOYV0O5/YYUPMjTpEQ1keMUUK98HUVFtGm0SZMMXFkIe/odEiOKf7x0ZC0CONT1JT/Lsh6Fa0WIVYU=
