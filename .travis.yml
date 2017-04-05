@@ -10,7 +10,6 @@ install:
 script:
 - set -o errexit
 - export AWS_DEFAULT_REGION=us-east-1
-- env | perl -pne 's/=.*//'
 # TODO: Better not to list tests individually, but for the moment...
 - python manage.py test --verbosity=2 django_docker_engine.test_ecs_utils
 - |-
