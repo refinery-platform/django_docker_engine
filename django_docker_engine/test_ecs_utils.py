@@ -5,6 +5,7 @@ import time
 
 logging.basicConfig(level=logging.INFO)
 
+
 class EcsTests(unittest.TestCase):
     def setUp(self):
         logging.info('setUp')
@@ -14,14 +15,13 @@ class EcsTests(unittest.TestCase):
         self.cluster_name = 'test_cluster'
         self.instance = None
 
-
     def tearDown(self):
         logging.info('tearDown')
         self.ec2_client.delete_key_pair(KeyName=self.key_pair_name)
         self.instance.terminate()
-        #self.ecs_client.delete_cluster(cluster=self.cluster_name)
-        # "The Cluster cannot be deleted while Container Instances are active or draining."
-
+        # self.ecs_client.delete_cluster(cluster=self.cluster_name)
+        # Cleaning up is good, but I get this error:
+        # The Cluster cannot be deleted while Container Instances are active or draining.
 
     def run_task(self, task_name):
         response = None
@@ -56,7 +56,6 @@ class EcsTests(unittest.TestCase):
             t += 1
 
         # TODO: Hit it to make sure HTTP works and ports are open.
-            
 
     def test_create_cluster(self):
         logging.info('create_cluster')
@@ -79,9 +78,10 @@ class EcsTests(unittest.TestCase):
                         # host port will be assigned
                     },
                 ],
+
                 # At least one required:
                 'memory': 100,  # Hard limit
-                'memoryReservation': 50, # Soft limit
+                'memoryReservation': 50,  # Soft limit
             }]
         )
         self.assertEqual(response['taskDefinition']['status'], 'ACTIVE')
@@ -113,7 +113,7 @@ class EcsTests(unittest.TestCase):
                 # TODO: A new user will not already have this profile;
                 # TODO: Should we create it?
                 'Arn': 'arn:aws:iam::100836861126:instance-profile/ecsInstanceRole',
-                #'Name': 'optional?'
+                # 'Name': 'optional?'
             }
         )
         self.assertEqual(response['Instances'][0]['State']['Name'], 'pending')
@@ -133,4 +133,4 @@ class EcsTests(unittest.TestCase):
         self.run_task(task_name)
 
         # TODO: deregister_task requires revision
-        #response = self.ecs_client.deregister_task_definition()
+        # response = self.ecs_client.deregister_task_definition()
