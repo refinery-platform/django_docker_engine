@@ -6,7 +6,7 @@ class EcsTests(unittest.TestCase):
         self.ecs_client = boto3.client('ecs')
         self.ec2_client = boto3.client('ec2')
         self.key_pair_name = 'test_django_docker'
-        self.instance_id = None
+        self.instance = None
 
     def tearDown(self):
         self.ec2_client.delete_key_pair(KeyName=self.key_pair_name)
@@ -50,7 +50,7 @@ class EcsTests(unittest.TestCase):
         )
         self.assertEqual(response['Instances'][0]['State']['Name'], 'pending')
         instance_id = response['Instances'][0]['InstanceId']
-        self.instance = self.ec2_client.Instance(instance_id)
+        self.instance = boto3.resource('ec2').Instance(instance_id)
         self.instance.wait_until_running()
 
         #
