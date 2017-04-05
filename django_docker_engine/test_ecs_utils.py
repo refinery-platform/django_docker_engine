@@ -14,12 +14,49 @@ class EcsTests(unittest.TestCase):
         self.cluster_name = 'test_cluster'
         self.instance = None
 
+
     def tearDown(self):
         logging.info('tearDown')
         self.ec2_client.delete_key_pair(KeyName=self.key_pair_name)
         self.instance.terminate()
         #self.ecs_client.delete_cluster(cluster=self.cluster_name)
         # "The Cluster cannot be deleted while Container Instances are active or draining."
+
+
+    def run_task(self, task_name):
+        response = None
+        t = 0
+        while not response:
+            # This may take 30 seconds.
+            try:
+                response = self.ecs_client.run_task(
+                    cluster=self.cluster_name,
+                    taskDefinition=task_name
+                )
+            except Exception as e:
+                logging.info("%s: Expect 'InvalidParameterException': %s", t, e)
+                time.sleep(1)
+                t += 1
+
+        task_arn = response['tasks'][0]['taskArn']
+        status = response['tasks'][0]['lastStatus']
+        desired_status = response['tasks'][0]['desiredStatus']
+
+        logging.info('describe_tasks, until it is running')
+
+        t = 0
+        while status != desired_status:
+            time.sleep(1)
+            response = self.ecs_client.describe_tasks(
+                cluster=self.cluster_name,
+                tasks=[task_arn]
+            )
+            status = response['tasks'][0]['lastStatus']
+            logging.info("%s: status=%s", t, status)
+            t += 1
+
+        # TODO: Hit it to make sure HTTP works and ports are open.
+            
 
     def test_create_cluster(self):
         logging.info('create_cluster')
@@ -29,9 +66,9 @@ class EcsTests(unittest.TestCase):
 
         logging.info('register_task_definition')
 
-        TASK_NAME = 'test_task'
+        task_name = 'test_task'
         response = self.ecs_client.register_task_definition(
-            family=TASK_NAME,
+            family=task_name,
             containerDefinitions=[{
                 'name': 'my_container',
                 'image': 'nginx:1.11-alpine',
@@ -84,21 +121,16 @@ class EcsTests(unittest.TestCase):
         self.instance = boto3.resource('ec2').Instance(instance_id)
 
         # We still had a race condition with this waiter:
-        # The instance may be up, but perhaps Docker engine?
+        # The instance may be up, but not the Docker engine.
         # self.instance.wait_until_running()
 
-        response = None
-        while not response:
-            try:
-                response = self.ecs_client.run_task(
-                    cluster=self.cluster_name,
-                    taskDefinition=TASK_NAME
-                )
-            except Exception as e:
-                logging.info(e)
-                time.sleep(1)
-        logging.info(response)
-        # TODO: assert
+        logging.info('run_task, 1st time')
+
+        self.run_task(task_name)
+
+        logging.info('run_task, 2nd time')
+
+        self.run_task(task_name)
 
         # TODO: deregister_task requires revision
         #response = self.ecs_client.deregister_task_definition()
