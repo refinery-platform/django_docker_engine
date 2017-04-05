@@ -37,25 +37,24 @@ class EcsTests(unittest.TestCase):
                 logging.info("%s: Expect 'InvalidParameterException': %s", t, e)
                 time.sleep(1)
                 t += 1
-
-        task_arn = response['tasks'][0]['taskArn']
-        status = response['tasks'][0]['lastStatus']
-        desired_status = response['tasks'][0]['desiredStatus']
+        task = response['tasks'][0]
+        task_arn = task['taskArn']
+        desired_status = task['desiredStatus']
 
         logging.info('describe_tasks, until it is running')
 
         t = 0
-        while status != desired_status:
+        while task['lastStatus'] != desired_status:
             time.sleep(1)
             response = self.ecs_client.describe_tasks(
                 cluster=self.cluster_name,
                 tasks=[task_arn]
             )
-            status = response['tasks'][0]['lastStatus']
-            logging.info("%s: status=%s", t, status)
+            task = response['tasks'][0]
+            logging.info("%s: status=%s", t, task['lastStatus'])
             t += 1
 
-        # TODO: Hit it to make sure HTTP works and ports are open.
+        return task['containers'][0]['networkBindings'][0]['hostPort']
 
     def test_create_cluster(self):
         logging.info('create_cluster')
@@ -120,17 +119,21 @@ class EcsTests(unittest.TestCase):
         instance_id = response['Instances'][0]['InstanceId']
         self.instance = boto3.resource('ec2').Instance(instance_id)
 
+        logging.info(self.instance) # TODO: get IP
+
         # We still had a race condition with this waiter:
         # The instance may be up, but not the Docker engine.
         # self.instance.wait_until_running()
 
-        logging.info('run_task, 1st time')
+        logging.info('run_task, 1st time (slow)')
 
-        self.run_task(task_name)
+        port = self.run_task(task_name)
+        logging.info('port: %s', port)
 
-        logging.info('run_task, 2nd time')
+        logging.info('run_task, 2nd time (fast)')
+        logging.info('port: %s', port)
 
-        self.run_task(task_name)
+        port = self.run_task(task_name)
 
         # TODO: deregister_task requires revision
         # response = self.ecs_client.deregister_task_definition()
