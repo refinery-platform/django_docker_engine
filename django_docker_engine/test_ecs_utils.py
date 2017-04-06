@@ -40,29 +40,32 @@ class EcsTests(unittest.TestCase):
             Description='Security group for tests'
         )
         security_group_id = response['GroupId']
-        # Alternate approach:
-        # self.ec2_client.authorize_security_group_ingress(
-        #     GroupId=security_group_id,
-        #     IpProtocol='tcp',
-        #     FromPort=32768,
-        #     ToPort=65535,
-        #     CidrIp="0.0.0.0/0"
-        # )
         security_group = self.ec2_resource.SecurityGroup(security_group_id)
+
+        # http://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definition_parameters.html
+        # Ephermal port range has changed in different versions;
+        # This is a super-set.
+        min_port = 32768
+        max_port = 65535
+        ecs_container_agent_port = 51678
+
+        # Fails silently if Cidr is missing.
         security_group.authorize_ingress(
             IpProtocol='tcp',
-            CidrIp='0.0.0.0/0', # Fails silently if Cidr is missing.
-            # http://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definition_parameters.html
-            # Ephermal port range has changed in different versions;
-            # This is a super-set.
-            FromPort=32768,
-            ToPort=65535
-            # TODO: Exclude 51678 to protect ECS Container Agent.
+            CidrIp='0.0.0.0/0',
+            FromPort=min_port,
+            ToPort=ecs_container_agent_port-1
+        )
+        security_group.authorize_ingress(
+            IpProtocol='tcp',
+            CidrIp='0.0.0.0/0',
+            FromPort=ecs_container_agent_port + 1,
+            ToPort=max_port
         )
         security_group.reload()
         permissions = security_group.ip_permissions
         logging.info(permissions)
-        self.assertEqual(len(permissions), 1)
+        self.assertEqual(len(permissions), 2)
         return security_group_id
 
     def run_task(self, task_name):
