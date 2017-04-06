@@ -2,6 +2,7 @@ import unittest
 import boto3
 import logging
 import time
+import pprint
 
 logging.basicConfig(level=logging.INFO)
 
@@ -54,6 +55,7 @@ class EcsTests(unittest.TestCase):
             logging.info("%s: status=%s", t, task['lastStatus'])
             t += 1
 
+        logging.debug(pprint.pformat(task))
         return task['containers'][0]['networkBindings'][0]['hostPort']
 
     def test_create_cluster(self):
@@ -127,13 +129,15 @@ class EcsTests(unittest.TestCase):
 
         logging.info('run_task, 1st time (slow)')
 
-        port = self.run_task(task_name)
-        logging.info('port: %s', port)
+        port_1 = self.run_task(task_name)
+        logging.info('port: %s', port_1)
 
         logging.info('run_task, 2nd time (fast)')
-        logging.info('port: %s', port)
 
-        port = self.run_task(task_name)
+        port_2 = self.run_task(task_name)
+        logging.info('port: %s', port_2)
+
+        self.assertNotEquals(port_1, port_2)
 
         # TODO: deregister_task requires revision
         # response = self.ecs_client.deregister_task_definition()
