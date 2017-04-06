@@ -5,6 +5,7 @@ import time
 import pprint
 import re
 import datetime
+import requests
 
 logging.basicConfig(level=logging.INFO)
 
@@ -101,6 +102,9 @@ class EcsTests(unittest.TestCase):
             family=task_name,
             containerDefinitions=[{
                 'name': 'my_container',
+
+                # This is the smallest httpd I could find, but not
+                # proportionately faster: bottleneck may not be download.
                 'image': 'fnichol/uhttpd:latest',
                 'portMappings': [
                     {
@@ -148,22 +152,28 @@ class EcsTests(unittest.TestCase):
             }
         )
         self.assertEqual(response['Instances'][0]['State']['Name'], 'pending')
+
         instance_id = response['Instances'][0]['InstanceId']
         self.instance = boto3.resource('ec2').Instance(instance_id)
-        ip = self.instance.public_ip_address
-        logging.info('IP: %s', ip) # TODO: This returns None
 
         logging.info('run_task, 1st time (slow)')
 
         port_1 = self.run_task(task_name)
-        logging.info('port: %s', port_1)
+        self.instance.reload()
+        ip = self.instance.public_ip_address
+        url_1 = 'http://%s:%s/' % (ip, port_1)
+        logging.info('url: %s', url_1)
 
         logging.info('run_task, 2nd time (fast)')
 
         port_2 = self.run_task(task_name)
-        logging.info('port: %s', port_2)
+        url_2 = 'http://%s:%s/' % (ip, port_2)
+        logging.info('url: %s', url_2)
 
         self.assertNotEquals(port_1, port_2)
+
+        response = requests.get(url_1)
+        logging.info(response.text)
 
         # TODO: deregister_task requires revision
         # response = self.ecs_client.deregister_task_definition()
