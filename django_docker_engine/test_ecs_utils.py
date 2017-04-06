@@ -21,6 +21,7 @@ class EcsTests(unittest.TestCase):
         self.key_pair_name = 'test_django_docker_{}'.format(timestamp)
         self.cluster_name = 'test_cluster_{}'.format(timestamp)
         self.security_group_name = 'test_security_group_{}'.format(timestamp)
+        self.security_group_id = self.create_security_group()
 
         self.instance = None
 
@@ -39,9 +40,18 @@ class EcsTests(unittest.TestCase):
             Description='Security group for tests'
         )
         security_group_id = response['GroupId']
+        # Alternate approach:
+        # self.ec2_client.authorize_security_group_ingress(
+        #     GroupId=security_group_id,
+        #     IpProtocol='tcp',
+        #     FromPort=32768,
+        #     ToPort=65535,
+        #     CidrIp="0.0.0.0/0"
+        # )
         security_group = self.ec2_resource.SecurityGroup(security_group_id)
         security_group.authorize_ingress(
             IpProtocol='tcp',
+            CidrIp='0.0.0.0/0', # Fails silently if Cidr is missing.
             # http://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definition_parameters.html
             # Ephermal port range has changed in different versions;
             # This is a super-set.
@@ -49,6 +59,10 @@ class EcsTests(unittest.TestCase):
             ToPort=65535
             # TODO: Exclude 51678 to protect ECS Container Agent.
         )
+        security_group.reload()
+        permissions = security_group.ip_permissions
+        logging.info(permissions)
+        self.assertEqual(len(permissions), 1)
         return security_group_id
 
     def run_task(self, task_name):
@@ -141,7 +155,8 @@ class EcsTests(unittest.TestCase):
             NetworkInterfaces=[
                 {
                     'DeviceIndex': 0,
-                    'AssociatePublicIpAddress': True
+                    'AssociatePublicIpAddress': True,
+                    'Groups': [self.security_group_id]
                 }
             ],
             IamInstanceProfile={
@@ -157,23 +172,28 @@ class EcsTests(unittest.TestCase):
         self.instance = boto3.resource('ec2').Instance(instance_id)
 
         logging.info('run_task, 1st time (slow)')
-
         port_1 = self.run_task(task_name)
+
+        # Not sure when exactly it get public IP, but not immediately available.
         self.instance.reload()
         ip = self.instance.public_ip_address
+
         url_1 = 'http://%s:%s/' % (ip, port_1)
         logging.info('url: %s', url_1)
 
-        logging.info('run_task, 2nd time (fast)')
+        response = requests.get(url_1)
+        self.assertIn('Index of /', response.text)
 
+        logging.info('run_task, 2nd time (fast)')
         port_2 = self.run_task(task_name)
-        url_2 = 'http://%s:%s/' % (ip, port_2)
-        logging.info('url: %s', url_2)
 
         self.assertNotEquals(port_1, port_2)
 
-        response = requests.get(url_1)
-        logging.info(response.text)
+        url_2 = 'http://%s:%s/' % (ip, port_2)
+        logging.info('url: %s', url_2)
+
+        response = requests.get(url_2)
+        self.assertIn('Index of /', response.text)
 
         # TODO: deregister_task requires revision
         # response = self.ecs_client.deregister_task_definition()
