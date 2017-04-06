@@ -28,7 +28,11 @@ class EcsTests(unittest.TestCase):
         response = None
         t = 0
         while not response:
-            # This may take 30 seconds.
+            # Note that the instance may be up, but not the Docker engine.
+            # ie: This waiter is not sufficient:
+            # self.instance.wait_until_running()
+            #
+            # This may take more than a minute.
             try:
                 response = self.ecs_client.run_task(
                     cluster=self.cluster_name,
@@ -120,12 +124,8 @@ class EcsTests(unittest.TestCase):
         self.assertEqual(response['Instances'][0]['State']['Name'], 'pending')
         instance_id = response['Instances'][0]['InstanceId']
         self.instance = boto3.resource('ec2').Instance(instance_id)
-
-        logging.info(self.instance) # TODO: get IP
-
-        # We still had a race condition with this waiter:
-        # The instance may be up, but not the Docker engine.
-        # self.instance.wait_until_running()
+        ip = self.instance.public_ip_address
+        logging.info('IP: %s', ip)
 
         logging.info('run_task, 1st time (slow)')
 
