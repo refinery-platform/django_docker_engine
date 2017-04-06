@@ -3,6 +3,8 @@ import boto3
 import logging
 import time
 import pprint
+import re
+import datetime
 
 logging.basicConfig(level=logging.INFO)
 
@@ -12,17 +14,41 @@ class EcsTests(unittest.TestCase):
         logging.info('setUp')
         self.ecs_client = boto3.client('ecs')
         self.ec2_client = boto3.client('ec2')
-        self.key_pair_name = 'test_django_docker'
-        self.cluster_name = 'test_cluster'
+        self.ec2_resource = boto3.resource('ec2')
+
+        timestamp = re.sub(r'\D', '_', str(datetime.datetime.now()))
+        self.key_pair_name = 'test_django_docker_{}'.format(timestamp)
+        self.cluster_name = 'test_cluster_{}'.format(timestamp)
+        self.security_group_name = 'test_security_group_{}'.format(timestamp)
+
         self.instance = None
 
     def tearDown(self):
         logging.info('tearDown')
         self.ec2_client.delete_key_pair(KeyName=self.key_pair_name)
         self.instance.terminate()
+        # TODO: self.ec2_client.delete_security_group(GroupName=self.security_group_name)
         # self.ecs_client.delete_cluster(cluster=self.cluster_name)
         # Cleaning up is good, but I get this error:
         # The Cluster cannot be deleted while Container Instances are active or draining.
+
+    def create_security_group(self):
+        response = self.ec2_client.create_security_group(
+            GroupName=self.security_group_name,
+            Description='Security group for tests'
+        )
+        security_group_id = response['GroupId']
+        security_group = self.ec2_resource.SecurityGroup(security_group_id)
+        security_group.authorize_ingress(
+            IpProtocol='tcp',
+            # http://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definition_parameters.html
+            # Ephermal port range has changed in different versions;
+            # This is a super-set.
+            FromPort=32768,
+            ToPort=65535
+            # TODO: Exclude 51678 to protect ECS Container Agent.
+        )
+        return security_group_id
 
     def run_task(self, task_name):
         response = None
@@ -75,7 +101,7 @@ class EcsTests(unittest.TestCase):
             family=task_name,
             containerDefinitions=[{
                 'name': 'my_container',
-                'image': 'nginx:1.11-alpine',
+                'image': 'fnichol/uhttpd:latest',
                 'portMappings': [
                     {
                         'containerPort': 80,
@@ -125,7 +151,7 @@ class EcsTests(unittest.TestCase):
         instance_id = response['Instances'][0]['InstanceId']
         self.instance = boto3.resource('ec2').Instance(instance_id)
         ip = self.instance.public_ip_address
-        logging.info('IP: %s', ip)
+        logging.info('IP: %s', ip) # TODO: This returns None
 
         logging.info('run_task, 1st time (slow)')
 
