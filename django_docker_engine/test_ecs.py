@@ -7,10 +7,12 @@ import re
 import datetime
 import requests
 
-logging.basicConfig(level=logging.INFO)
-
 
 class EcsTests(unittest.TestCase):
+    """
+    This only exercises the AWS ECS SDK: It does not test any of our own code.
+    May go away eventually.
+    """
     def setUp(self):
         logging.info('setUp')
         self.ecs_client = boto3.client('ecs')
