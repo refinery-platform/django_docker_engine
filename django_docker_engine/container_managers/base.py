@@ -20,7 +20,7 @@ class BaseManager:
         raise NotImplementedError()
 
     @abstractmethod
-    def get_port(self, container_name):
+    def get_url(self, container_name):
         raise NotImplementedError()
 
     @abstractmethod

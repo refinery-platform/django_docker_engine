@@ -57,7 +57,7 @@ class DockerTests(unittest.TestCase):
                    volumes=volume_spec,
                    ports=ports_spec,
                    labels={DockerTests.TEST_LABEL: 'true'})
-        return client.lookup_container_port(container_name)
+        return client.lookup_container_url(container_name)
 
     def assert_url_content(self, url, content, client=django.test.Client()):
         for i in xrange(10):
@@ -96,8 +96,7 @@ class DockerTests(unittest.TestCase):
     def test_httpd(self):
         container_name = self.timestamp()
         hello_html = '<html><body>hello direct</body></html>'
-        port = self.one_file_server(container_name, hello_html)
-        url = 'http://localhost:{}/'.format(port)
+        url = self.one_file_server(container_name, hello_html)
         self.assert_url_content(url, hello_html, client=requests)
 
     def test_docker_proxy(self):

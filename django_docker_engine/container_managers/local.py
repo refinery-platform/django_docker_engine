@@ -10,10 +10,11 @@ class LocalManager(BaseManager):
     def run(self, image_name, cmd, **kwargs):
         return self.__client.run(image_name, cmd, **kwargs)
 
-    def get_port(self, container_name):
+    def get_url(self, container_name):
         container = self.__client.get(container_name)
-        return container. \
+        port = container. \
             attrs['NetworkSettings']['Ports']['80/tcp'][0]['HostPort']
+        return 'http://localhost:{}'.format(port)
 
     def list(self, filters={}):
         return self.__client.list(filters=filters)

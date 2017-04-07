@@ -25,11 +25,11 @@ class DockerClientWrapper():
         kwargs['labels'] = labels
         return self.__containers_manager.run(image_name, cmd, **kwargs)
 
-    def lookup_container_port(self, container_name):
+    def lookup_container_url(self, container_name):
         """
-        Given the name of a container, returns the host port mapped to port 80.
+        Given the name of a container, returns the url mapped to port 80.
         """
-        return self.__containers_manager.get_port(container_name)
+        return self.__containers_manager.get_url(container_name)
 
     def purge_by_label(self, label):
         """
@@ -110,4 +110,4 @@ class DockerContainerSpec():
                    labels=self.labels)
         # Metadata on the returned container object (like the assigned port)
         # is not complete, so we do a redundant lookup.
-        return client.lookup_container_port(self.container_name)
+        return client.lookup_container_url(self.container_name)
