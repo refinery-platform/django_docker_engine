@@ -24,7 +24,7 @@ class DockerTests(unittest.TestCase):
             base,
             re.sub(r'\W', '_', str(datetime.datetime.now())))
         os.mkdir(self.tmp)
-        if os.environ['TEST_ON_AWS_ECS']:
+        if os.environ.get('TEST_ON_AWS_ECS'):
             manager = ecs_manager.BaseManager()
         else:
             manager = local_manager.LocalManager()
