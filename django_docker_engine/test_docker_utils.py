@@ -22,15 +22,16 @@ class DockerTests(unittest.TestCase):
             base,
             re.sub(r'\W', '_', str(datetime.datetime.now())))
         os.mkdir(self.tmp)
-        self.initial_containers = DockerClientWrapper().list()
+        self.client = DockerClientWrapper()
+        self.initial_containers = self.client.list()
 
         # There may be containers running which are not "my containers".
         self.assertEqual(0, self.count_my_containers())
 
     def tearDown(self):
         rmtree(self.tmp)
-        DockerClientWrapper().purge_by_label(DockerTests.TEST_LABEL)
-        final_containers = DockerClientWrapper().list()
+        self.client.purge_by_label(DockerTests.TEST_LABEL)
+        final_containers = self.client.list()
         self.assertEqual(self.initial_containers, final_containers)
 
     TEST_LABEL = DockerClientWrapper.ROOT_LABEL + '.test'
@@ -39,7 +40,7 @@ class DockerTests(unittest.TestCase):
         return re.sub(r'\W', '_', str(datetime.datetime.now()))
 
     def count_my_containers(self):
-        return len(DockerClientWrapper().list(
+        return len(self.client.list(
             filters={'label': DockerTests.TEST_LABEL}
         ))
 
@@ -51,7 +52,7 @@ class DockerTests(unittest.TestCase):
                 'bind': '/usr/share/nginx/html',
                 'mode': 'ro'}}
         ports_spec = {'80/tcp': None}
-        client = DockerClientWrapper()
+        client = self.client
         client.run('nginx:1.10.3-alpine',
                    name=container_name,
                    detach=True,
@@ -74,7 +75,7 @@ class DockerTests(unittest.TestCase):
 
     def test_hello_world(self):
         input = 'hello world'
-        output = DockerClientWrapper().run(
+        output = self.client.run(
             'alpine:3.4',
             'echo ' + input,
             labels={DockerTests.TEST_LABEL: 'true'}
@@ -86,7 +87,7 @@ class DockerTests(unittest.TestCase):
         with open(os.path.join(self.tmp, 'world.txt'), 'w') as file:
             file.write(input)
         volume_spec = {self.tmp: {'bind': '/hello', 'mode': 'ro'}}
-        output = DockerClientWrapper().run(
+        output = self.client.run(
             'alpine:3.4',
             'cat /hello/world.txt',
             labels={DockerTests.TEST_LABEL: 'true'},
@@ -136,7 +137,7 @@ class DockerTests(unittest.TestCase):
             labels={DockerTests.TEST_LABEL: 'true'}).run()
         self.assertEqual(1, self.count_my_containers())
 
-        DockerClientWrapper().purge_inactive(5)
+        self.client.purge_inactive(5)
         self.assertEqual(1, self.count_my_containers())
         # Even without activity, it should not be purged if younger than the limit.
 
@@ -145,12 +146,12 @@ class DockerTests(unittest.TestCase):
         url = '/docker/{}/'.format(container_name)
         django.test.Client().get(url)
 
-        DockerClientWrapper().purge_inactive(1)
+        self.client.purge_inactive(1)
         self.assertEqual(1, self.count_my_containers())
         # With a tighter time limit, recent activity should keep it alive.
 
         sleep(2)
 
-        DockerClientWrapper().purge_inactive(0)
+        self.client.purge_inactive(0)
         self.assertEqual(0, self.count_my_containers())
         # But with an even tighter limit, it should be purged.
