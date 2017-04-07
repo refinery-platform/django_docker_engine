@@ -10,17 +10,38 @@ install:
 script:
 - set -o errexit
 - export AWS_DEFAULT_REGION=us-east-1
+- start() { echo travis_fold':'start:$1; }
+- end() { echo travis_fold':'end:$1; }
+
+# Test everything with defaults
+- start defaults
 - python manage.py test --verbosity=2
-# For only the tests that rely on django, we check across a range of versions:
+- end defaults
+
+# Test a range of django versions, but skip the much slower ECS tests:
 - |-
   for VERSION in '1.7.1' '1.8.17' '1.9.12' '1.10.6'; do
-    echo travis_fold':'start:django-$VERSION
+    start django-$VERSION
     pip install django==$VERSION
     python manage.py test --verbosity=2 django_docker_engine.test_docker_utils
-    echo travis_fold':'end:django-$VERSION
+    end django-$VERSION
   done
+
+# Test again, but the backend is now AWS:
+- start django-with-ecs
+- export TEST_ON_AWS_ECS=true
+- python manage.py test --verbosity=2 django_docker_engine.test_docker_utils
+- end django-with-ecs
+
+# Check packaging and formatting:
+- start egg
 - python setup.py bdist_egg
+- start egg
+
+- start format
 - flake8
+- start format
+
 env:
   global:
   - secure: JeVAUR7tJhYyaMqdLbEwpJJ5B7/+zrI/mtqNFI10yNYwT2YKmXFOsMv0MClJEjM0GjUg6bRVSl/iJv0A2+ao2a0h7PqGXoGCg5K6+v240We9cedgj9noA2YefaaXQh2sbnK8yLu4EsRw0XGJlJBNXHEWiLCfeB+EcDBH8Giy6MvRIHZMUZpCQMCpUIGs+5fJf7e9AolHqy3TNoAn6z5Oo7zGewLFETkVja6XzS4UQqXOYmyb97RI4+AhnEicfO74f0FGcCPUOLK4trR1u12/zMglGOIasprVE5SFwoDI7jn3CIgeqm1b++Xncq6P/DXhkFKKZJ0oiumxIaJSgXXLt4NCpEPktp8PitZv6C6N+FL6D7pEJl8PEHSLjrZOllZys30NemP9a82Nfm4H2ao436UmdQ3wF+N+aJvMYXf1Ck4gXtBoNY+VSbKz99rqRnUPxvfXYehBKikgBrDPv+rsRZa+fCSEnnj22ulPxmbK1YV/rv+9+3TRFL7Q+4KFhggcU1jPn1Nj3rJuZr4Gq0qqWF/rfZTCSkG+tjY5M8+7grg8U3WvdJQ2yolN29b0ImyHqm0JFKtYVj734vz8/SRv0Rf7Ygt5b4zzTuZQA+lE9tn/K5p/3dWuhnpQyUXtLyXQnqdBH6ErwMK9jBYmnC+gph6rWFf6H/IeYShTj+922Lw=

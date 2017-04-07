@@ -7,6 +7,8 @@ import django
 from docker_utils import DockerClientWrapper, DockerContainerSpec
 from shutil import rmtree
 from time import sleep
+from container_managers import local as local_manager
+from container_managers import ecs as ecs_manager
 
 
 class DockerTests(unittest.TestCase):
@@ -22,7 +24,11 @@ class DockerTests(unittest.TestCase):
             base,
             re.sub(r'\W', '_', str(datetime.datetime.now())))
         os.mkdir(self.tmp)
-        self.client = DockerClientWrapper()
+        if os.environ['TEST_ON_AWS_ECS']:
+            manager = ecs_manager.BaseManager()
+        else:
+            manager = local_manager.LocalManager()
+        self.client = DockerClientWrapper(manager=manager)
         self.test_label = self.client.root_label + '.test'
         self.initial_containers = self.client.list()
 
