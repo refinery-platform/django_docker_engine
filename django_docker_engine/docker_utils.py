@@ -29,9 +29,7 @@ class DockerClientWrapper():
         """
         Given the name of a container, returns the host port mapped to port 80.
         """
-        container = self.__containers_manager.get(container_name)
-        return container.\
-            attrs['NetworkSettings']['Ports']['80/tcp'][0]['HostPort']
+        return self.__containers_manager.get_port(container_name)
 
     def purge_by_label(self, label):
         """

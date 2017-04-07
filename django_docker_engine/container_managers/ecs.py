@@ -6,7 +6,7 @@ class EcsManager(BaseManager):
     def run(self, image_name, cmd, **kwargs):
         raise NotImplementedError()
 
-    def get(self, container_name):
+    def get_port(self, container_name):
         raise NotImplementedError()
 
     def list(self, filters={}):
