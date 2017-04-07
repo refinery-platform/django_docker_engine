@@ -23,6 +23,7 @@ class DockerTests(unittest.TestCase):
             re.sub(r'\W', '_', str(datetime.datetime.now())))
         os.mkdir(self.tmp)
         self.client = DockerClientWrapper()
+        self.test_label = self.client.root_label + '.test'
         self.initial_containers = self.client.list()
 
         # There may be containers running which are not "my containers".
@@ -30,18 +31,16 @@ class DockerTests(unittest.TestCase):
 
     def tearDown(self):
         rmtree(self.tmp)
-        self.client.purge_by_label(DockerTests.TEST_LABEL)
+        self.client.purge_by_label(self.test_label)
         final_containers = self.client.list()
         self.assertEqual(self.initial_containers, final_containers)
-
-    TEST_LABEL = DockerClientWrapper.ROOT_LABEL + '.test'
 
     def timestamp(self):
         return re.sub(r'\W', '_', str(datetime.datetime.now()))
 
     def count_my_containers(self):
         return len(self.client.list(
-            filters={'label': DockerTests.TEST_LABEL}
+            filters={'label': self.test_label}
         ))
 
     def one_file_server(self, container_name, html):
@@ -58,7 +57,7 @@ class DockerTests(unittest.TestCase):
                    detach=True,
                    volumes=volume_spec,
                    ports=ports_spec,
-                   labels={DockerTests.TEST_LABEL: 'true'})
+                   labels={self.test_label: 'true'})
         return client.lookup_container_url(container_name)
 
     def assert_url_content(self, url, content, client=django.test.Client()):
@@ -78,7 +77,7 @@ class DockerTests(unittest.TestCase):
         output = self.client.run(
             'alpine:3.4',
             'echo ' + input,
-            labels={DockerTests.TEST_LABEL: 'true'}
+            labels={self.test_label: 'true'}
         )
         self.assertEqual(output, input + '\n')
 
@@ -90,7 +89,7 @@ class DockerTests(unittest.TestCase):
         output = self.client.run(
             'alpine:3.4',
             'cat /hello/world.txt',
-            labels={DockerTests.TEST_LABEL: 'true'},
+            labels={self.test_label: 'true'},
             volumes=volume_spec
         )
         self.assertEqual(output, input)
@@ -113,7 +112,7 @@ class DockerTests(unittest.TestCase):
         DockerContainerSpec(
             image_name='nginx:1.10.3-alpine',
             container_name=container_name,
-            labels={DockerTests.TEST_LABEL: 'true'}).run()
+            labels={self.test_label: 'true'}).run()
         url = '/docker/{}/'.format(container_name)
         self.assert_url_content(url, 'Welcome to nginx!')
 
@@ -124,7 +123,7 @@ class DockerTests(unittest.TestCase):
             container_name=container_name,
             input={'foo': 'bar'},
             container_input_path='/usr/share/nginx/html/index.html',
-            labels={DockerTests.TEST_LABEL: 'true'}
+            labels={self.test_label: 'true'}
         ).run()
         url = '/docker/{}/'.format(container_name)
         self.assert_url_content(url, '{"foo": "bar"}')
@@ -134,7 +133,7 @@ class DockerTests(unittest.TestCase):
         DockerContainerSpec(
             image_name='nginx:1.10.3-alpine',
             container_name=container_name,
-            labels={DockerTests.TEST_LABEL: 'true'}).run()
+            labels={self.test_label: 'true'}).run()
         self.assertEqual(1, self.count_my_containers())
 
         self.client.purge_inactive(5)

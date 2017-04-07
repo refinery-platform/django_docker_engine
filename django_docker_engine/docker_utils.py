@@ -7,10 +7,11 @@ from container_managers import local as local_manager
 
 
 class DockerClientWrapper():
-    ROOT_LABEL = 'io.github.refinery-project.django_docker_engine'
-
-    def __init__(self, manager=local_manager.LocalManager()):
+    def __init__(self,
+                 manager=local_manager.LocalManager(),
+                 root_label='io.github.refinery-project.django_docker_engine'):
         self.__containers_manager = manager
+        self.root_label = root_label
 
     def run(self, image_name, cmd=None, **kwargs):
         """
@@ -21,7 +22,7 @@ class DockerClientWrapper():
             # Without tag the SDK pulls every version; not what I expected.
             # https://github.com/docker/docker-py/issues/1510
         labels = kwargs.get('labels') or {}
-        labels.update({DockerClientWrapper.ROOT_LABEL: 'true'})
+        labels.update({self.root_label: 'true'})
         kwargs['labels'] = labels
         return self.__containers_manager.run(image_name, cmd, **kwargs)
 
