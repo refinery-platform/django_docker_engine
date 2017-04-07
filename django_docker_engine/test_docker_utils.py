@@ -7,7 +7,6 @@ import django
 from docker_utils import DockerClientWrapper, DockerContainerSpec
 from shutil import rmtree
 from time import sleep
-import docker  # Only to be used in setUp and tearDown
 
 
 class DockerTests(unittest.TestCase):
@@ -23,13 +22,15 @@ class DockerTests(unittest.TestCase):
             base,
             re.sub(r'\W', '_', str(datetime.datetime.now())))
         os.mkdir(self.tmp)
-        self.initial_containers = docker.from_env().containers.list()
+        self.initial_containers = DockerClientWrapper().list()
+
+        # There may be containers running which are not "my containers".
         self.assertEqual(0, self.count_my_containers())
 
     def tearDown(self):
         rmtree(self.tmp)
         DockerClientWrapper().purge_by_label(DockerTests.TEST_LABEL)
-        final_containers = docker.from_env().containers.list()
+        final_containers = DockerClientWrapper().list()
         self.assertEqual(self.initial_containers, final_containers)
 
     TEST_LABEL = DockerClientWrapper.ROOT_LABEL + '.test'
@@ -38,7 +39,7 @@ class DockerTests(unittest.TestCase):
         return re.sub(r'\W', '_', str(datetime.datetime.now()))
 
     def count_my_containers(self):
-        return len(docker.from_env().containers.list(
+        return len(DockerClientWrapper().list(
             filters={'label': DockerTests.TEST_LABEL}
         ))
 

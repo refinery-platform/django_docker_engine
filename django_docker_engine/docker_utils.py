@@ -31,11 +31,14 @@ class DockerClientWrapper():
         """
         return self.__containers_manager.get_url(container_name)
 
+    def list(self, filters={}):
+        return self.__containers_manager.list(filters)
+
     def purge_by_label(self, label):
         """
         Removes all containers matching the label.
         """
-        for container in self.__containers_manager.list(filters={'label': label}):
+        for container in self.list({'label': label}):
             # TODO: Confirm that it belongs to me
             container.remove(force=True)
 
@@ -43,7 +46,7 @@ class DockerClientWrapper():
         """
         Removes containers which do not have recent log entries.
         """
-        for container in self.__containers_manager.list():
+        for container in self.list():
             # TODO: Confirm that it belongs to me
             if not self.__is_active(container, seconds):
                 container.remove(force=True)
