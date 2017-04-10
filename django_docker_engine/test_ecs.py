@@ -10,8 +10,9 @@ import requests
 
 class EcsTests(unittest.TestCase):
     """
-    This only exercises the AWS ECS SDK: It does not test any of our own code.
-    May go away eventually.
+    This only exercises the AWS ECS SDK:
+    It does not test any of our own code!
+    Probably not useful once what I've learned here has been integrated.
     """
     def setUp(self):
         logging.info('setUp')
