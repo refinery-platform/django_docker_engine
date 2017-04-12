@@ -7,6 +7,7 @@ import re
 import datetime
 import requests
 
+logging.basicConfig(level=logging.INFO)
 
 class EcsTests(unittest.TestCase):
     """
