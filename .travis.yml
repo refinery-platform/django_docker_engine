@@ -28,10 +28,10 @@ script:
   done
 
 # Test again, but the backend is now AWS:
-#- start django-with-ecs
-#- export TEST_ON_AWS_ECS=true
-#- python manage.py test --verbosity=2 django_docker_engine.test_docker_utils
-#- end django-with-ecs
+- start django-with-ecs
+- export TEST_ON_AWS_ECS=true
+- python manage.py test --verbosity=2 django_docker_engine.test_docker_utils
+- end django-with-ecs
 
 # Check packaging and formatting:
 - start egg

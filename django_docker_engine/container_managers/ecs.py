@@ -13,7 +13,14 @@ class EcsManager(BaseManager):
                  key_pair_name=None,
                  cluster_name=None,
                  security_group_id=None,
-                 instance_id=None):
+                 instance_id=None,
+
+                 # TODO: Does something in Refinery need to create this?
+                 instance_profile_arn=
+                    'arn:aws:iam::100836861126:instance-profile/ecsInstanceRole',
+
+                 # us-east-1: amzn-ami-2016.09.g-amazon-ecs-optimized
+                 ami_id='ami-275ffe31'):
         """
         Specify a key pair, cluster, and security group to use,
         or new ones will be created with names based on the given prefix.
@@ -21,6 +28,9 @@ class EcsManager(BaseManager):
         self.__ecs_client = boto3.client('ecs')
         self.__ec2_client = boto3.client('ec2')
         self.__ec2_resource = boto3.resource('ec2')
+
+        self.__instance_profile_arn = instance_profile_arn
+        self.__ami_id = ami_id
 
         timestamp = re.sub(r'\D', '_', str(datetime.datetime.now()))
         default = prefix + timestamp
@@ -76,9 +86,7 @@ class EcsManager(BaseManager):
 
     def __create_instance(self):
         response = self.__ec2_client.run_instances(
-            # TODO: parameterize image
-            ImageId='ami-275ffe31',
-            # us-east-1: amzn-ami-2016.09.g-amazon-ecs-optimized
+            ImageId=self.__ami_id,
             MinCount=1,
             MaxCount=1,
             InstanceType='t2.nano',
@@ -95,10 +103,7 @@ class EcsManager(BaseManager):
                 }
             ],
             IamInstanceProfile={
-                # TODO: A new user will not already have this profile;
-                # TODO: Should we create it?
-                'Arn': 'arn:aws:iam::100836861126:instance-profile/ecsInstanceRole',
-                # 'Name': 'optional?'
+                'Arn': self.__instance_profile_arn
             }
         )
         assert(response['Instances'][0]['State']['Name'] == 'pending')
