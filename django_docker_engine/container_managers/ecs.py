@@ -143,55 +143,54 @@ class EcsManager(BaseManager):
             t += 1
         return task['containers'][0]['networkBindings'][0]['hostPort']
 
-    if __name__ == '__main__':
-        def run(self, image_name, cmd, **kwargs):
-            """
-            Start a specified Docker image.
-            "image_name" may (and in fact, should) include a version.
-            """
+    def run(self, image_name, cmd, **kwargs):
+        """
+        Start a specified Docker image.
+        "image_name" may (and in fact, should) include a version.
+        """
 
-            # ECS anticipates multiple containers coming together to constitute
-            # a task, but for now we just have one container per task.
-            # For now, using the same names for both...
-            unversioned_image_name = re.sub(r':.*', '', image_name)
+        # ECS anticipates multiple containers coming together to constitute
+        # a task, but for now we just have one container per task.
+        # For now, using the same names for both...
+        unversioned_image_name = re.sub(r':.*', '', image_name)
 
-            # Defaults to listing only the active tasks
-            response = self.__ecs_client.list_task_definitions(
-                familyPrefix=unversioned_image_name)
-            task_definition_arns = response['taskDefinitionArns']
-            count = len(task_definition_arns)
+        # Defaults to listing only the active tasks
+        response = self.__ecs_client.list_task_definitions(
+            familyPrefix=unversioned_image_name)
+        task_definition_arns = response['taskDefinitionArns']
+        count = len(task_definition_arns)
 
-            if count > 1:
-                raise StandardError(
-                    'Expected a single task definition for %s; instead we have %s'
-                    % (unversioned_image_name, task_definition_arns))
-            elif count < 1:
-                response = self.__ecs_client.register_task_definition(
-                    family=unversioned_image_name,
-                    containerDefinitions=[{
-                        'name': unversioned_image_name,
-                        'image': image_name,
-                        'portMappings': [
-                            {
-                                'containerPort': 80,
-                                'protocol': 'tcp'
-                                # host port will be assigned
-                            },
-                        ],
+        if count > 1:
+            raise StandardError(
+                'Expected a single task definition for %s; instead we have %s'
+                % (unversioned_image_name, task_definition_arns))
+        elif count < 1:
+            response = self.__ecs_client.register_task_definition(
+                family=unversioned_image_name,
+                containerDefinitions=[{
+                    'name': unversioned_image_name,
+                    'image': image_name,
+                    'portMappings': [
+                        {
+                            'containerPort': 80,
+                            'protocol': 'tcp'
+                            # host port will be assigned
+                        },
+                    ],
 
-                        # TODO: We'll want this to be configurable
-                        # At least one required:
-                        'memory': 100,  # Hard limit
-                        'memoryReservation': 50,  # Soft limit
-                    }]
-                )
-                assert(response['taskDefinition']['status'] == 'ACTIVE')
+                    # TODO: We'll want this to be configurable
+                    # At least one required:
+                    'memory': 100,  # Hard limit
+                    'memoryReservation': 50,  # Soft limit
+                }]
+            )
+            assert(response['taskDefinition']['status'] == 'ACTIVE')
 
-            instance_resource = boto3.resource('ec2').Instance(self.__instance_id)
-            self.__run_task(image_name, instance_resource)
+        instance_resource = boto3.resource('ec2').Instance(self.__instance_id)
+        self.__run_task(image_name, instance_resource)
 
-            # TODO: At this point, local.py returns Docker SDK object;
-            # Instead it should return a wrapper, and we'll match that interface.
+        # TODO: At this point, local.py returns Docker SDK object;
+        # Instead it should return a wrapper, and we'll match that interface.
 
     def get_url(self, container_name):
         raise NotImplementedError()
