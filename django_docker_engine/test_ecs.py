@@ -101,7 +101,7 @@ class EcsTests(unittest.TestCase):
         logging.info('describe_tasks, until it is running')
 
         t = 0
-        while task['lastStatus'] != desired_status:
+        while task['lastStatus'] not in [desired_status, 'STOPPED']:
             time.sleep(1)
             response = self.ecs_client.describe_tasks(
                 cluster=self.cluster_name,
@@ -138,7 +138,8 @@ class EcsTests(unittest.TestCase):
 
                 # This is the smallest httpd I could find, but not
                 # proportionately faster: bottleneck may not be download.
-                'image': 'fnichol/uhttpd:latest',
+                #'image': 'fnichol/uhttpd:latest',
+                'image': 'hello-world:latest',
                 'portMappings': [
                     {
                         'containerPort': 80,
@@ -196,10 +197,14 @@ class EcsTests(unittest.TestCase):
         # Not sure when exactly it gets a public IP,
         # but it is not immediately available above.
         self.instance.reload()
-        ip = self.instance.public_ip_address
+        # ip = self.instance.public_ip_address
+        #
+        # url_1 = 'http://%s:%s/' % (ip, port_1)
+        # logging.info('url: %s', url_1)
+        #
+        # response = requests.get(url_1)
+        # self.assertIn('Index of /', response.text)
 
-        url_1 = 'http://%s:%s/' % (ip, port_1)
-        logging.info('url: %s', url_1)
 
         response = self.logs_client.describe_log_streams(logGroupName=self.log_group_name)
         stream_descriptions = response['logStreams']
@@ -215,8 +220,7 @@ class EcsTests(unittest.TestCase):
 
         import pdb; pdb.set_trace()
 
-        response = requests.get(url_1)
-        self.assertIn('Index of /', response.text)
+
 
         logging.info('run_task, 2nd time (fast)')
         port_2 = self.run_task(task_name)
