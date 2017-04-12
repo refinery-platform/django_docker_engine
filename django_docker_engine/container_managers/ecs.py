@@ -145,7 +145,7 @@ class EcsManager(BaseManager):
 
     def run(self, image_name, cmd, **kwargs):
         """
-        Start a specified Docker image.
+        Start a specified Docker image, and returns the output.
         "image_name" may (and in fact, should) include a version.
         """
 
@@ -189,8 +189,12 @@ class EcsManager(BaseManager):
         instance_resource = boto3.resource('ec2').Instance(self.__instance_id)
         self.__run_task(image_name, instance_resource)
 
-        # TODO: At this point, local.py returns Docker SDK object;
-        # Instead it should return a wrapper, and we'll match that interface.
+        # TODO: At this point, local.py returns output from the container,
+        # if any, but this is non-trivial under AWS.
+        # See: https://github.com/aws/amazon-ecs-agent/issues/9#issuecomment-195637638
+        # For now, just return a placeholder
+
+        return 'TODO: Container output placeholder'
 
     def get_url(self, container_name):
         raise NotImplementedError()
