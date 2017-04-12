@@ -193,12 +193,27 @@ class EcsTests(unittest.TestCase):
         logging.info('run_task, 1st time (slow)')
         port_1 = self.run_task(task_name)
 
-        # Not sure when exactly it get public IP, but not immediately available.
+        # Not sure when exactly it gets a public IP,
+        # but it is not immediately available above.
         self.instance.reload()
         ip = self.instance.public_ip_address
 
         url_1 = 'http://%s:%s/' % (ip, port_1)
         logging.info('url: %s', url_1)
+
+        response = self.logs_client.describe_log_streams(logGroupName=self.log_group_name)
+        stream_descriptions = response['logStreams']
+        stream_names = [description['logStreamName'] for description in stream_descriptions]
+        self.assertEqual(len(stream_names), 1) # Not confident this is universally true, but true right now?
+
+        response = self.logs_client.get_log_events(
+            logGroupName=self.log_group_name,
+            logStreamName=stream_names[0])
+        events = response['events']
+        self.assertNotEquals(len(events), 0)
+        # TODO: What do we expect to see in the log?
+
+        import pdb; pdb.set_trace()
 
         response = requests.get(url_1)
         self.assertIn('Index of /', response.text)
