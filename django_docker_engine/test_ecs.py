@@ -19,20 +19,24 @@ class EcsTests(unittest.TestCase):
         logging.info('setUp')
         self.ecs_client = boto3.client('ecs')
         self.ec2_client = boto3.client('ec2')
+        self.logs_client = boto3.client('logs')
         self.ec2_resource = boto3.resource('ec2')
 
         timestamp = re.sub(r'\D', '_', str(datetime.datetime.now()))
         self.key_pair_name = 'test_django_docker_{}'.format(timestamp)
         self.cluster_name = 'test_cluster_{}'.format(timestamp)
+        self.log_group_name = 'test_log_group_{}'.format(timestamp)
         self.security_group_name = 'test_security_group_{}'.format(timestamp)
         self.security_group_id = self.create_security_group()
-
         self.instance = None
+
+        self.logs_client.create_log_group(logGroupName=self.log_group_name)
 
     def tearDown(self):
         logging.info('tearDown')
         self.ec2_client.delete_key_pair(KeyName=self.key_pair_name)
         self.instance.terminate()
+        self.logs_client.delete_log_group(logGroupName=self.log_group_name)
         # TODO: self.ec2_client.delete_security_group(GroupName=self.security_group_name)
         # self.ecs_client.delete_cluster(cluster=self.cluster_name)
         # Cleaning up is good, but I get this error:
@@ -123,6 +127,14 @@ class EcsTests(unittest.TestCase):
             family=task_name,
             containerDefinitions=[{
                 'name': 'my_container',
+                'logConfiguration': {
+                    'logDriver': 'awslogs',
+                    'options': {
+                        'awslogs-group': self.log_group_name,
+                        'awslogs-region': 'us-east-1',
+                        'awslogs-stream-prefix': 'test_prefix'
+                    }
+                },
 
                 # This is the smallest httpd I could find, but not
                 # proportionately faster: bottleneck may not be download.
