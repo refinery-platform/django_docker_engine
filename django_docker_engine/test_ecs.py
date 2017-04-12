@@ -112,7 +112,10 @@ class EcsTests(unittest.TestCase):
             t += 1
 
         logging.debug(pprint.pformat(task))
-        return task['containers'][0]['networkBindings'][0]['hostPort']
+        # If the container stops, networkBindings may not be available.
+        bindings = task['containers'][0].get('networkBindings')
+        if bindings:
+            return bindings[0]['hostPort']
 
     def test_create_cluster(self):
         logging.info('create_cluster')
@@ -197,6 +200,7 @@ class EcsTests(unittest.TestCase):
         # Not sure when exactly it gets a public IP,
         # but it is not immediately available above.
         self.instance.reload()
+        # TODO: Make it a webserver again!
         # ip = self.instance.public_ip_address
         #
         # url_1 = 'http://%s:%s/' % (ip, port_1)
@@ -216,22 +220,18 @@ class EcsTests(unittest.TestCase):
             logStreamName=stream_names[0])
         events = response['events']
         self.assertNotEquals(len(events), 0)
-        # TODO: What do we expect to see in the log?
-
-        import pdb; pdb.set_trace()
-
-
+        self.assertEqual(events[0]['message'], 'Hello from Docker!')
 
         logging.info('run_task, 2nd time (fast)')
         port_2 = self.run_task(task_name)
 
-        self.assertNotEquals(port_1, port_2)
-
         url_2 = 'http://%s:%s/' % (ip, port_2)
         logging.info('url: %s', url_2)
 
-        response = requests.get(url_2)
-        self.assertIn('Index of /', response.text)
+        # TODO: Make it a webserver again
+        # self.assertNotEquals(port_1, port_2)
+        # response = requests.get(url_2)
+        # self.assertIn('Index of /', response.text)
 
         # TODO: deregister_task requires revision
         # response = self.ecs_client.deregister_task_definition()
