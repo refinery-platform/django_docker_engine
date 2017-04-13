@@ -8,19 +8,20 @@ from base import BaseManager, BaseContainer
 
 class EcsManager(BaseManager):
 
-    def __init__(self,
-                 prefix='django_docker_',
-                 key_pair_name=None,
-                 cluster_name=None,
-                 security_group_id=None,
-                 instance_id=None,
+    DEFAULT_ROLE_ARN = \
+        'arn:aws:iam::100836861126:instance-profile/ecsInstanceRole'
 
-                 # TODO: Does something in Refinery need to create this?
-                 instance_profile_arn=
-                    'arn:aws:iam::100836861126:instance-profile/ecsInstanceRole',
+    def __init__(
+            self,
+            prefix='django_docker_',
+            key_pair_name=None,
+            cluster_name=None,
+            security_group_id=None,
+            instance_id=None,
+            instance_profile_arn=DEFAULT_ROLE_ARN,
 
-                 # us-east-1: amzn-ami-2016.09.g-amazon-ecs-optimized
-                 ami_id='ami-275ffe31'):
+            # us-east-1: amzn-ami-2016.09.g-amazon-ecs-optimized
+            ami_id='ami-275ffe31'):
         """
         Specify a key pair, cluster, and security group to use,
         or new ones will be created with names based on the given prefix.
@@ -85,16 +86,18 @@ class EcsManager(BaseManager):
         return security_group_id
 
     def __create_instance(self):
+        user_data = '\n'.join([
+            '#!/bin/bash',
+            'echo ECS_CLUSTER={} >> /etc/ecs/ecs.config'.format(
+                self.__cluster_name
+            )])
         response = self.__ec2_client.run_instances(
             ImageId=self.__ami_id,
             MinCount=1,
             MaxCount=1,
             InstanceType='t2.nano',
             KeyName=self.__key_pair_name,
-            UserData='\n'.join([
-                '#!/bin/bash',
-                'echo ECS_CLUSTER={} >> /etc/ecs/ecs.config'.
-                    format(self.__cluster_name)]),
+            UserData=user_data,
             NetworkInterfaces=[
                 {
                     'DeviceIndex': 0,
