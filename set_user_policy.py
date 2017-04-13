@@ -16,8 +16,8 @@ class PolicySetter():
         policies = [
             # TODO: Add notes about why these are needed.
             'AmazonEC2ContainerRegistryFullAccess',
-            'AmazonEC2ContainerServiceforEC2Role',
-            'AmazonEC2ContainerServiceRole'
+            'service-role/AmazonEC2ContainerServiceforEC2Role',
+            'service-role/AmazonEC2ContainerServiceRole'
         ]
         for policy in policies:
             arn = prefix + '/' + policy
@@ -49,7 +49,7 @@ class PolicySetter():
                 ]
             }
             user_policy = self.__user.Policy(name)
-            user_policy.put(json.dumps(full_doc))
+            user_policy.put(PolicyDocument=json.dumps(full_doc))
 
 
 if __name__ == '__main__':
