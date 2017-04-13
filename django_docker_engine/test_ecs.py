@@ -138,11 +138,7 @@ class EcsTests(unittest.TestCase):
                         'awslogs-stream-prefix': 'test_prefix'
                     }
                 },
-
-                # This is the smallest httpd I could find, but not
-                # proportionately faster: bottleneck may not be download.
-                #'image': 'fnichol/uhttpd:latest',
-                'image': 'hello-world:latest',
+                'image': 'nginx:latest',
                 'portMappings': [
                     {
                         'containerPort': 80,
@@ -200,20 +196,20 @@ class EcsTests(unittest.TestCase):
         # Not sure when exactly it gets a public IP,
         # but it is not immediately available above.
         self.instance.reload()
-        # TODO: Make it a webserver again!
-        # ip = self.instance.public_ip_address
-        #
-        # url_1 = 'http://%s:%s/' % (ip, port_1)
-        # logging.info('url: %s', url_1)
-        #
-        # response = requests.get(url_1)
-        # self.assertIn('Index of /', response.text)
+        ip = self.instance.public_ip_address
 
+        url_1 = 'http://%s:%s/' % (ip, port_1)
+        logging.info('url: %s', url_1)
+
+        response = requests.get(url_1)
+        self.assertIn('Welcome to nginx', response.text)
 
         response = self.logs_client.describe_log_streams(logGroupName=self.log_group_name)
         stream_descriptions = response['logStreams']
         stream_names = [description['logStreamName'] for description in stream_descriptions]
         self.assertEqual(len(stream_names), 1) # Not confident this is universally true, but true right now?
+
+        import pdb; pdb.set_trace()
 
         response = self.logs_client.get_log_events(
             logGroupName=self.log_group_name,
