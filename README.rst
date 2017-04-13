@@ -10,7 +10,7 @@ but nothing should prevent its use in other contexts, as well.
 In order for a Docker container to work with this package it must:
 
 - listen on port 80 for HTTP connections, and
-- have a single directory where input files can be dropped.
+- accept a single json file as input.
 
 The following Docker projects have been designed to work with ``django_docker_engine``:
 
@@ -19,15 +19,6 @@ The following Docker projects have been designed to work with ``django_docker_en
 -----
 Usage: Configuring Django
 -----
-
-Typically, Docker Engine will be installed and running on the same machine as Django:
-Review their `docs <https://docs.docker.com/engine/installation/>`_ for the best information,
-but here is one way to install on Linux::
-
-    $ sudo apt-get install libapparmor1
-    $ DEB=docker-engine_1.13.0-0~ubuntu-precise_amd64.deb
-    $ wget https://apt.dockerproject.org/repo/pool/main/d/docker-engine/$DEB
-    $ sudo dpkg -i $DEB
 
 Use pip to install ``django_docker_engine``, either adding a line to ``requirements.txt``
 or on the commandline::
@@ -38,15 +29,34 @@ You will need to decide on a path that should be routed to Docker. A minimal ``u
 
     from django.conf.urls import include, url
     import django_docker_engine
-    
+
     urlpatterns = [ url(r'^docker/', include('django_docker_engine.urls')) ]
+
+-----
+Usage: Docker
+-----
+
+``django_docker_engine`` tries to abstract away the differences between different ways of running Docker.
+
+.....
+Local Docker Engine
+.....
+
+Typically, Docker Engine will be installed and running on the same machine as Django:
+Review their `docs <https://docs.docker.com/engine/installation/>`_ for the best information,
+but here is one way to install on Linux::
+
+    $ sudo apt-get install libapparmor1
+    $ DEB=docker-engine_1.13.0-0~ubuntu-precise_amd64.deb
+    $ wget https://apt.dockerproject.org/repo/pool/main/d/docker-engine/$DEB
+    $ sudo dpkg -i $DEB
 
 You also need a Docker container with port 80 open: ``DockerContainerSpec`` makes this easy to manage programatically,
 but for now let's start one by hand::
 
     $ docker run --name empty-server --publish 80 --detach nginx:1.10.3-alpine
     
-Next, let's start Django::
+Next, if you haven't already, start Django::
 
     $ python manage.py runserver
     
@@ -54,6 +64,23 @@ and visit: http://localhost:8000/docker/empty-server
 
 You should see the Nginx welcome page: ``django_docker_engine`` has determined the port the container was assigned,
 and has proxied your request. 
+
+.....
+Docker Engine on AWS-EC2
+.....
+
+TODO: It should be possible to do it almost exactly the same way,
+except that the Docker instance is running on an EC2 instance.
+
+.....
+Docker Engine via AWS-ECS
+.....
+
+TODO: Instead of interacting directly with the Docker Engine,
+use the AWS-ECS API.
+
+For the AWS-ECS tests to work, a rather extensive set of permissions is necessary.
+These can be assigned with the ``set_user_policy.py`` script.
 
 -------
 Usage: Launching Containers
@@ -89,7 +116,6 @@ Development
     cd django_docker_engine
     pip install -r requirements.txt
     pip install -r requirements-dev.txt
-    python manage.py migrate
     python manage.py test --verbosity=2
 
 ------------

@@ -32,10 +32,16 @@ class PolicySetter():
                 ['ec2:CreateSecurityGroup', 'ec2:DeleteSecurityGroup'],
             'RunAndTerminateInstances':
                 ['ec2:RunInstances', 'ec2:TerminateInstances'],
+            'AuthorizeSecurityGroupIngressAndEgress':
+                ['ec2:AuthorizeSecurityGroupEgress', 'ec2:AuthorizeSecurityGroupIngress'],
+            'IamPassRole':
+                ['iam:PassRole'], # I think that without this, assigning a role to ECS EC2 instances would not work.
+            'EcsAllowEverything':
+                ['ecs:*'],  # TODO: Tighten
             'CreateAndDeleteLogGroup':
                 ['logs:CreateLogGroup', 'logs:DeleteLogGroup'],
-            'LogsAllowEverything':
-                ['logs:*'], # TODO: Tighten
+            # 'LogsAllowEverything':
+            #     ['logs:*'], # TODO: Tighten
         }
         for name in actions:
             full_doc = {
