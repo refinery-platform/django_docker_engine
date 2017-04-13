@@ -22,6 +22,7 @@ class PolicySetter():
         for policy in policies:
             arn = prefix + '/' + policy
             self.__user.attach_policy(PolicyArn=arn)
+            print(policy)
 
     def __set_inline_policies(self):
         # Alternatively, could create new managed policies, either for each of these, or all of them.
@@ -55,6 +56,7 @@ class PolicySetter():
             }
             user_policy = self.__user.Policy(name)
             user_policy.put(PolicyDocument=json.dumps(full_doc))
+            print(actions[name])
 
 
 if __name__ == '__main__':
