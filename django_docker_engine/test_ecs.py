@@ -9,6 +9,7 @@ import requests
 
 logging.basicConfig(level=logging.INFO)
 
+
 class EcsTests(unittest.TestCase):
     """
     This only exercises the AWS ECS SDK:
