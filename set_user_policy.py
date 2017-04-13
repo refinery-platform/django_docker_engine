@@ -25,7 +25,8 @@ class PolicySetter():
             print(policy)
 
     def __set_inline_policies(self):
-        # Alternatively, could create new managed policies, either for each of these, or all of them.
+        # Alternatively, could create new managed policies,
+        # either for each of these, or all of them.
         actions = {
             'CreateAndDeleteKeyPair':
                 ["ec2:CreateKeyPair", "ec2:DeleteKeyPair"],
@@ -35,8 +36,8 @@ class PolicySetter():
                 ['ec2:RunInstances', 'ec2:TerminateInstances'],
             'AuthorizeSecurityGroupIngressAndEgress':
                 ['ec2:AuthorizeSecurityGroupEgress', 'ec2:AuthorizeSecurityGroupIngress'],
-            'IamPassRole':
-                ['iam:PassRole'], # I think that without this, assigning a role to ECS EC2 instances would not work.
+            'IamPassRole':  # Assign a role to ECS EC2 instance
+                ['iam:PassRole'],
             'EcsAllowEverything':
                 ['ecs:*'],  # TODO: Tighten
             'CreateAndDeleteLogGroup':
@@ -50,7 +51,7 @@ class PolicySetter():
                     {
                         "Effect": "Allow",
                         "Action": actions[name],
-                        "Resource": ["*"] # TODO: Tighten
+                        "Resource": ["*"]  # TODO: Tighten
                     }
                 ]
             }
@@ -66,5 +67,3 @@ if __name__ == '__main__':
     else:
         print('USAGE: %s AWS_USERNAME' % sys.argv[0])
         print('Grants to the specified user the privs necessary to run AWS-ECS tests')
-        import doctest
-        doctest.testmod()
