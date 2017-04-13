@@ -112,11 +112,10 @@ class EcsTests(unittest.TestCase):
             logging.info("%s: status=%s", t, task['lastStatus'])
             t += 1
 
-        logging.debug(pprint.pformat(task))
+        logging.info(pprint.pformat(task))
         # If the container stops, networkBindings may not be available.
         bindings = task['containers'][0].get('networkBindings')
-        if bindings:
-            return bindings[0]['hostPort']
+        return bindings[0]['hostPort']
 
     def test_create_cluster(self):
         logging.info('create_cluster')
@@ -205,19 +204,27 @@ class EcsTests(unittest.TestCase):
         response = requests.get(url_1)
         self.assertIn('Welcome to nginx', response.text)
 
+        no_such_file = 'foobar'
+        response = requests.get(url_1 + no_such_file)
+        self.assertIn('404 Not Found', response.text)
+
         response = self.logs_client.describe_log_streams(logGroupName=self.log_group_name)
         stream_descriptions = response['logStreams']
         stream_names = [description['logStreamName'] for description in stream_descriptions]
         self.assertEqual(len(stream_names), 1) # Not confident this is universally true, but true right now?
 
-        import pdb; pdb.set_trace()
-
-        response = self.logs_client.get_log_events(
-            logGroupName=self.log_group_name,
-            logStreamName=stream_names[0])
-        events = response['events']
-        self.assertNotEquals(len(events), 0)
-        self.assertEqual(events[0]['message'], 'Hello from Docker!')
+        log_events = []
+        t = 0
+        while len(log_events) != 2:
+            logging.info('%s: Did not yet find expected events in logs', t)
+            t += 1
+            time.sleep(1)
+            response = self.logs_client.get_log_events(
+                logGroupName=self.log_group_name,
+                logStreamName=stream_names[0])
+            log_events = response['events']
+        self.assertIn('"GET / HTTP/1.1" 200', log_events[0]['message'])
+        self.assertIn('"GET /%s HTTP/1.1" 404' % no_such_file, log_events[1]['message'])
 
         logging.info('run_task, 2nd time (fast)')
         port_2 = self.run_task(task_name)
@@ -225,10 +232,9 @@ class EcsTests(unittest.TestCase):
         url_2 = 'http://%s:%s/' % (ip, port_2)
         logging.info('url: %s', url_2)
 
-        # TODO: Make it a webserver again
-        # self.assertNotEquals(port_1, port_2)
-        # response = requests.get(url_2)
-        # self.assertIn('Index of /', response.text)
+        self.assertNotEquals(port_1, port_2)
+        response = requests.get(url_2)
+        self.assertIn('Welcome to nginx', response.text)
 
         # TODO: deregister_task requires revision
         # response = self.ecs_client.deregister_task_definition()

@@ -42,6 +42,10 @@ class PolicySetter():
                 ['ecs:*'],  # TODO: Tighten
             'CreateAndDeleteLogGroup':
                 ['logs:CreateLogGroup', 'logs:DeleteLogGroup'],
+            'DescribeLogStreams':
+                ['logs:DescribeLogStreams'],
+            'GetLogEvents':
+                ['logs:GetLogEvents']
             # 'LogsAllowEverything':
             #     ['logs:*'], # TODO: Tighten
         }
