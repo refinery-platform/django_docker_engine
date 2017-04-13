@@ -24,6 +24,7 @@ class PolicySetter():
             self.__user.attach_policy(PolicyArn=arn)
 
     def __set_inline_policies(self):
+        # Alternatively, could create new managed policies, either for each of these, or all of them.
         actions = {
             'CreateAndDeleteKeyPair':
                 ["ec2:CreateKeyPair", "ec2:DeleteKeyPair"],
@@ -38,10 +39,8 @@ class PolicySetter():
         }
         for name in actions:
             full_doc = {
-                "Version": "2012-10-17",
                 "Statement": [
                     {
-                        # "Sid": "Stmt1491412963000",
                         "Effect": "Allow",
                         "Action": actions[name],
                         "Resource": ["*"] # TODO: Tighten
