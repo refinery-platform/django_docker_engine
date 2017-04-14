@@ -46,7 +46,7 @@ class EcsManager(BaseManager):
             self._create_instance()
 
     def _create_key_pair(self, key_pair_name):
-        response = self.ec2_client.create_key_pair(KeyName=key_pair_name)
+        response = self._ec2_client.create_key_pair(KeyName=key_pair_name)
         assert(response['KeyName'] == key_pair_name)
         return key_pair_name
 
@@ -56,7 +56,7 @@ class EcsManager(BaseManager):
         return cluster_name
 
     def _create_security_group(self, security_group_name):
-        response = self.ec2_client.create_security_group(
+        response = self._ec2_client.create_security_group(
             GroupName=security_group_name,
             Description='Security group for tests'
         )
