@@ -1,13 +1,17 @@
-import docker
 import json
 import os
 import re
 from datetime import datetime
 from time import time
+from container_managers import local as local_manager
 
 
 class DockerClientWrapper():
-    ROOT_LABEL = 'io.github.refinery-project.django_docker_engine'
+    def __init__(self,
+                 manager=local_manager.LocalManager(),
+                 root_label='io.github.refinery-project.django_docker_engine'):
+        self.__containers_manager = manager
+        self.root_label = root_label
 
     def run(self, image_name, cmd=None, **kwargs):
         """
@@ -18,26 +22,24 @@ class DockerClientWrapper():
             # Without tag the SDK pulls every version; not what I expected.
             # https://github.com/docker/docker-py/issues/1510
         labels = kwargs.get('labels') or {}
-        labels.update({DockerClientWrapper.ROOT_LABEL: 'true'})
+        labels.update({self.root_label: 'true'})
         kwargs['labels'] = labels
-        client = docker.from_env()
-        return client.containers.run(image_name, cmd, **kwargs)
+        return self.__containers_manager.run(image_name, cmd, **kwargs)
 
-    def lookup_container_port(self, container_name):
+    def lookup_container_url(self, container_name):
         """
-        Given the name of a container, returns the host port mapped to port 80.
+        Given the name of a container, returns the url mapped to port 80.
         """
-        client = docker.from_env()
-        container = client.containers.get(container_name)
-        return container.\
-            attrs['NetworkSettings']['Ports']['80/tcp'][0]['HostPort']
+        return self.__containers_manager.get_url(container_name)
+
+    def list(self, filters={}):
+        return self.__containers_manager.list(filters)
 
     def purge_by_label(self, label):
         """
         Removes all containers matching the label.
         """
-        client = docker.from_env()
-        for container in client.containers.list(filters={'label': label}):
+        for container in self.list({'label': label}):
             # TODO: Confirm that it belongs to me
             container.remove(force=True)
 
@@ -45,8 +47,7 @@ class DockerClientWrapper():
         """
         Removes containers which do not have recent log entries.
         """
-        client = docker.from_env()
-        for container in client.containers.list():
+        for container in self.list():
             # TODO: Confirm that it belongs to me
             if not self.__is_active(container, seconds):
                 container.remove(force=True)
@@ -113,4 +114,4 @@ class DockerContainerSpec():
                    labels=self.labels)
         # Metadata on the returned container object (like the assigned port)
         # is not complete, so we do a redundant lookup.
-        return client.lookup_container_port(self.container_name)
+        return client.lookup_container_url(self.container_name)

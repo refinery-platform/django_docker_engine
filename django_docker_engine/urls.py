@@ -15,9 +15,7 @@ urlpatterns = [
     url(r'^(?P<container_name>[^/]*)/(?P<url>.*)$',
         lambda request, container_name, url:
         HttpProxy.as_view(
-            base_url='http://localhost:{}/'.format(
-                DockerClientWrapper().lookup_container_port(container_name)
-            )
+            base_url=DockerClientWrapper().lookup_container_url(container_name)
         )(request, url=url)
         )
 ]

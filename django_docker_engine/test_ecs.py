@@ -12,27 +12,32 @@ logging.basicConfig(level=logging.INFO)
 
 class EcsTests(unittest.TestCase):
     """
-    This only exercises the AWS ECS SDK: It does not test any of our own code.
-    May go away eventually.
+    This only exercises the AWS ECS SDK:
+    It does not test any of our own code!
+    Probably not useful once what I've learned here has been integrated.
     """
     def setUp(self):
         logging.info('setUp')
         self.ecs_client = boto3.client('ecs')
         self.ec2_client = boto3.client('ec2')
+        self.logs_client = boto3.client('logs')
         self.ec2_resource = boto3.resource('ec2')
 
         timestamp = re.sub(r'\D', '_', str(datetime.datetime.now()))
         self.key_pair_name = 'test_django_docker_{}'.format(timestamp)
         self.cluster_name = 'test_cluster_{}'.format(timestamp)
+        self.log_group_name = 'test_log_group_{}'.format(timestamp)
         self.security_group_name = 'test_security_group_{}'.format(timestamp)
         self.security_group_id = self.create_security_group()
-
         self.instance = None
+
+        self.logs_client.create_log_group(logGroupName=self.log_group_name)
 
     def tearDown(self):
         logging.info('tearDown')
         self.ec2_client.delete_key_pair(KeyName=self.key_pair_name)
         self.instance.terminate()
+        self.logs_client.delete_log_group(logGroupName=self.log_group_name)
         # TODO: self.ec2_client.delete_security_group(GroupName=self.security_group_name)
         # self.ecs_client.delete_cluster(cluster=self.cluster_name)
         # Cleaning up is good, but I get this error:
@@ -97,7 +102,7 @@ class EcsTests(unittest.TestCase):
         logging.info('describe_tasks, until it is running')
 
         t = 0
-        while task['lastStatus'] != desired_status:
+        while task['lastStatus'] not in [desired_status, 'STOPPED']:
             time.sleep(1)
             response = self.ecs_client.describe_tasks(
                 cluster=self.cluster_name,
@@ -107,8 +112,10 @@ class EcsTests(unittest.TestCase):
             logging.info("%s: status=%s", t, task['lastStatus'])
             t += 1
 
-        logging.debug(pprint.pformat(task))
-        return task['containers'][0]['networkBindings'][0]['hostPort']
+        logging.info(pprint.pformat(task))
+        # If the container stops, networkBindings may not be available.
+        bindings = task['containers'][0].get('networkBindings')
+        return bindings[0]['hostPort']
 
     def test_create_cluster(self):
         logging.info('create_cluster')
@@ -123,10 +130,15 @@ class EcsTests(unittest.TestCase):
             family=task_name,
             containerDefinitions=[{
                 'name': 'my_container',
-
-                # This is the smallest httpd I could find, but not
-                # proportionately faster: bottleneck may not be download.
-                'image': 'fnichol/uhttpd:latest',
+                'logConfiguration': {
+                    'logDriver': 'awslogs',
+                    'options': {
+                        'awslogs-group': self.log_group_name,
+                        'awslogs-region': 'us-east-1',
+                        'awslogs-stream-prefix': 'test_prefix'
+                    }
+                },
+                'image': 'nginx:latest',
                 'portMappings': [
                     {
                         'containerPort': 80,
@@ -181,7 +193,8 @@ class EcsTests(unittest.TestCase):
         logging.info('run_task, 1st time (slow)')
         port_1 = self.run_task(task_name)
 
-        # Not sure when exactly it get public IP, but not immediately available.
+        # Not sure when exactly it gets a public IP,
+        # but it is not immediately available above.
         self.instance.reload()
         ip = self.instance.public_ip_address
 
@@ -189,18 +202,43 @@ class EcsTests(unittest.TestCase):
         logging.info('url: %s', url_1)
 
         response = requests.get(url_1)
-        self.assertIn('Index of /', response.text)
+        self.assertIn('Welcome to nginx', response.text)
+
+        no_such_file = 'foobar'
+        response = requests.get(url_1 + no_such_file)
+        self.assertIn('404 Not Found', response.text)
+
+        response = self.logs_client.describe_log_streams(logGroupName=self.log_group_name)
+        stream_descriptions = response['logStreams']
+        stream_names = [
+            description['logStreamName'] for description in stream_descriptions
+        ]
+
+        # Not confident this is universally true, but true right now?
+        self.assertEqual(len(stream_names), 1)
+
+        log_events = []
+        t = 0
+        while len(log_events) < 2:
+            logging.info('%s: logs are empty: %s', t, log_events)
+            t += 1
+            time.sleep(1)
+            response = self.logs_client.get_log_events(
+                logGroupName=self.log_group_name,
+                logStreamName=stream_names[0])
+            log_events = response['events']
+        self.assertIn('"GET / HTTP/1.1" 200', log_events[0]['message'])
+        self.assertIn('"GET /%s HTTP/1.1" 404' % no_such_file, log_events[1]['message'])
 
         logging.info('run_task, 2nd time (fast)')
         port_2 = self.run_task(task_name)
 
-        self.assertNotEquals(port_1, port_2)
-
         url_2 = 'http://%s:%s/' % (ip, port_2)
         logging.info('url: %s', url_2)
 
+        self.assertNotEquals(port_1, port_2)
         response = requests.get(url_2)
-        self.assertIn('Index of /', response.text)
+        self.assertIn('Welcome to nginx', response.text)
 
         # TODO: deregister_task requires revision
         # response = self.ecs_client.deregister_task_definition()
