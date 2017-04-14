@@ -121,6 +121,7 @@ class EcsManager(BaseManager):
             # self.instance.wait_until_running()
             #
             # This may take more than a minute.
+            logging.basicConfig(level=logging.DEBUG)
             try:
                 response = self._ecs_client.run_task(
                     cluster=self._cluster_name,
@@ -162,23 +163,23 @@ class EcsManager(BaseManager):
         # ECS anticipates multiple containers coming together to constitute
         # a task, but for now we just have one container per task.
         # For now, using the same names for both...
-        unversioned_image_name = re.sub(r':.*', '', image_name)
+        task_name = re.sub(r':.*', '', image_name)
 
         # Defaults to listing only the active tasks
         response = self._ecs_client.list_task_definitions(
-            familyPrefix=unversioned_image_name)
+            familyPrefix=task_name)
         task_definition_arns = response['taskDefinitionArns']
         count = len(task_definition_arns)
 
         if count > 1:
             raise StandardError(
                 'Expected a single task definition for %s; instead we have %s'
-                % (unversioned_image_name, task_definition_arns))
+                % (task_name, task_definition_arns))
         elif count < 1:
             response = self._ecs_client.register_task_definition(
-                family=unversioned_image_name,
+                family=task_name,
                 containerDefinitions=[{
-                    'name': unversioned_image_name,
+                    'name': task_name,
                     'image': image_name,
                     'portMappings': [
                         {
@@ -197,7 +198,7 @@ class EcsManager(BaseManager):
             assert(response['taskDefinition']['status'] == 'ACTIVE')
 
         instance_resource = boto3.resource('ec2').Instance(self._instance_id)
-        self._run_task(image_name, instance_resource)
+        self._run_task(task_name, instance_resource)
 
         raise NotImplementedError('TODO: get CloudWatch logs')
 
