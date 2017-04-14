@@ -126,7 +126,14 @@ class EcsManager(BaseManager):
                     cluster=self._cluster_name,
                     taskDefinition=task_name
                 )
-            except Exception as e:
+            except StandardError as e:
+                expected = (
+                    'An error occurred (InvalidParameterException) '
+                    'when calling the RunTask operation: '
+                    'No Container Instances were found in your cluster.'
+                )
+                if expected not in e.message:
+                    raise e
                 logging.debug("%s: Expect 'InvalidParameterException': %s", t, e)
                 time.sleep(1)
                 t += 1
@@ -192,18 +199,18 @@ class EcsManager(BaseManager):
         instance_resource = boto3.resource('ec2').Instance(self._instance_id)
         self._run_task(image_name, instance_resource)
 
-        # TODO: At this point, local.py returns output from the container,
-        # if any, but this is non-trivial under AWS.
-        # See: https://github.com/aws/amazon-ecs-agent/issues/9#issuecomment-195637638
-        # For now, just return a placeholder
-
-        return 'TODO: Container output placeholder'
+        raise NotImplementedError('TODO: get CloudWatch logs')
 
     def get_url(self, container_name):
         raise NotImplementedError()
 
     def list(self, filters={}):
-        raise NotImplementedError()
+        response = self._ecs_client.list_container_instances()
+        if response.get('nextToken'):
+            raise NotImplementedError('TODO: Iterate to collect all instances')
+
+        # TODO: If we do anything with these, we need to return EcsContainers instead.
+        return response['containerInstanceArns']
 
 
 class EcsContainer(BaseContainer):
