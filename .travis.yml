@@ -19,19 +19,19 @@ script:
 - end defaults
 
 # Test a range of django versions, but skip the much slower ECS tests:
-#- |-
-#  for VERSION in '1.7.1' '1.8.17' '1.9.12' '1.10.6'; do
-#    start django-$VERSION
-#    pip install django==$VERSION
-#    python manage.py test --verbosity=2 django_docker_engine.test_docker_utils
-#    end django-$VERSION
-#  done
-#
-## Test again, but the backend is now AWS:
-#- start django-with-ecs
-#- export TEST_ON_AWS_ECS=true
-#- python manage.py test --verbosity=2 django_docker_engine.test_docker_utils
-#- end django-with-ecs
+- |-
+  for VERSION in '1.7.1' '1.8.17' '1.9.12' '1.10.6'; do
+    start django-$VERSION
+    pip install django==$VERSION
+    python manage.py test --verbosity=2 django_docker_engine.test_docker_utils
+    end django-$VERSION
+  done
+
+# Test again, but the backend is now AWS:
+- start django-with-ecs
+- export TEST_ON_AWS_ECS=true
+- python manage.py test --verbosity=2 django_docker_engine.test_docker_utils
+- end django-with-ecs
 
 # Check packaging and formatting:
 - start egg
