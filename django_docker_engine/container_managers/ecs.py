@@ -8,6 +8,8 @@ from base import BaseManager, BaseContainer
 
 class EcsManager(BaseManager):
 
+    # us-east-1: amzn-ami-2016.09.g-amazon-ecs-optimized
+    DEFAULT_AMI_ID = 'ami-275ffe31'
     DEFAULT_ROLE_ARN = \
         'arn:aws:iam::100836861126:instance-profile/ecsInstanceRole'
 
@@ -19,9 +21,7 @@ class EcsManager(BaseManager):
             security_group_id=None,
             instance_id=None,
             instance_profile_arn=DEFAULT_ROLE_ARN,
-
-            # us-east-1: amzn-ami-2016.09.g-amazon-ecs-optimized
-            ami_id='ami-275ffe31'):
+            ami_id=DEFAULT_AMI_ID):
         """
         Specify a key pair, cluster, and security group to use,
         or new ones will be created with names based on the given prefix.
