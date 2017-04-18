@@ -285,25 +285,20 @@ class EcsManager(BaseManager):
 
         # Read the logs:
         logs_client = boto3.client('logs')
-        logs_client.describe_log_streams(logGroupName=self._log_group_name)
-        # stream_descriptions = response['logStreams']
-        # stream_names = [
-        #     description['logStreamName'] for description in stream_descriptions
-        #     ]
-        #
-        # # Not confident this is universally true, but true right now?
-        # self.assertEqual(len(stream_names), 1)
-        #
-        # log_events = []
-        # t = 0
-        # while len(log_events) < 2:
-        #     logging.info('%s: logs are empty: %s', t, log_events)
-        #     t += 1
-        #     time.sleep(1)
-        #     response = self.logs_client.get_log_events(
-        #         logGroupName=self.log_group_name,
-        #         logStreamName=stream_names[0])
-        raise NotImplementedError('TODO: get CloudWatch logs')
+        response = logs_client.describe_log_streams(logGroupName=self._log_group_name)
+        stream_descriptions = response['logStreams']
+
+        # Not confident this is universally true...
+        assert len(stream_descriptions) == 1, \
+            'Expected exactly one stream, not {}'.format(stream_descriptions)
+        stream_names = [
+            description['logStreamName'] for description in stream_descriptions
+        ]
+        response = boto3.client('logs').get_log_events(
+                logGroupName=self._log_group_name,
+                logStreamName=stream_names[0])
+        log_events = response['events']
+        return log_events
 
     def get_url(self, container_name):
         raise NotImplementedError()
