@@ -30,7 +30,8 @@ class EcsManager(BaseManager):
                  key_pair_name=None,
                  cluster_name=None,
                  security_group_id=None,
-                 instance_id=None):
+                 instance_id=None,
+                 log_group_name=None):
         """
         Specify a key pair, cluster, and security group to use,
         or new ones will be created with names based on the given prefix.
@@ -39,20 +40,21 @@ class EcsManager(BaseManager):
         self._ec2_client = boto3.client('ec2')
         self._ec2_resource = boto3.resource('ec2')
 
-        assert (instance_id and security_group_id and cluster_name and key_pair_name) \
-               or not instance_id,\
-            'If instance_id is given, all IDs must be given: %s' % {
-                'security_group_id': security_group_id,
-                'cluster_name': cluster_name,
-                'key_pair_name': key_pair_name
-            }
-
-        if instance_id:
+        if (instance_id and
+                security_group_id and
+                cluster_name and
+                key_pair_name and
+                log_group_name):
             self._instance_id = instance_id
             self._cluster_name = cluster_name
             self._security_group_id = security_group_id
             self._key_pair_name = key_pair_name
-        else:
+            self._log_group_name = log_group_name
+        elif not (instance_id or
+                      security_group_id or
+                      cluster_name or
+                      key_pair_name or
+                      log_group_name):
             # TODO: Will we ever use this branch?
             aws_ids = EcsManager.create_instance(
                 key_pair_name=key_pair_name,
@@ -63,6 +65,16 @@ class EcsManager(BaseManager):
             self._cluster_name = aws_ids.cluster_name
             self._security_group_id = aws_ids.security_group_id
             self._instance_id = aws_ids.instance_id
+            self._log_group_name = aws_ids.log_group_name
+        else:
+            raise RuntimeError('All IDs must be given, or none; Instead we have {}'.format(
+                {
+                    'security_group_id': security_group_id,
+                    'cluster_name': cluster_name,
+                    'key_pair_name': key_pair_name,
+                    'log_group_name': log_group_name
+                }
+            ))
 
     @staticmethod
     def _create_key_pair(key_pair_name):
@@ -108,10 +120,16 @@ class EcsManager(BaseManager):
         return security_group_id
 
     @staticmethod
+    def _create_log_group(log_group_name):
+        boto3.client('logs').create_log_group(logGroupName=log_group_name)
+        return log_group_name
+
+    @staticmethod
     def create_instance(
             key_pair_name=None,
             security_group_id=None,
             cluster_name=None,
+            log_group_name=None,
             ami_id=DEFAULT_AMI_ID,
             instance_profile_arn=DEFAULT_ROLE_ARN,
             instance_type=DEFAULT_INSTANCE_TYPE,
@@ -122,6 +140,8 @@ class EcsManager(BaseManager):
                        EcsManager._create_cluster(EcsManager.DEFAULT)
         security_group_id = security_group_id or \
                             EcsManager._create_security_group(EcsManager.DEFAULT)
+        log_group_name = log_group_name or \
+                         EcsManager._create_log_group(EcsManager.DEFAULT)
         user_data = '\n'.join([
             '#!/bin/bash',
             'echo ECS_CLUSTER={} >> /etc/ecs/ecs.config'.format(
@@ -161,11 +181,13 @@ class EcsManager(BaseManager):
                             ['key_pair_name',
                              'security_group_id',
                              'cluster_name',
-                             'instance_id'])(
+                             'instance_id',
+                             'log_group_name'])(
             key_pair_name=key_pair_name,
             security_group_id=security_group_id,
             cluster_name=cluster_name,
-            instance_id=instance_id
+            instance_id=instance_id,
+            log_group_name=log_group_name
         )
 
     def _run_task(self, task_name, instance_resource):
@@ -214,6 +236,7 @@ class EcsManager(BaseManager):
                         .format(t, task_name, desired_status, task['lastStatus']))
         return task['containers'][0]['networkBindings'][0]['hostPort']
 
+
     def run(self, image_name, cmd, **kwargs):
         """
         Start a specified Docker image, and returns the output.
@@ -260,6 +283,26 @@ class EcsManager(BaseManager):
         instance_resource = boto3.resource('ec2').Instance(self._instance_id)
         self._run_task(task_name, instance_resource)
 
+        # Read the logs:
+        logs_client = boto3.client('logs')
+        logs_client.describe_log_streams(logGroupName=self._log_group_name)
+        # stream_descriptions = response['logStreams']
+        # stream_names = [
+        #     description['logStreamName'] for description in stream_descriptions
+        #     ]
+        #
+        # # Not confident this is universally true, but true right now?
+        # self.assertEqual(len(stream_names), 1)
+        #
+        # log_events = []
+        # t = 0
+        # while len(log_events) < 2:
+        #     logging.info('%s: logs are empty: %s', t, log_events)
+        #     t += 1
+        #     time.sleep(1)
+        #     response = self.logs_client.get_log_events(
+        #         logGroupName=self.log_group_name,
+        #         logStreamName=stream_names[0])
         raise NotImplementedError('TODO: get CloudWatch logs')
 
     def get_url(self, container_name):
@@ -299,3 +342,4 @@ if __name__ == '__main__':
         print('export AWS_KEY_PAIR_NAME={}'.format(aws_ids.key_pair_name))
         print('export AWS_SECURITY_GROUP_ID={}'.format(aws_ids.security_group_id))
         print('export AWS_CLUSTER_NAME={}'.format(aws_ids.cluster_name))
+        print('export AWS_LOG_GROUP_NAME={}'.format(aws_ids.log_group_name))

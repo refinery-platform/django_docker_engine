@@ -29,7 +29,8 @@ class DockerTests(unittest.TestCase):
                 key_pair_name=os.environ.get('AWS_KEY_PAIR_NAME'),
                 cluster_name=os.environ.get('AWS_CLUSTER_NAME'),
                 security_group_id=os.environ.get('AWS_SECURITY_GROUP_ID'),
-                instance_id=os.environ.get('AWS_INSTANCE_ID')
+                instance_id=os.environ.get('AWS_INSTANCE_ID'),
+                log_group_name=os.environ.get('AWS_LOG_GROUP_NAME')
             )
         else:
             self.manager = local_manager.LocalManager()
