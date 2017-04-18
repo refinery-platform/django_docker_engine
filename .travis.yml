@@ -31,6 +31,7 @@ script:
 - start django-with-ecs
 - $(python django_docker_engine/container_managers/ecs.py) # envvars
 - python manage.py test --verbosity=2 django_docker_engine.test_docker_utils
+- python django_docker_engine/container_managers/ecs.py --destroy-ec2 $AWS_INSTANCE_ID
 - end django-with-ecs
 
 # Check packaging and formatting:

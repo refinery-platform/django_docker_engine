@@ -72,7 +72,11 @@ class DockerContainerSpec():
     def __init__(self, image_name, container_name,
                  input={},
                  container_input_path='/tmp/input.json',
-                 labels={}):
+                 labels={},
+                 manager=None):
+        if not manager:
+            raise RuntimeError('"manager" is required')
+        self.manager = manager
         self.image_name = image_name
         self.container_name = container_name
         self.container_input_path = container_input_path
@@ -105,7 +109,7 @@ class DockerContainerSpec():
                 'bind': self.container_input_path,
                 'mode': 'ro'}}
         ports_spec = {'80/tcp': None}
-        client = DockerClientWrapper()
+        client = DockerClientWrapper(manager=self.manager)
         client.run(self.image_name,
                    name=self.container_name,
                    detach=True,

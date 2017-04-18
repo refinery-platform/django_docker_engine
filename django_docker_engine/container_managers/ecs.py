@@ -5,7 +5,7 @@ import re
 import time
 from base import BaseManager, BaseContainer
 from collections import namedtuple
-
+from argparse import ArgumentParser
 
 class EcsManager(BaseManager):
 
@@ -17,6 +17,14 @@ class EcsManager(BaseManager):
     TIMESTAMP = re.sub(r'\D', '_', str(datetime.datetime.now()))
     PREFIX = 'django_docker_'
     DEFAULT = PREFIX + TIMESTAMP
+    TIMEOUT = 60
+
+    DEFAULT_TAGS = {
+        'department': 'dbmi',
+        'environment': 'test',
+        'project': 'django_docker_engine',
+        'product': 'refinery'
+    }
 
     def __init__(self,
                  key_pair_name=None,
@@ -106,7 +114,8 @@ class EcsManager(BaseManager):
             cluster_name=None,
             ami_id=DEFAULT_AMI_ID,
             instance_profile_arn=DEFAULT_ROLE_ARN,
-            instance_type=DEFAULT_INSTANCE_TYPE):
+            instance_type=DEFAULT_INSTANCE_TYPE,
+            tags=DEFAULT_TAGS):
         key_pair_name = key_pair_name or \
                         EcsManager._create_key_pair(EcsManager.DEFAULT)
         cluster_name = cluster_name or \
@@ -118,6 +127,10 @@ class EcsManager(BaseManager):
             'echo ECS_CLUSTER={} >> /etc/ecs/ecs.config'.format(
                 cluster_name
             )])
+        expanded_tags = [{
+                            'Key': key,
+                            'Value': tags[key]
+                        } for key in tags]
         response = boto3.client('ec2').run_instances(
             ImageId=ami_id,
             MinCount=1,
@@ -134,7 +147,13 @@ class EcsManager(BaseManager):
             ],
             IamInstanceProfile={
                 'Arn': instance_profile_arn
-            }
+            },
+            TagSpecifications=[
+                {
+                    'ResourceType': 'instance',
+                    'Tags': expanded_tags
+                }
+            ]
         )
         assert(response['Instances'][0]['State']['Name'] == 'pending')
         instance_id = response['Instances'][0]['InstanceId']
@@ -158,7 +177,7 @@ class EcsManager(BaseManager):
             # self.instance.wait_until_running()
             #
             # This may take more than a minute.
-            logging.basicConfig(level=logging.DEBUG)
+            # logging.basicConfig(level=logging.DEBUG)
             try:
                 response = self._ecs_client.run_task(
                     cluster=self._cluster_name,
@@ -189,6 +208,10 @@ class EcsManager(BaseManager):
             )
             task = response['tasks'][0]
             t += 1
+            if t > self.TIMEOUT:
+                raise RuntimeError(
+                    'After {}s, still waiting for task "{}" to enter "{}" from "{}"'
+                        .format(t, task_name, desired_status, task['lastStatus']))
         return task['containers'][0]['networkBindings'][0]['hostPort']
 
     def run(self, image_name, cmd, **kwargs):
@@ -261,9 +284,18 @@ class EcsContainer(BaseContainer):
 
 
 if __name__ == '__main__':
-    aws_ids = EcsManager.create_instance()
-    # These variables are looked for during test runs.
-    print('export AWS_INSTANCE_ID=%s' % aws_ids.instance_id)
-    print('export AWS_KEY_PAIR_NAME=%s' % aws_ids.key_pair_name)
-    print('export AWS_SECURITY_GROUP_ID=%s' % aws_ids.security_group_id)
-    print('export AWS_CLUSTER_NAME=%s' % aws_ids.cluster_name)
+    parser = ArgumentParser(
+        description='Create (or destroy) all necessary AWS resources. ' +
+                    'If creating, output the new IDs.')
+    parser.add_argument('--destroy-ec2', dest='ec2_id')
+    parsed = parser.parse_args()
+    if parsed.ec2_id:
+        # TODO: cleanup
+        print('TODO: delete {}'.format(parsed.ec2_id))
+    else:
+        aws_ids = EcsManager.create_instance()
+        # These variables are looked for during test runs.
+        print('export AWS_INSTANCE_ID={}'.format(aws_ids.instance_id))
+        print('export AWS_KEY_PAIR_NAME={}'.format(aws_ids.key_pair_name))
+        print('export AWS_SECURITY_GROUP_ID={}'.format(aws_ids.security_group_id))
+        print('export AWS_CLUSTER_NAME={}'.format(aws_ids.cluster_name))
