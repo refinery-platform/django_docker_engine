@@ -35,13 +35,31 @@ class EcsTests(unittest.TestCase):
 
     def tearDown(self):
         logging.info('tearDown')
+        instance_arns = self.ecs_client.list_container_instances(
+            cluster=self.cluster_name
+        )['containerInstanceArns']
+        for instance_arn in instance_arns:
+            self.ecs_client.deregister_container_instance(
+                cluster=self.cluster_name,
+                containerInstance=instance_arn, # NOT just the the instance ID
+                force=True)
         self.ec2_client.delete_key_pair(KeyName=self.key_pair_name)
         self.instance.terminate()
         self.logs_client.delete_log_group(logGroupName=self.log_group_name)
-        # TODO: self.ec2_client.delete_security_group(GroupName=self.security_group_name)
-        # self.ecs_client.delete_cluster(cluster=self.cluster_name)
-        # Cleaning up is good, but I get this error:
-        # The Cluster cannot be deleted while Container Instances are active or draining.
+        self.ec2_client.delete_security_group(GroupName=self.security_group_name)
+
+        # TODO: deregister_task requires revision
+        # response = self.ecs_client.deregister_task_definition()
+
+        i = 0
+        while True:
+            try:
+                i += 1
+                time.sleep(1)
+                self.ecs_client.delete_cluster(cluster=self.cluster_name)
+                break
+            except StandardError as e:
+                logging.info('{}: {}'.format(i, e.message))
 
     def create_security_group(self):
         response = self.ec2_client.create_security_group(
@@ -239,6 +257,3 @@ class EcsTests(unittest.TestCase):
         self.assertNotEquals(port_1, port_2)
         response = requests.get(url_2)
         self.assertIn('Welcome to nginx', response.text)
-
-        # TODO: deregister_task requires revision
-        # response = self.ecs_client.deregister_task_definition()

@@ -294,7 +294,7 @@ class EcsManager(BaseManager):
         stream_names = [
             description['logStreamName'] for description in stream_descriptions
         ]
-        response = boto3.client('logs').get_log_events(
+        response = logs_client.get_log_events(
                 logGroupName=self._log_group_name,
                 logStreamName=stream_names[0])
         log_events = response['events']
