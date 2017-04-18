@@ -32,7 +32,12 @@ class EcsManager(BaseManager):
         self._ec2_resource = boto3.resource('ec2')
 
         assert (instance_id and security_group_id and cluster_name and key_pair_name) \
-               or not instance_id, 'If instance_id is given, all IDs must be given'
+               or not instance_id,\
+            'If instance_id is given, all IDs must be given: %s' % {
+                'security_group_id': security_group_id,
+                'cluster_name': cluster_name,
+                'key_pair_name': key_pair_name
+            }
 
         if instance_id:
             self._instance_id = instance_id

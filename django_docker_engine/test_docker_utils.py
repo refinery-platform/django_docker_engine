@@ -26,7 +26,7 @@ class DockerTests(unittest.TestCase):
         os.mkdir(self.tmp)
         if os.environ.get('AWS_INSTANCE_ID'):
             manager = ecs_manager.EcsManager(
-                key_pair_name=os.environ.get('KEY_PAIR_NAME'),
+                key_pair_name=os.environ.get('AWS_KEY_PAIR_NAME'),
                 cluster_name=os.environ.get('AWS_CLUSTER_NAME'),
                 security_group_id=os.environ.get('AWS_SECURITY_GROUP_ID'),
                 instance_id=os.environ.get('AWS_INSTANCE_ID')
