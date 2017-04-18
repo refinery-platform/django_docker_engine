@@ -24,8 +24,13 @@ class DockerTests(unittest.TestCase):
             base,
             re.sub(r'\W', '_', str(datetime.datetime.now())))
         os.mkdir(self.tmp)
-        if os.environ.get('TEST_ON_AWS_ECS'):
-            manager = ecs_manager.EcsManager()
+        if os.environ.get('AWS_INSTANCE_ID'):
+            manager = ecs_manager.EcsManager(
+                key_pair_name=os.environ.get('KEY_PAIR_NAME'),
+                cluster_name=os.environ.get('AWS_CLUSTER_NAME'),
+                security_group_id=os.environ.get('AWS_SECURITY_GROUP_ID'),
+                instance_id=os.environ.get('AWS_INSTANCE_ID')
+            )
         else:
             manager = local_manager.LocalManager()
         self.client = DockerClientWrapper(manager=manager)

@@ -4,24 +4,25 @@ import datetime
 import re
 import time
 from base import BaseManager, BaseContainer
+from collections import namedtuple
 
 
 class EcsManager(BaseManager):
 
+    DEFAULT_INSTANCE_TYPE = 't2.nano'
     # us-east-1: amzn-ami-2016.09.g-amazon-ecs-optimized
     DEFAULT_AMI_ID = 'ami-275ffe31'
     DEFAULT_ROLE_ARN = \
         'arn:aws:iam::100836861126:instance-profile/ecsInstanceRole'
+    TIMESTAMP = re.sub(r'\D', '_', str(datetime.datetime.now()))
+    PREFIX = 'django_docker_'
+    DEFAULT = PREFIX + TIMESTAMP
 
-    def __init__(
-            self,
-            prefix='django_docker_',
-            key_pair_name=None,
-            cluster_name=None,
-            security_group_id=None,
-            instance_id=None,
-            instance_profile_arn=DEFAULT_ROLE_ARN,
-            ami_id=DEFAULT_AMI_ID):
+    def __init__(self,
+                 key_pair_name=None,
+                 cluster_name=None,
+                 security_group_id=None,
+                 instance_id=None):
         """
         Specify a key pair, cluster, and security group to use,
         or new ones will be created with names based on the given prefix.
@@ -30,38 +31,46 @@ class EcsManager(BaseManager):
         self._ec2_client = boto3.client('ec2')
         self._ec2_resource = boto3.resource('ec2')
 
-        self._instance_profile_arn = instance_profile_arn
-        self._ami_id = ami_id
+        assert (instance_id and security_group_id and cluster_name and key_pair_name) \
+               or not instance_id, 'If instance_id is given, all IDs must be given'
 
-        timestamp = re.sub(r'\D', '_', str(datetime.datetime.now()))
-        default = prefix + timestamp
+        if instance_id:
+            self._instance_id = instance_id
+            self._cluster_name = cluster_name
+            self._security_group_id = security_group_id
+            self._key_pair_name = key_pair_name
+        else:
+            # TODO: Will we ever use this branch?
+            aws_ids = EcsManager.create_instance(
+                key_pair_name=key_pair_name,
+                cluster_name=cluster_name,
+                security_group_id=security_group_id
+            )
+            self._key_pair_name = aws_ids.key_pair_name
+            self._cluster_name = aws_ids.cluster_name
+            self._security_group_id = aws_ids.security_group_id
+            self._instance_id = aws_ids.instance_id
 
-        self._key_pair_name = key_pair_name or \
-            self._create_key_pair(default)
-        self._cluster_name = cluster_name or \
-            self._create_cluster(default)
-        self._security_group_id = security_group_id or \
-            self._create_security_group(default)
-        self._instance_id = instance_id or \
-            self._create_instance()
-
-    def _create_key_pair(self, key_pair_name):
-        response = self._ec2_client.create_key_pair(KeyName=key_pair_name)
+    @staticmethod
+    def _create_key_pair(key_pair_name):
+        response = boto3.client('ec2').create_key_pair(KeyName=key_pair_name)
         assert(response['KeyName'] == key_pair_name)
         return key_pair_name
 
-    def _create_cluster(self, cluster_name):
-        response = self._ecs_client.create_cluster(clusterName=cluster_name)
+    @staticmethod
+    def _create_cluster(cluster_name):
+        response = boto3.client('ecs').create_cluster(clusterName=cluster_name)
         assert(response['cluster']['status'] == 'ACTIVE')
         return cluster_name
 
-    def _create_security_group(self, security_group_name):
-        response = self._ec2_client.create_security_group(
+    @staticmethod
+    def _create_security_group(security_group_name):
+        response = boto3.client('ec2').create_security_group(
             GroupName=security_group_name,
-            Description='Security group for tests'
+            Description='Security group for django_docker_engine'
         )
         security_group_id = response['GroupId']
-        security_group = self._ec2_resource.SecurityGroup(security_group_id)
+        security_group = boto3.resource('ec2').SecurityGroup(security_group_id)
 
         # http://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definition_parameters.html
         # Ephermal port range has changed in different versions;
@@ -85,32 +94,55 @@ class EcsManager(BaseManager):
         )
         return security_group_id
 
-    def _create_instance(self):
+    @staticmethod
+    def create_instance(
+            key_pair_name=None,
+            security_group_id=None,
+            cluster_name=None,
+            ami_id=DEFAULT_AMI_ID,
+            instance_profile_arn=DEFAULT_ROLE_ARN,
+            instance_type=DEFAULT_INSTANCE_TYPE):
+        key_pair_name = key_pair_name or \
+                        EcsManager._create_key_pair(EcsManager.DEFAULT)
+        cluster_name = cluster_name or \
+                       EcsManager._create_cluster(EcsManager.DEFAULT)
+        security_group_id = security_group_id or \
+                            EcsManager._create_security_group(EcsManager.DEFAULT)
         user_data = '\n'.join([
             '#!/bin/bash',
             'echo ECS_CLUSTER={} >> /etc/ecs/ecs.config'.format(
-                self._cluster_name
+                cluster_name
             )])
-        response = self._ec2_client.run_instances(
-            ImageId=self._ami_id,
+        response = boto3.client('ec2').run_instances(
+            ImageId=ami_id,
             MinCount=1,
             MaxCount=1,
-            InstanceType='t2.nano',
-            KeyName=self._key_pair_name,
+            InstanceType=instance_type,
+            KeyName=key_pair_name,
             UserData=user_data,
             NetworkInterfaces=[
                 {
                     'DeviceIndex': 0,
                     'AssociatePublicIpAddress': True,
-                    'Groups': [self._security_group_id]
+                    'Groups': [security_group_id]
                 }
             ],
             IamInstanceProfile={
-                'Arn': self._instance_profile_arn
+                'Arn': instance_profile_arn
             }
         )
         assert(response['Instances'][0]['State']['Name'] == 'pending')
-        return response['Instances'][0]['InstanceId']
+        instance_id = response['Instances'][0]['InstanceId']
+        return namedtuple('AwsIds',
+                            ['key_pair_name',
+                             'security_group_id',
+                             'cluster_name',
+                             'instance_id'])(
+            key_pair_name=key_pair_name,
+            security_group_id=security_group_id,
+            cluster_name=cluster_name,
+            instance_id=instance_id
+        )
 
     def _run_task(self, task_name, instance_resource):
         response = None
@@ -221,3 +253,12 @@ class EcsContainer(BaseContainer):
 
     def logs(self):
         raise NotImplementedError()
+
+
+if __name__ == '__main__':
+    aws_ids = EcsManager.create_instance()
+    # These variables are looked for during test runs.
+    print('export AWS_INSTANCE_ID=%s' % aws_ids.instance_id)
+    print('export AWS_KEY_PAIR_NAME=%s' % aws_ids.key_pair_name)
+    print('export AWS_SECURITY_GROUP_ID=%s' % aws_ids.security_group_id)
+    print('export AWS_CLUSTER_NAME=%s' % aws_ids.cluster_name)
