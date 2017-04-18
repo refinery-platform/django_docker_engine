@@ -29,8 +29,7 @@ script:
 
 # Test again, but the backend is now ECS:
 - start django-with-ecs
-- export TEST_ON_AWS_ECS=true
-- $(python django_docker_engine/container_managers/ecs.py) # more envvars
+- $(python django_docker_engine/container_managers/ecs.py) # envvars
 - python manage.py test --verbosity=2 django_docker_engine.test_docker_utils
 - end django-with-ecs
 
