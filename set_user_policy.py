@@ -32,6 +32,8 @@ class PolicySetter():
                 ["ec2:CreateKeyPair", "ec2:DeleteKeyPair"],
             'CreateAndDeleteSecurityGroup':
                 ['ec2:CreateSecurityGroup', 'ec2:DeleteSecurityGroup'],
+            'CreateAndDeleteTags':
+                ['ec2:CreateTags', 'ec2:DeleteTags'],
             'RunAndTerminateInstances':
                 ['ec2:RunInstances', 'ec2:TerminateInstances'],
             'AuthorizeSecurityGroupIngressAndEgress':
