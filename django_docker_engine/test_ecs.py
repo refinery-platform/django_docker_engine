@@ -6,6 +6,7 @@ import pprint
 import re
 import datetime
 import requests
+from botocore import exceptions
 
 logging.basicConfig(level=logging.INFO)
 
@@ -46,20 +47,29 @@ class EcsTests(unittest.TestCase):
         self.ec2_client.delete_key_pair(KeyName=self.key_pair_name)
         self.instance.terminate()
         self.logs_client.delete_log_group(logGroupName=self.log_group_name)
-        self.ec2_client.delete_security_group(GroupName=self.security_group_name)
 
         # TODO: deregister_task requires revision
         # response = self.ecs_client.deregister_task_definition()
 
-        i = 0
+        t = 0
         while True:
             try:
-                i += 1
+                t += 1
+                time.sleep(1)
+                self.ec2_client.delete_security_group(GroupName=self.security_group_name)
+                break
+            except exceptions.ClientError as e:
+                logging.info('{}: {}'.format(t, e.message))
+
+        t = 0
+        while True:
+            try:
+                t += 1
                 time.sleep(1)
                 self.ecs_client.delete_cluster(cluster=self.cluster_name)
                 break
             except StandardError as e:
-                logging.info('{}: {}'.format(i, e.message))
+                logging.info('{}: {}'.format(t, e.message))
 
     def create_security_group(self):
         response = self.ec2_client.create_security_group(
