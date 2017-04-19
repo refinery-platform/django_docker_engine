@@ -118,6 +118,17 @@ Development
     pip install -r requirements-dev.txt
     python manage.py test --verbosity=2
 
+TODO: The tests need to be better at cleaning up their dependencies.
+Until then, keep an eye on the web console:
+
+- `Security Groups <https://console.aws.amazon.com/ec2/v2/home?region=us-east-1#SecurityGroups:search=django_docker_;sort=groupId>`_
+- `EC2 Instances <https://console.aws.amazon.com/ec2/v2/home?region=us-east-1#Instances:search=django_docker_;sort=keyName>`_
+- `Tasks <https://console.aws.amazon.com/ecs/home?region=us-east-1#/taskDefinitions>`_
+- `Clusters <https://console.aws.amazon.com/ecs/home?region=us-east-1#/clusters>`_
+- `Logs <https://console.aws.amazon.com/cloudwatch/home?region=us-east-1#logs:>`_
+
+(or use AWS-CLI.)
+
 ------------
 Dependencies
 ------------
