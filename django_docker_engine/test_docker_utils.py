@@ -42,6 +42,10 @@ class DockerTests(unittest.TestCase):
 
     def tearDown(self):
         rmtree(self.tmp)
+        self.client.purge_by_label(self.test_label)
+        final_containers = self.client.list()
+        self.assertEqual(self.initial_containers, final_containers)
+
 
     def timestamp(self):
         return re.sub(r'\W', '_', str(datetime.datetime.now()))
