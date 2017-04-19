@@ -24,11 +24,12 @@ class EcsTests(unittest.TestCase):
         self.logs_client = boto3.client('logs')
         self.ec2_resource = boto3.resource('ec2')
 
+        prefix = 'django_docker_'
         timestamp = re.sub(r'\D', '_', str(datetime.datetime.now()))
-        self.key_pair_name = 'test_django_docker_{}'.format(timestamp)
-        self.cluster_name = 'test_cluster_{}'.format(timestamp)
-        self.log_group_name = 'test_log_group_{}'.format(timestamp)
-        self.security_group_name = 'test_security_group_{}'.format(timestamp)
+        self.key_pair_name = prefix + timestamp
+        self.cluster_name = prefix + timestamp
+        self.log_group_name = prefix + timestamp
+        self.security_group_name = prefix + timestamp
         self.security_group_id = self.create_security_group()
         self.instance = None
 
