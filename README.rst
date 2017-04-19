@@ -118,7 +118,7 @@ Development
     pip install -r requirements-dev.txt
     python manage.py test --verbosity=2
 
-TODO: The tests need to be better at cleaning up their dependencies.
+TODO: The tests need to be better at cleaning up the resources they create.
 Until then, keep an eye on the web console:
 
 - `Security Groups <https://console.aws.amazon.com/ec2/v2/home?region=us-east-1#SecurityGroups:search=django_docker_;sort=groupId>`_
@@ -135,8 +135,8 @@ Dependencies
 
 - `docker-py <https://github.com/docker/docker-py>`_: The official
   Python SDK for Docker. It uses much the same vocabulary as the CLI,
-  but with `tricky differences <https://github.com/docker/docker-py/issues/1510>`_
-  in meaning. The alternatives are calling
+  but with some `subtle differences <https://github.com/docker/docker-py/issues/1510>`_
+  in meaning. It's better than the alternatives: calling
   the CLI commands as subprocesses, or hitting the socket API directly.
 
 - `django-http-proxy <https://github.com/yvandermeer/django-http-proxy>`_:
