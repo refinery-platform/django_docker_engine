@@ -241,10 +241,12 @@ class EcsManager(BaseManager):
                 t += 1
         task = response['tasks'][0]
         task_arn = task['taskArn']
-        desired_status = task['desiredStatus']
 
         t = 0
-        while task['lastStatus'] != desired_status:
+        while task['lastStatus'] != task['desiredStatus']:
+            logging.warning('lastStatus: %s; desiredStatus: %s',
+                            task['lastStatus'],
+                            task['desiredStatus'])
             # And now wait again for Docker...
             time.sleep(1)
             response = self._ecs_client.describe_tasks(
@@ -256,7 +258,7 @@ class EcsManager(BaseManager):
             if t > self.TIMEOUT:
                 raise RuntimeError(
                     'After {}s, still waiting for task "{}" to enter "{}" from "{}"'
-                    .format(t, task_name, desired_status, task['lastStatus']))
+                    .format(t, task_name, task['desiredStatus'], task['lastStatus']))
         return task['containers'][0]['networkBindings'][0]['hostPort']
 
     def run(self, image_name, cmd, **kwargs):
