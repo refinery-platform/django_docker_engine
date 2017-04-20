@@ -163,6 +163,8 @@ Dependencies
   in meaning. It's better than the alternatives: calling
   the CLI commands as subprocesses, or hitting the socket API directly.
 
+- `boto <http://boto3.readthedocs.io/en/latest/>`_: AWS Python SDK.
+
 - `django-http-proxy <https://github.com/yvandermeer/django-http-proxy>`_:
   Makes Django into a proxy server. It looks like this package has thought about
   some of the edge cases, like rewriting absolute URLs in the body content.
@@ -174,3 +176,10 @@ Related projects
 - `sidomo <https://github.com/deepgram/sidomo>`_: Wrap containers
   as python objects, but assumes input -> output, rather than a
   long-running process.
+
+- `Dockstore <https://dockstore.org/docs/about>`_:
+  Docker containers described with CWL.
+
+- `BioContainers <http://biocontainers.pro/docs/developer-manual/developer-intro/>`_:
+  A set of best-practices, a community, and a registry of containers
+  built for biology. Preference given to BioConda?
