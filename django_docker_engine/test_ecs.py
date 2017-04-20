@@ -106,7 +106,7 @@ class EcsTests(unittest.TestCase):
         self.assertEqual(len(permissions), 2)
         return security_group_id
 
-    def run_task(self, task_name):
+    def run_task(self, task_name, expected_log_streams):
         response = None
         t = 0
         while not response:
@@ -115,6 +115,7 @@ class EcsTests(unittest.TestCase):
             # self.instance.wait_until_running()
             #
             # This may take more than a minute.
+            self.assert_log_streams(expected_log_streams)
             try:
                 response = self.ecs_client.run_task(
                     cluster=self.cluster_name,
@@ -124,6 +125,7 @@ class EcsTests(unittest.TestCase):
                 logging.info("%s: Expect 'InvalidParameterException': %s", t, e)
                 time.sleep(1)
                 t += 1
+
         task = response['tasks'][0]
         task_arn = task['taskArn']
         desired_status = task['desiredStatus']
@@ -138,13 +140,23 @@ class EcsTests(unittest.TestCase):
                 tasks=[task_arn]
             )
             task = response['tasks'][0]
-            logging.info("%s: status=%s", t, task['lastStatus'])
+            logging.info("%s: status=%s / streams=%s", t, task['lastStatus'], self.get_log_streams())
             t += 1
 
         logging.info(pprint.pformat(task))
         # If the container stops, networkBindings may not be available.
         bindings = task['containers'][0].get('networkBindings')
         return bindings[0]['hostPort']
+
+    def get_log_streams(self):
+        response = self.logs_client.describe_log_streams(logGroupName=self.log_group_name)
+        return response['logStreams']
+
+
+    def assert_log_streams(self, count):
+        streams = self.get_log_streams()
+        self.assertEquals(len(streams), count,
+                          'Expected len(streams)=%s; instead streams=%s' % (count, streams))
 
     def test_create_cluster(self):
         logging.info('create_cluster')
@@ -219,16 +231,15 @@ class EcsTests(unittest.TestCase):
         instance_id = response['Instances'][0]['InstanceId']
         self.instance = boto3.resource('ec2').Instance(instance_id)
 
-        response = self.logs_client.describe_log_streams(logGroupName=self.log_group_name)
-        stream_descriptions = response['logStreams']
-        self.assertEquals(len(stream_descriptions), 0)
+        # No logStreams...
+        self.assert_log_streams(0)
 
         logging.info('run_task, 1st time (slow)')
-        port_1 = self.run_task(task_name)
+        port_1 = self.run_task(task_name, 0)
 
-        response = self.logs_client.describe_log_streams(logGroupName=self.log_group_name)
-        stream_descriptions = response['logStreams']
-        self.assertEquals(len(stream_descriptions), 1)
+        # ... until after run_task.
+        self.assert_log_streams(1)
+        logging.info('streams: %s', self.get_log_streams())
 
         # Not sure when exactly it gets a public IP,
         # but it is not immediately available above.
@@ -268,7 +279,7 @@ class EcsTests(unittest.TestCase):
         self.assertIn('"GET /%s HTTP/1.1" 404' % no_such_file, log_events[1]['message'])
 
         logging.info('run_task, 2nd time (fast)')
-        port_2 = self.run_task(task_name)
+        port_2 = self.run_task(task_name, 1)
 
         url_2 = 'http://%s:%s/' % (ip, port_2)
         logging.info('url: %s', url_2)
