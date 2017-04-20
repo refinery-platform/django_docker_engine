@@ -303,8 +303,8 @@ class EcsManager(BaseManager):
                         'logDriver': 'awslogs',
                         'options': {
                             'awslogs-group': self._log_group_name,
-                            'awslogs-region': EcsManager.DEFAULT_REGION,
-                            'awslogs-stream-prefix': EcsManager.PREFIX
+                            'awslogs-region': EcsManager.DEFAULT_REGION
+                            # 'awslogs-stream-prefix': EcsManager.PREFIX
                         }
                     },
 

@@ -219,8 +219,16 @@ class EcsTests(unittest.TestCase):
         instance_id = response['Instances'][0]['InstanceId']
         self.instance = boto3.resource('ec2').Instance(instance_id)
 
+        response = self.logs_client.describe_log_streams(logGroupName=self.log_group_name)
+        stream_descriptions = response['logStreams']
+        self.assertEquals(len(stream_descriptions), 0)
+
         logging.info('run_task, 1st time (slow)')
         port_1 = self.run_task(task_name)
+
+        response = self.logs_client.describe_log_streams(logGroupName=self.log_group_name)
+        stream_descriptions = response['logStreams']
+        self.assertEquals(len(stream_descriptions), 1)
 
         # Not sure when exactly it gets a public IP,
         # but it is not immediately available above.
