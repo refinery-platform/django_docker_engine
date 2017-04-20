@@ -11,6 +11,7 @@ from argparse import ArgumentParser
 class EcsManager(BaseManager):
 
     DEFAULT_INSTANCE_TYPE = 't2.nano'
+    DEFAULT_REGION = 'us-east-1'
     # us-east-1: amzn-ami-2016.09.g-amazon-ecs-optimized
     DEFAULT_AMI_ID = 'ami-275ffe31'
     DEFAULT_ROLE_ARN = \
@@ -298,6 +299,14 @@ class EcsManager(BaseManager):
                             # host port will be assigned
                         },
                     ],
+                    'logConfiguration': {
+                        'logDriver': 'awslogs',
+                        'options': {
+                            'awslogs-group': self._log_group_name,
+                            'awslogs-region': EcsManager.DEFAULT_REGION,
+                            'awslogs-stream-prefix': EcsManager.PREFIX
+                        }
+                    },
 
                     # TODO: We'll want this to be configurable
                     # At least one required:

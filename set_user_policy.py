@@ -47,7 +47,11 @@ class PolicySetter():
             'DescribeLogStreams':
                 ['logs:DescribeLogStreams'],
             'GetLogEvents':
-                ['logs:GetLogEvents']
+                ['logs:GetLogEvents'],
+            'CreateLogStream':
+                ['logs:CreateLogStream'],
+            'PutLogEvents':
+                ['logs:PutLogEvents']
             # 'LogsAllowEverything':
             #     ['logs:*'], # TODO: Tighten
         }
