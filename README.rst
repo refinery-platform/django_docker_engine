@@ -123,11 +123,35 @@ Until then, keep an eye on the web console:
 
 - `Security Groups <https://console.aws.amazon.com/ec2/v2/home?region=us-east-1#SecurityGroups:search=django_docker_;sort=groupId>`_
 - `EC2 Instances <https://console.aws.amazon.com/ec2/v2/home?region=us-east-1#Instances:search=django_docker_;sort=keyName>`_
-- `Tasks <https://console.aws.amazon.com/ecs/home?region=us-east-1#/taskDefinitions>`_
+- `Task Definitions <https://console.aws.amazon.com/ecs/home?region=us-east-1#/taskDefinitions>`_
 - `Clusters <https://console.aws.amazon.com/ecs/home?region=us-east-1#/clusters>`_
 - `Logs <https://console.aws.amazon.com/cloudwatch/home?region=us-east-1#logs:>`_
 
-(or use AWS-CLI.)
+or use AWS-CLI (TODO: Better filtering so we delete only test ones, not the production ones.)::
+
+    aws ec2 describe-instances \
+        --filters Name=tag:project,Values=django_docker_engine \
+        --query 'Reservations[].Instances[].[InstanceId]' \
+        --output text | \
+    xargs aws ec2 terminate-instances --instance-ids
+
+    aws ec2 describe-security-groups \
+        --filters Name=description,Values='Security group for django_docker_engine' \
+        --query 'SecurityGroups[].[GroupId]' \
+        --output text | \
+    xargs -n 1 aws ec2 delete-security-group --group-id
+
+    aws ecs list-clusters \
+        --query 'clusterArns' \
+        --output text | \
+    xargs -n 1 aws ecs delete-cluster --cluster
+
+    aws logs describe-log-groups \
+        --query 'logGroups[].[logGroupName]' \
+        --output text | \
+    xargs -n 1 aws logs delete-log-group --log-group-name
+
+(It seems that tasks can not be deleted, they can only be "deregistered".)
 
 ------------
 Dependencies
