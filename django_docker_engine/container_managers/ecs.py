@@ -7,6 +7,7 @@ from base import BaseManager, BaseContainer
 from collections import namedtuple
 from argparse import ArgumentParser
 
+
 class EcsManager(BaseManager):
 
     DEFAULT_INSTANCE_TYPE = 't2.nano'
@@ -175,8 +176,19 @@ class EcsManager(BaseManager):
                 }
             ]
         )
-        assert(response['Instances'][0]['State']['Name'] == 'pending')
+
         instance_id = response['Instances'][0]['InstanceId']
+        state = 'pending'
+        t = 0
+        while state != 'running':
+            if state != 'pending':
+                raise RuntimeError('Instance %s has unexpected state' % (instance_id, state))
+            logging.warn('%s: Instance %s not yet running; state is still %s', t, instance_id, state)
+            time.sleep(1)
+            state = EcsManager._get_state(instance_id)
+            t += 1
+            if t > 120:
+                raise RuntimeError('Instance %s still not running' % instance_id)
         return namedtuple('AwsIds',
                             ['key_pair_name',
                              'security_group_id',
@@ -189,6 +201,13 @@ class EcsManager(BaseManager):
             instance_id=instance_id,
             log_group_name=log_group_name
         )
+
+    @staticmethod
+    def _get_state(instance_id):
+        response = boto3.client('ec2').describe_instances(
+            InstanceIds=[instance_id]
+        )
+        return response['Reservations'][0]['Instances'][0]['State']['Name']
 
     def _run_task(self, task_name, instance_resource):
         response = None
