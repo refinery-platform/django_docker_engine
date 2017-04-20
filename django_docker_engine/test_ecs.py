@@ -43,7 +43,7 @@ class EcsTests(unittest.TestCase):
         for instance_arn in instance_arns:
             self.ecs_client.deregister_container_instance(
                 cluster=self.cluster_name,
-                containerInstance=instance_arn, # NOT just the the instance ID
+                containerInstance=instance_arn,  # NOT just the the instance ID
                 force=True)
         self.ec2_client.delete_key_pair(KeyName=self.key_pair_name)
         self.instance.terminate()

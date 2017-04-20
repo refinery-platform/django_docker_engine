@@ -41,7 +41,8 @@ class EcsManager(BaseManager):
         self._ec2_client = boto3.client('ec2')
         self._ec2_resource = boto3.resource('ec2')
 
-        if (instance_id and
+        if (
+                instance_id and
                 security_group_id and
                 cluster_name and
                 key_pair_name and
@@ -52,10 +53,10 @@ class EcsManager(BaseManager):
             self._key_pair_name = key_pair_name
             self._log_group_name = log_group_name
         elif not (instance_id or
-                      security_group_id or
-                      cluster_name or
-                      key_pair_name or
-                      log_group_name):
+                  security_group_id or
+                  cluster_name or
+                  key_pair_name or
+                  log_group_name):
             # TODO: Will we ever use this branch?
             aws_ids = EcsManager.create_instance(
                 key_pair_name=key_pair_name,
@@ -68,14 +69,15 @@ class EcsManager(BaseManager):
             self._instance_id = aws_ids.instance_id
             self._log_group_name = aws_ids.log_group_name
         else:
-            raise RuntimeError('All IDs must be given, or none; Instead we have {}'.format(
-                {
-                    'security_group_id': security_group_id,
-                    'cluster_name': cluster_name,
-                    'key_pair_name': key_pair_name,
-                    'log_group_name': log_group_name
-                }
-            ))
+            raise RuntimeError(
+                'All IDs must be given, or none; Instead we have {}'
+                .format({
+                        'security_group_id': security_group_id,
+                        'cluster_name': cluster_name,
+                        'key_pair_name': key_pair_name,
+                        'log_group_name': log_group_name
+                        })
+            )
 
     @staticmethod
     def _create_key_pair(key_pair_name):
@@ -136,13 +138,13 @@ class EcsManager(BaseManager):
             instance_type=DEFAULT_INSTANCE_TYPE,
             tags=DEFAULT_TAGS):
         key_pair_name = key_pair_name or \
-                        EcsManager._create_key_pair(EcsManager.DEFAULT)
+            EcsManager._create_key_pair(EcsManager.DEFAULT)
         cluster_name = cluster_name or \
-                       EcsManager._create_cluster(EcsManager.DEFAULT)
+            EcsManager._create_cluster(EcsManager.DEFAULT)
         security_group_id = security_group_id or \
-                            EcsManager._create_security_group(EcsManager.DEFAULT)
+            EcsManager._create_security_group(EcsManager.DEFAULT)
         log_group_name = log_group_name or \
-                         EcsManager._create_log_group(EcsManager.DEFAULT)
+            EcsManager._create_log_group(EcsManager.DEFAULT)
         user_data = '\n'.join([
             '#!/bin/bash',
             'echo ECS_CLUSTER={} >> /etc/ecs/ecs.config'.format(
@@ -182,19 +184,21 @@ class EcsManager(BaseManager):
         t = 0
         while state != 'running':
             if state != 'pending':
-                raise RuntimeError('Instance %s has unexpected state' % (instance_id, state))
-            logging.warn('%s: Instance %s not yet running; state is still %s', t, instance_id, state)
+                raise RuntimeError('Instance %s has unexpected state'
+                                   % (instance_id, state))
+            logging.warn('%s: Instance %s not yet running; state is still %s',
+                         t, instance_id, state)
             time.sleep(1)
             state = EcsManager._get_state(instance_id)
             t += 1
             if t > 120:
                 raise RuntimeError('Instance %s still not running' % instance_id)
         return namedtuple('AwsIds',
-                            ['key_pair_name',
-                             'security_group_id',
-                             'cluster_name',
-                             'instance_id',
-                             'log_group_name'])(
+                          ['key_pair_name',
+                           'security_group_id',
+                           'cluster_name',
+                           'instance_id',
+                           'log_group_name'])(
             key_pair_name=key_pair_name,
             security_group_id=security_group_id,
             cluster_name=cluster_name,
@@ -252,9 +256,8 @@ class EcsManager(BaseManager):
             if t > self.TIMEOUT:
                 raise RuntimeError(
                     'After {}s, still waiting for task "{}" to enter "{}" from "{}"'
-                        .format(t, task_name, desired_status, task['lastStatus']))
+                    .format(t, task_name, desired_status, task['lastStatus']))
         return task['containers'][0]['networkBindings'][0]['hostPort']
-
 
     def run(self, image_name, cmd, **kwargs):
         """

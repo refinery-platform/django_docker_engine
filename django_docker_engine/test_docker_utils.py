@@ -47,7 +47,6 @@ class DockerTests(unittest.TestCase):
         final_containers = self.client.list()
         self.assertEqual(self.initial_containers, final_containers)
 
-
     def timestamp(self):
         return re.sub(r'\W', '_', str(datetime.datetime.now()))
 
