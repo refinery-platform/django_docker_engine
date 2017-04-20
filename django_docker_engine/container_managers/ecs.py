@@ -244,7 +244,8 @@ class EcsManager(BaseManager):
 
         t = 0
         while task['lastStatus'] != task['desiredStatus']:
-            logging.warning('lastStatus: %s; desiredStatus: %s',
+            logging.warning('%s: lastStatus: %s / desiredStatus: %s',
+                            task_arn,
                             task['lastStatus'],
                             task['desiredStatus'])
             # And now wait again for Docker...
@@ -259,7 +260,9 @@ class EcsManager(BaseManager):
                 raise RuntimeError(
                     'After {}s, still waiting for task "{}" to enter "{}" from "{}"'
                     .format(t, task_name, task['desiredStatus'], task['lastStatus']))
-        return task['containers'][0]['networkBindings'][0]['hostPort']
+        # TODO: Container may or may not still be running;
+        # Was there a reason I wanted to return the port here?
+        # task['containers'][0]['networkBindings'][0]['hostPort']
 
     def run(self, image_name, cmd, **kwargs):
         """
