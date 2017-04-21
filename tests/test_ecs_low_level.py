@@ -262,15 +262,13 @@ class EcsTests(unittest.TestCase):
         response = requests.get(url_1 + no_such_file)
         self.assertIn('404 Not Found', response.text)
 
-        response = self.logs_client.describe_log_streams(logGroupName=self.log_group_name)
-        stream_descriptions = response['logStreams']
-        stream_names = [
-            description['logStreamName'] for description in stream_descriptions
-        ]
-
-        # Not confident this is universally true, but true right now?
-        # TODO: get 2 here?
-        # self.assertEqual(len(stream_names), 1)
+        stream_names = []
+        while len(stream_names) == 0:
+            response = self.logs_client.describe_log_streams(logGroupName=self.log_group_name)
+            stream_descriptions = response['logStreams']
+            stream_names = [
+                description['logStreamName'] for description in stream_descriptions
+            ]
 
         log_events = []
         t = 0
