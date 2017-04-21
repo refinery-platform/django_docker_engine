@@ -18,19 +18,21 @@ script:
 - python manage.py test tests --verbosity=2
 - end defaults
 
+- utils_tests() { python manage.py test --verbosity=2 tests.test_docker_utils.DockerTests; }
+
 # Test a range of django versions, but skip the much slower ECS tests:
 - |-
   for VERSION in '1.7.1' '1.8.17' '1.9.12' '1.10.6'; do
     start django-$VERSION
     pip install django==$VERSION
-    python manage.py test --verbosity=2 django_docker_engine.test_docker_utils
+    utils_tests
     end django-$VERSION
   done
 
 # Test again, but the backend is now ECS:
 - start django-with-ecs
 - $(python django_docker_engine/container_managers/ecs.py) # envvars
-- python manage.py test --verbosity=2 django_docker_engine.test_docker_utils
+- utils_tests
 - python django_docker_engine/container_managers/ecs.py --destroy-ec2 $AWS_INSTANCE_ID
 - end django-with-ecs
 
