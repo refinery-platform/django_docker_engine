@@ -51,9 +51,9 @@ class PolicySetter():
             'CreateLogStream':
                 ['logs:CreateLogStream'],
             'PutLogEvents':
-                ['logs:PutLogEvents']
-            # 'LogsAllowEverything':
-            #     ['logs:*'], # TODO: Tighten
+                ['logs:PutLogEvents'],
+            'CloudFormation':
+                ['cloudformation:*'] # TODO: Tighten
         }
         for name in actions:
             full_doc = {

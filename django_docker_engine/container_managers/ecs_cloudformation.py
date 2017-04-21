@@ -1,4 +1,10 @@
 from base import BaseManager, BaseContainer
+import os
+import boto3
+import re
+import datetime
+import time
+from pprint import pprint
 
 
 class EcsCloudFormationManager(BaseManager):
@@ -31,4 +37,39 @@ class EcsCloudFormationContainer(BaseContainer):
 
 
 if __name__ == '__main__':
-    raise NotImplementedError()
+    timestamp = re.sub(r'\D', '-', str(datetime.datetime.now()))
+    prefix = 'django-docker-'
+    name = prefix + timestamp
+
+    tags = {
+        'department': 'dbmi',
+        'environment': 'test',
+        'project': 'django_docker_engine',
+        'product': 'refinery'
+    }
+    expanded_tags = [{
+                         'Key': key,
+                         'Value': tags[key]
+                     } for key in tags]
+
+    path = os.path.join(os.path.dirname(__file__), 'stack.json')
+    json = open(path).read()
+    client = boto3.client('cloudformation')
+
+    create_stack_response = client.create_stack(
+        StackName=name,
+        TemplateBody=json,
+        Tags=expanded_tags
+    )
+    stack_id = create_stack_response['StackId']
+
+    CREATE_IN_PROGRESS = 'CREATE_IN_PROGRESS'
+    started = False
+    describe_stack_response = None
+    while not started:
+        time.sleep(1)
+        describe_stack_response = client.describe_stacks(StackName=stack_id)
+        status = describe_stack_response['Stacks'][0]['StackStatus']
+        started = status != CREATE_IN_PROGRESS
+
+    pprint(describe_stack_response)

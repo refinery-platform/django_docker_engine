@@ -1,0 +1,14 @@
+{
+    "Description" : "hello world?",
+    "Resources" : {
+        "SecurityGroup" : {
+            "Type" : "AWS::EC2::SecurityGroup",
+            "Properties" : {
+                "GroupDescription": "hello world?"
+            }
+        }
+    },
+    "Outputs" : {
+    },
+    "AWSTemplateFormatVersion" : "2010-09-09"
+}
