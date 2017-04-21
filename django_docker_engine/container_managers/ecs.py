@@ -237,7 +237,7 @@ class EcsManager(BaseManager):
                 )
                 if expected not in e.message:
                     raise e
-                logging.debug("%s: Expect 'InvalidParameterException': %s", t, e)
+                logging.debug("%s: Got the expected 'InvalidParameterException': %s", t, e)
                 time.sleep(1)
                 t += 1
         if response.get('failures'):
@@ -323,14 +323,18 @@ class EcsManager(BaseManager):
 
         # Read the logs:
         logs_client = boto3.client('logs')
-        response = logs_client.describe_log_streams(logGroupName=self._log_group_name)
-        stream_descriptions = response['logStreams']
+        log_streams = []
+        while len(log_streams) == 0:
+            logging.warning('Waiting for log streams...')
+            time.sleep(1)
+            response = logs_client.describe_log_streams(logGroupName=self._log_group_name)
+            log_streams = response['logStreams']
 
         # Not confident this is universally true...
-        assert len(stream_descriptions) == 1, \
-            'Expected exactly one stream, not {}'.format(stream_descriptions)
+        assert len(log_streams) == 1, \
+            'Expected exactly one stream, not {}'.format(log_streams)
         stream_names = [
-            description['logStreamName'] for description in stream_descriptions
+            description['logStreamName'] for description in log_streams
         ]
         response = logs_client.get_log_events(
                 logGroupName=self._log_group_name,
