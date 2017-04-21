@@ -240,7 +240,10 @@ class EcsTests(unittest.TestCase):
         # self.assert_log_streams(0)
 
         logging.info('run_task, 1st time (slow)')
-        port_1 = self.run_task(task_name, 0)
+        port_1 = None
+        while not port_1:
+            # Hit a failure here once... no reproducer?
+            port_1 = self.run_task(task_name, 0)
 
         # ... until after run_task.
         # TODO: This had been working...
