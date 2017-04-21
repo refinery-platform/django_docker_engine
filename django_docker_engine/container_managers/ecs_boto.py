@@ -8,7 +8,7 @@ from collections import namedtuple
 from argparse import ArgumentParser
 
 
-class EcsManager(BaseManager):
+class EcsBotoManager(BaseManager):
 
     DEFAULT_INSTANCE_TYPE = 't2.nano'
     DEFAULT_REGION = 'us-east-1'
@@ -59,7 +59,7 @@ class EcsManager(BaseManager):
                   key_pair_name or
                   log_group_name):
             # TODO: Will we ever use this branch?
-            aws_ids = EcsManager.create_instance(
+            aws_ids = EcsBotoManager.create_instance(
                 key_pair_name=key_pair_name,
                 cluster_name=cluster_name,
                 security_group_id=security_group_id
@@ -139,13 +139,13 @@ class EcsManager(BaseManager):
             instance_type=DEFAULT_INSTANCE_TYPE,
             tags=DEFAULT_TAGS):
         key_pair_name = key_pair_name or \
-            EcsManager._create_key_pair(EcsManager.DEFAULT)
+                        EcsBotoManager._create_key_pair(EcsBotoManager.DEFAULT)
         cluster_name = cluster_name or \
-            EcsManager._create_cluster(EcsManager.DEFAULT)
+                       EcsBotoManager._create_cluster(EcsBotoManager.DEFAULT)
         security_group_id = security_group_id or \
-            EcsManager._create_security_group(EcsManager.DEFAULT)
+                            EcsBotoManager._create_security_group(EcsBotoManager.DEFAULT)
         log_group_name = log_group_name or \
-            EcsManager._create_log_group(EcsManager.DEFAULT)
+                         EcsBotoManager._create_log_group(EcsBotoManager.DEFAULT)
         user_data = '\n'.join([
             '#!/bin/bash',
             'echo ECS_CLUSTER={} >> /etc/ecs/ecs.config'.format(
@@ -190,7 +190,7 @@ class EcsManager(BaseManager):
             logging.warn('%s: Instance %s not yet running; state is still %s',
                          t, instance_id, state)
             time.sleep(1)
-            state = EcsManager._get_state(instance_id)
+            state = EcsBotoManager._get_state(instance_id)
             t += 1
             if t > 120:
                 raise RuntimeError('Instance %s still not running' % instance_id)
@@ -307,7 +307,7 @@ class EcsManager(BaseManager):
                         'logDriver': 'awslogs',
                         'options': {
                             'awslogs-group': self._log_group_name,
-                            'awslogs-region': EcsManager.DEFAULT_REGION
+                            'awslogs-region': EcsBotoManager.DEFAULT_REGION
                             # 'awslogs-stream-prefix': EcsManager.PREFIX
                         }
                     },
@@ -356,7 +356,7 @@ class EcsManager(BaseManager):
         return response['containerInstanceArns']
 
 
-class EcsContainer(BaseContainer):
+class EcsBotoContainer(BaseContainer):
 
     def remove(self):
         raise NotImplementedError()
@@ -375,7 +375,7 @@ if __name__ == '__main__':
         # TODO: cleanup
         print('TODO: delete {}'.format(parsed.ec2_id))
     else:
-        aws_ids = EcsManager.create_instance()
+        aws_ids = EcsBotoManager.create_instance()
         # These variables are looked for during test runs.
         print('export AWS_INSTANCE_ID={}'.format(aws_ids.instance_id))
         print('export AWS_KEY_PAIR_NAME={}'.format(aws_ids.key_pair_name))

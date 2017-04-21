@@ -12,7 +12,7 @@ logging.basicConfig(level=logging.INFO)
 
 
 @unittest.skip
-class EcsTests(unittest.TestCase):
+class EcsLowLevelTests(unittest.TestCase):
     """
     This only exercises the AWS ECS SDK:
     It does not test any of our own code!
