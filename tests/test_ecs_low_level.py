@@ -264,7 +264,8 @@ class EcsTests(unittest.TestCase):
 
         stream_names = []
         while len(stream_names) == 0:
-            response = self.logs_client.describe_log_streams(logGroupName=self.log_group_name)
+            response = self.logs_client.describe_log_streams(
+                logGroupName=self.log_group_name)
             stream_descriptions = response['logStreams']
             stream_names = [
                 description['logStreamName'] for description in stream_descriptions
