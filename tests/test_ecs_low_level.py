@@ -148,7 +148,8 @@ class EcsTests(unittest.TestCase):
         logging.info(pprint.pformat(task))
         # If the container stops, networkBindings may not be available.
         bindings = task['containers'][0].get('networkBindings')
-        return bindings[0]['hostPort']
+        if bindings:
+            return bindings[0]['hostPort']
 
     def get_log_streams(self):
         response = self.logs_client.describe_log_streams(
