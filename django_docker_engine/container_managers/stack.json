@@ -4,7 +4,7 @@
         "SecurityGroup" : {
             "Type" : "AWS::EC2::SecurityGroup",
             "Properties" : {
-                "GroupDescription": "hello world?"
+                "GroupDescription": "hello world"
             }
         }
     },

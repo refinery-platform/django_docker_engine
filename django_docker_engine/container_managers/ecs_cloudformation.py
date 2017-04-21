@@ -64,12 +64,17 @@ if __name__ == '__main__':
     stack_id = create_stack_response['StackId']
 
     CREATE_IN_PROGRESS = 'CREATE_IN_PROGRESS'
-    started = False
-    describe_stack_response = None
-    while not started:
-        time.sleep(1)
-        describe_stack_response = client.describe_stacks(StackName=stack_id)
-        status = describe_stack_response['Stacks'][0]['StackStatus']
-        started = status != CREATE_IN_PROGRESS
+    CREATE_COMPLETE = 'CREATE_COMPLETE'
 
-    pprint(describe_stack_response)
+    describe_stack_response = None
+    status = CREATE_IN_PROGRESS
+    while status == CREATE_IN_PROGRESS:
+        time.sleep(1)
+        describe_create = client.describe_stacks(StackName=stack_id)
+        status = describe_create['Stacks'][0]['StackStatus']
+
+    pprint(describe_create)
+
+    if status != CREATE_COMPLETE:
+        describe_events = client.describe_stack_events(StackName=stack_id)
+        pprint(describe_events)
