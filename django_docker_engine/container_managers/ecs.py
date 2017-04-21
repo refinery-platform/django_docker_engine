@@ -237,7 +237,9 @@ class EcsManager(BaseManager):
                 )
                 if expected not in e.message:
                     raise e
-                logging.debug("%s: Got the expected 'InvalidParameterException': %s", t, e)
+                logging.debug(
+                    "%s: Got the expected 'InvalidParameterException': %s",
+                    t, e)
                 time.sleep(1)
                 t += 1
         if response.get('failures'):

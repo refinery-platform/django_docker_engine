@@ -25,6 +25,7 @@ class DockerTests(unittest.TestCase):
             re.sub(r'\W', '_', str(datetime.datetime.now())))
         os.mkdir(self.tmp)
         if os.environ.get('AWS_INSTANCE_ID'):
+            # TODO: This is not working yet; Going to try CloudFormation.
             self.manager = ecs_manager.EcsManager(
                 key_pair_name=os.environ.get('AWS_KEY_PAIR_NAME'),
                 cluster_name=os.environ.get('AWS_CLUSTER_NAME'),

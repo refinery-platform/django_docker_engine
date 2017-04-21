@@ -140,7 +140,8 @@ class EcsTests(unittest.TestCase):
                 tasks=[task_arn]
             )
             task = response['tasks'][0]
-            logging.info("%s: status=%s / streams=%s", t, task['lastStatus'], self.get_log_streams())
+            logging.info("%s: status=%s / streams=%s",
+                         t, task['lastStatus'], self.get_log_streams())
             t += 1
 
         logging.info(pprint.pformat(task))
@@ -149,14 +150,15 @@ class EcsTests(unittest.TestCase):
         return bindings[0]['hostPort']
 
     def get_log_streams(self):
-        response = self.logs_client.describe_log_streams(logGroupName=self.log_group_name)
+        response = self.logs_client.describe_log_streams(
+            logGroupName=self.log_group_name)
         return response['logStreams']
-
 
     def assert_log_streams(self, count):
         streams = self.get_log_streams()
-        self.assertEquals(len(streams), count,
-                          'Expected len(streams)=%s; instead streams=%s' % (count, streams))
+        self.assertEquals(
+            len(streams), count,
+            'Expected len(streams)=%s; instead streams=%s' % (count, streams))
 
     def test_create_cluster(self):
         logging.info('create_cluster')
