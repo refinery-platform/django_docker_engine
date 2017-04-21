@@ -38,13 +38,13 @@ script:
 #- end django-with-ecs
 
 # Check packaging and formatting:
-- start egg
-- python setup.py bdist_egg
-- start egg
-
 - start format
 - flake8
 - start format
+
+- start egg
+- python setup.py bdist_egg
+- start egg
 
 env:
   global:

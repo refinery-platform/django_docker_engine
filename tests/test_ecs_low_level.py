@@ -116,7 +116,7 @@ class EcsTests(unittest.TestCase):
             #
             # This may take more than a minute.
             # TODO: This is erratic
-            #self.assert_log_streams(expected_log_streams)
+            # self.assert_log_streams(expected_log_streams)
             try:
                 response = self.ecs_client.run_task(
                     cluster=self.cluster_name,
@@ -236,14 +236,14 @@ class EcsTests(unittest.TestCase):
 
         # No logStreams...
         # usually, but this did fail for me at least once.
-        #self.assert_log_streams(0)
+        # self.assert_log_streams(0)
 
         logging.info('run_task, 1st time (slow)')
         port_1 = self.run_task(task_name, 0)
 
         # ... until after run_task.
         # TODO: This had been working...
-        #self.assert_log_streams(1)
+        # self.assert_log_streams(1)
         logging.info('streams: %s', self.get_log_streams())
 
         # Not sure when exactly it gets a public IP,
@@ -269,7 +269,7 @@ class EcsTests(unittest.TestCase):
 
         # Not confident this is universally true, but true right now?
         # TODO: get 2 here?
-        #self.assertEqual(len(stream_names), 1)
+        # self.assertEqual(len(stream_names), 1)
 
         log_events = []
         t = 0
