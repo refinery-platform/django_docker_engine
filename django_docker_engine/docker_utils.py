@@ -10,7 +10,7 @@ class DockerClientWrapper():
     def __init__(self,
                  manager=local_manager.LocalManager(),
                  root_label='io.github.refinery-project.django_docker_engine'):
-        self.__containers_manager = manager
+        self._containers_manager = manager
         self.root_label = root_label
 
     def run(self, image_name, cmd=None, **kwargs):
@@ -24,16 +24,16 @@ class DockerClientWrapper():
         labels = kwargs.get('labels') or {}
         labels.update({self.root_label: 'true'})
         kwargs['labels'] = labels
-        return self.__containers_manager.run(image_name, cmd, **kwargs)
+        return self._containers_manager.run(image_name, cmd, **kwargs)
 
     def lookup_container_url(self, container_name):
         """
         Given the name of a container, returns the url mapped to port 80.
         """
-        return self.__containers_manager.get_url(container_name)
+        return self._containers_manager.get_url(container_name)
 
     def list(self, filters={}):
-        return self.__containers_manager.list(filters)
+        return self._containers_manager.list(filters)
 
     def purge_by_label(self, label):
         """
@@ -49,10 +49,10 @@ class DockerClientWrapper():
         """
         for container in self.list():
             # TODO: Confirm that it belongs to me
-            if not self.__is_active(container, seconds):
+            if not self._is_active(container, seconds):
                 container.remove(force=True)
 
-    def __is_active(self, container, seconds):
+    def _is_active(self, container, seconds):
         utc_start_string = container.attrs['State']['StartedAt']
         utc_start = datetime.strptime(
             utc_start_string[:19], '%Y-%m-%dT%H:%M:%S')
@@ -72,14 +72,18 @@ class DockerContainerSpec():
     def __init__(self, image_name, container_name,
                  input={},
                  container_input_path='/tmp/input.json',
-                 labels={}):
+                 labels={},
+                 manager=None):
+        if not manager:
+            raise RuntimeError('"manager" is required')
+        self.manager = manager
         self.image_name = image_name
         self.container_name = container_name
         self.container_input_path = container_input_path
         self.input = input
         self.labels = labels
 
-    def __mkdtemp(self):
+    def _mkdtemp(self):
         # mkdtemp is the obvious way to do this, but
         # the resulting directory is not visible to Docker.
         # Tried chmod, but that didn't help.
@@ -94,7 +98,7 @@ class DockerContainerSpec():
         return dir
 
     def run(self):
-        host_input_dir = self.__mkdtemp()
+        host_input_dir = self._mkdtemp()
         # Host filename is arbitrary.
         host_input_path = os.path.join(host_input_dir, 'input.json')
         with open(host_input_path, 'w') as file:
@@ -105,7 +109,7 @@ class DockerContainerSpec():
                 'bind': self.container_input_path,
                 'mode': 'ro'}}
         ports_spec = {'80/tcp': None}
-        client = DockerClientWrapper()
+        client = DockerClientWrapper(manager=self.manager)
         client.run(self.image_name,
                    name=self.container_name,
                    detach=True,
