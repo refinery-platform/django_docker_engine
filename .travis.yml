@@ -15,7 +15,7 @@ script:
 
 # Test everything with defaults
 - start defaults
-- python manage.py test --verbosity=2
+- python manage.py test tests --verbosity=2
 - end defaults
 
 # Test a range of django versions, but skip the much slower ECS tests:

@@ -4,11 +4,11 @@ import datetime
 import re
 import requests
 import django
-from docker_utils import DockerClientWrapper, DockerContainerSpec
 from shutil import rmtree
 from time import sleep
-from container_managers import local as local_manager
-from container_managers import ecs as ecs_manager
+from django_docker_engine.docker_utils import DockerClientWrapper, DockerContainerSpec
+from django_docker_engine.container_managers import local as local_manager
+from django_docker_engine.container_managers import ecs as ecs_manager
 
 
 class DockerTests(unittest.TestCase):
