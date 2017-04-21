@@ -10,9 +10,7 @@ from botocore import exceptions
 
 logging.basicConfig(level=logging.INFO)
 
-# This has been passing reliably locally, but seems to fail
-# half the time on Travis. It is not actually testing any
-# outside code.
+
 @unittest.skip
 class EcsTests(unittest.TestCase):
     """
@@ -20,6 +18,9 @@ class EcsTests(unittest.TestCase):
     It does not test any of our own code!
     Probably not useful once what I've learned here has been integrated.
     """
+    # This has been passing reliably locally, but seems to fail
+    # half the time on Travis. It is not actually testing any
+    # outside code.
     def setUp(self):
         logging.info('setUp')
         self.ecs_client = boto3.client('ecs')
