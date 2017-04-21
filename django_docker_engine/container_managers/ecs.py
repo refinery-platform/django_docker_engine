@@ -240,6 +240,8 @@ class EcsManager(BaseManager):
                 logging.debug("%s: Expect 'InvalidParameterException': %s", t, e)
                 time.sleep(1)
                 t += 1
+        if response.get('failures'):
+            raise RuntimeError(response['failures'])
         task = response['tasks'][0]
         task_arn = task['taskArn']
 
