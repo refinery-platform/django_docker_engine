@@ -7,7 +7,7 @@ import pytz
 from pprint import pformat
 import troposphere
 import troposphere.ec2 as ec2
-import troposphere.ecs as ecs
+# import troposphere.ecs as ecs
 
 PADDING = ' ' * len('INFO:root:')
 
@@ -101,7 +101,7 @@ def _create_template_json():
             ]
         )
     )
-    ec2_instance = template.add_resource(
+    template.add_resource(
         ec2.Instance(
             'EC2',
             SecurityGroups=[troposphere.Ref(security_group)],
@@ -109,19 +109,19 @@ def _create_template_json():
             InstanceType='t2.nano'
         )
     )
-    template.add_resource(
-        ecs.Cluster(
-            'ECS',
-
-        )
-    )
+    # template.add_resource(
+    #     ecs.Cluster(
+    #         'ECS',
+    #
+    #     )
+    # )
 
     json = template.to_json()
     logging.info(json)
     return json
 
+
 def create_default_stack():
-    logging.basicConfig(level=logging.INFO)
     timestamp = re.sub(r'\D', '-', str(datetime.datetime.now()))
     prefix = 'django-docker-'
     name = prefix + timestamp
@@ -136,9 +136,14 @@ def create_default_stack():
     _create_stack(name, json, tags)
     return name
 
-def destroy_default_stack(name):
-    pass
+
+def delete_stack(name):
+    client = boto3.client('cloudformation')
+    client.delete_stack(
+        StackName=name
+    )
+
 
 if __name__ == '__main__':
-    create_default_stack()
-
+    name = create_default_stack()
+    print(name)

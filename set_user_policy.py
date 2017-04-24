@@ -53,7 +53,7 @@ class PolicySetter():
             'PutLogEvents':
                 ['logs:PutLogEvents'],
             'CloudFormation':
-                ['cloudformation:*'] # TODO: Tighten
+                ['cloudformation:*']  # TODO: Tighten
         }
         for name in actions:
             full_doc = {

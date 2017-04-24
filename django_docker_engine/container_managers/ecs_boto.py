@@ -139,13 +139,13 @@ class EcsBotoManager(BaseManager):
             instance_type=DEFAULT_INSTANCE_TYPE,
             tags=DEFAULT_TAGS):
         key_pair_name = key_pair_name or \
-                        EcsBotoManager._create_key_pair(EcsBotoManager.DEFAULT)
+            EcsBotoManager._create_key_pair(EcsBotoManager.DEFAULT)
         cluster_name = cluster_name or \
-                       EcsBotoManager._create_cluster(EcsBotoManager.DEFAULT)
+            EcsBotoManager._create_cluster(EcsBotoManager.DEFAULT)
         security_group_id = security_group_id or \
-                            EcsBotoManager._create_security_group(EcsBotoManager.DEFAULT)
+            EcsBotoManager._create_security_group(EcsBotoManager.DEFAULT)
         log_group_name = log_group_name or \
-                         EcsBotoManager._create_log_group(EcsBotoManager.DEFAULT)
+            EcsBotoManager._create_log_group(EcsBotoManager.DEFAULT)
         user_data = '\n'.join([
             '#!/bin/bash',
             'echo ECS_CLUSTER={} >> /etc/ecs/ecs.config'.format(
