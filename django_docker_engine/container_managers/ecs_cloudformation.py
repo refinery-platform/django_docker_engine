@@ -5,6 +5,7 @@ import re
 import datetime
 import time
 import logging
+import pytz
 from pprint import pformat
 
 
@@ -36,12 +37,16 @@ class EcsCloudFormationContainer(BaseContainer):
     def logs(self):
         raise NotImplementedError()
 
-def _format_events(events):
-    return '\n'.join(['%20s %20s %20s %20s' % (
-        event['ResourceStatus'],
-        event['ResourceType'],
-        event['LogicalResourceId'],
-        event['PhysicalResourceId']) for event in events])
+
+def _format_events(events, since):
+    log_prefix_width = 10
+    return ('\n'+' '*log_prefix_width).\
+        join(['{:<20} {:<27} {:<42} {:<70}'.format(
+            event['ResourceStatus'],
+            event['ResourceType'],
+            event['LogicalResourceId'],
+            event['PhysicalResourceId']) for event in events[::-1]
+                      if event['Timestamp'] > since])
 
 def _expand_tags(tags):
     return [{
@@ -64,12 +69,15 @@ def _create_stack(name, json, expanded_tags):
 
     stack_description = None
     status = CREATE_IN_PROGRESS
+    since = datetime.datetime.min.replace(tzinfo=pytz.UTC)
     while status == CREATE_IN_PROGRESS:
         time.sleep(1)
         stack_description = client.describe_stacks(StackName=stack_id)
         status = stack_description['Stacks'][0]['StackStatus']
-        event_descriptions = client.describe_stack_events(StackName=stack_id)
-        logging.info('\n'+_format_events(event_descriptions['StackEvents']))
+        event_descriptions = \
+            client.describe_stack_events(StackName=stack_id)['StackEvents']
+        logging.info(_format_events(event_descriptions, since))
+        since = event_descriptions[0]['Timestamp']
 
     if status != CREATE_COMPLETE:
         logging.warn('Stack creation not successful: %s', pformat(stack_description))
