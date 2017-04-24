@@ -8,7 +8,6 @@ from shutil import rmtree
 from time import sleep
 from django_docker_engine.docker_utils import DockerClientWrapper, DockerContainerSpec
 from django_docker_engine.container_managers import local as local_manager
-from django_docker_engine.container_managers import ecs as ecs_manager
 
 
 class DockerTests(unittest.TestCase):
@@ -25,14 +24,15 @@ class DockerTests(unittest.TestCase):
             re.sub(r'\W', '_', str(datetime.datetime.now())))
         os.mkdir(self.tmp)
         if os.environ.get('AWS_INSTANCE_ID'):
+            raise NotImplementedError('TODO: CloudFormation')
             # TODO: This is not working yet; Going to try CloudFormation.
-            self.manager = ecs_manager.EcsManager(
-                key_pair_name=os.environ.get('AWS_KEY_PAIR_NAME'),
-                cluster_name=os.environ.get('AWS_CLUSTER_NAME'),
-                security_group_id=os.environ.get('AWS_SECURITY_GROUP_ID'),
-                instance_id=os.environ.get('AWS_INSTANCE_ID'),
-                log_group_name=os.environ.get('AWS_LOG_GROUP_NAME')
-            )
+            # self.manager = ecs_manager.EcsManager(
+            #     key_pair_name=os.environ.get('AWS_KEY_PAIR_NAME'),
+            #     cluster_name=os.environ.get('AWS_CLUSTER_NAME'),
+            #     security_group_id=os.environ.get('AWS_SECURITY_GROUP_ID'),
+            #     instance_id=os.environ.get('AWS_INSTANCE_ID'),
+            #     log_group_name=os.environ.get('AWS_LOG_GROUP_NAME')
+            # )
         else:
             self.manager = local_manager.LocalManager()
         self.client = DockerClientWrapper(manager=self.manager)
