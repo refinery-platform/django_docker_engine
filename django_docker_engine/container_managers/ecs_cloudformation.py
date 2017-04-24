@@ -38,15 +38,28 @@ class EcsCloudFormationContainer(BaseContainer):
     def logs(self):
         raise NotImplementedError()
 
+PADDING = ' ' * len('INFO:root:')
 
-def _format_events(events, since):
-    log_prefix_width = 10
-    return ('\n'+' '*log_prefix_width).\
-        join(['{:<20} {:<27} {:<42} {:<70}'.format(
+def _format_event(event):
+    formatted = '{:<20} {:<27} {:<42} {:<70}'.format(
             event['ResourceStatus'],
             event['ResourceType'],
             event['LogicalResourceId'],
-            event['PhysicalResourceId']) for event in events[::-1]
+            event['PhysicalResourceId'])
+    reason = event.get('ResourceStatusReason')
+    if reason:
+        formatted += '\n' + PADDING + reason
+    return formatted
+
+def _format_events(events, since):
+    return ('\n' + PADDING).\
+        join([_format_event(event) for event in events[::-1]
+                      if event['Timestamp'] > since])
+
+def _raw_events(events, since):
+    log_prefix_width = 10
+    return ('\n'+' '*log_prefix_width).\
+        join([pformat(event) for event in events[::-1]
                       if event['Timestamp'] > since])
 
 def _expand_tags(tags):
@@ -79,10 +92,30 @@ def _create_stack(name, json, tags):
         event_descriptions = \
             client.describe_stack_events(StackName=stack_id)['StackEvents']
         logging.info(_format_events(event_descriptions, since))
+        logging.debug(_raw_events(event_descriptions, since))
         since = event_descriptions[0]['Timestamp']
 
     if status != CREATE_COMPLETE:
         logging.warn('Stack creation not successful: %s', pformat(stack_description))
+
+def _create_template_json():
+    template = troposphere.Template()
+    template.add_resource(
+        ec2.SecurityGroup(
+            'SG',
+            GroupDescription='All high ports are open'
+        )
+    )
+    template.add_resource(
+        ec2.Instance(
+            'EC2',
+            ImageId='ami-275ffe31'
+        )
+    )
+
+    json = template.to_json()
+    logging.info(json)
+    return json
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
@@ -90,22 +123,11 @@ if __name__ == '__main__':
     prefix = 'django-docker-'
     name = prefix + timestamp
 
+    json = _create_template_json()
     tags = {
         'department': 'dbmi',
         'environment': 'test',
         'project': 'django_docker_engine',
         'product': 'refinery'
     }
-
-    template = troposphere.Template()
-    template.add_resource(
-        ec2.SecurityGroup(
-            'highports',
-            GroupDescription='All high ports are open'
-        )
-    )
-
-    json = template.to_json()
-    logging.info(json)
-
     _create_stack(name, json, tags)
