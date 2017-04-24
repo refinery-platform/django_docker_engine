@@ -4,7 +4,8 @@ import boto3
 import re
 import datetime
 import time
-from pprint import pprint
+import logging
+from pprint import pformat
 
 
 class EcsCloudFormationManager(BaseManager):
@@ -35,25 +36,20 @@ class EcsCloudFormationContainer(BaseContainer):
     def logs(self):
         raise NotImplementedError()
 
+def _format_events(events):
+    return '\n'.join(['%20s %20s %20s %20s' % (
+        event['ResourceStatus'],
+        event['ResourceType'],
+        event['LogicalResourceId'],
+        event['PhysicalResourceId']) for event in events])
 
-if __name__ == '__main__':
-    timestamp = re.sub(r'\D', '-', str(datetime.datetime.now()))
-    prefix = 'django-docker-'
-    name = prefix + timestamp
+def _expand_tags(tags):
+    return [{
+        'Key': key,
+        'Value': tags[key]
+    } for key in tags]
 
-    tags = {
-        'department': 'dbmi',
-        'environment': 'test',
-        'project': 'django_docker_engine',
-        'product': 'refinery'
-    }
-    expanded_tags = [{
-                         'Key': key,
-                         'Value': tags[key]
-                     } for key in tags]
-
-    path = os.path.join(os.path.dirname(__file__), 'stack.json')
-    json = open(path).read()
+def _create_stack(name, json, expanded_tags):
     client = boto3.client('cloudformation')
 
     create_stack_response = client.create_stack(
@@ -66,15 +62,31 @@ if __name__ == '__main__':
     CREATE_IN_PROGRESS = 'CREATE_IN_PROGRESS'
     CREATE_COMPLETE = 'CREATE_COMPLETE'
 
-    describe_stack_response = None
+    stack_description = None
     status = CREATE_IN_PROGRESS
     while status == CREATE_IN_PROGRESS:
         time.sleep(1)
-        describe_create = client.describe_stacks(StackName=stack_id)
-        status = describe_create['Stacks'][0]['StackStatus']
-
-    pprint(describe_create)
+        stack_description = client.describe_stacks(StackName=stack_id)
+        status = stack_description['Stacks'][0]['StackStatus']
+        event_descriptions = client.describe_stack_events(StackName=stack_id)
+        logging.info('\n'+_format_events(event_descriptions['StackEvents']))
 
     if status != CREATE_COMPLETE:
-        describe_events = client.describe_stack_events(StackName=stack_id)
-        pprint(describe_events)
+        logging.warn('Stack creation not successful: %s', pformat(stack_description))
+
+if __name__ == '__main__':
+    logging.basicConfig(level=logging.INFO)
+    timestamp = re.sub(r'\D', '-', str(datetime.datetime.now()))
+    prefix = 'django-docker-'
+    name = prefix + timestamp
+
+    tags = {
+        'department': 'dbmi',
+        'environment': 'test',
+        'project': 'django_docker_engine',
+        'product': 'refinery'
+    }
+
+    path = os.path.join(os.path.dirname(__file__), 'stack.json')
+    json = open(path).read()
+    _create_stack(name, json, _expand_tags(tags))
