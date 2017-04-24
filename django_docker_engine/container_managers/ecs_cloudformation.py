@@ -1,5 +1,4 @@
 from base import BaseManager, BaseContainer
-import os
 import boto3
 import re
 import datetime
@@ -7,6 +6,8 @@ import time
 import logging
 import pytz
 from pprint import pformat
+import troposphere
+import troposphere.ec2 as ec2
 
 
 class EcsCloudFormationManager(BaseManager):
@@ -54,7 +55,8 @@ def _expand_tags(tags):
         'Value': tags[key]
     } for key in tags]
 
-def _create_stack(name, json, expanded_tags):
+def _create_stack(name, json, tags):
+    expanded_tags = _expand_tags(tags)
     client = boto3.client('cloudformation')
 
     create_stack_response = client.create_stack(
@@ -95,6 +97,15 @@ if __name__ == '__main__':
         'product': 'refinery'
     }
 
-    path = os.path.join(os.path.dirname(__file__), 'stack.json')
-    json = open(path).read()
-    _create_stack(name, json, _expand_tags(tags))
+    template = troposphere.Template()
+    template.add_resource(
+        ec2.SecurityGroup(
+            'highports',
+            GroupDescription='All high ports are open'
+        )
+    )
+
+    json = template.to_json()
+    logging.info(json)
+
+    _create_stack(name, json, tags)
