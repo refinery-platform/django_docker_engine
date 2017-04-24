@@ -45,7 +45,7 @@ def _format_event(event):
             event['ResourceStatus'],
             event['ResourceType'],
             event['LogicalResourceId'],
-            event['PhysicalResourceId'])
+            event['PhysicalResourceId']).strip()
     reason = event.get('ResourceStatusReason')
     if reason:
         formatted += '\n' + PADDING + reason
@@ -99,17 +99,37 @@ def _create_stack(name, json, tags):
         logging.warn('Stack creation not successful: %s', pformat(stack_description))
 
 def _create_template_json():
+    min_port = 32768
+    max_port = 65535
+    ecs_container_agent_port = 51678
+
     template = troposphere.Template()
-    template.add_resource(
+    security_group = template.add_resource(
         ec2.SecurityGroup(
             'SG',
-            GroupDescription='All high ports are open'
+            GroupDescription='All high ports are open',
+            SecurityGroupIngress=[
+                ec2.SecurityGroupRule(
+                    IpProtocol='tcp',
+                    FromPort=min_port,
+                    ToPort=ecs_container_agent_port - 1,
+                    CidrIp='0.0.0.0/0',
+                ),
+                ec2.SecurityGroupRule(
+                    IpProtocol='tcp',
+                    FromPort=ecs_container_agent_port + 1,
+                    ToPort=max_port,
+                    CidrIp='0.0.0.0/0'
+                ),
+            ]
         )
     )
     template.add_resource(
         ec2.Instance(
             'EC2',
-            ImageId='ami-275ffe31'
+            SecurityGroups=[troposphere.Ref(security_group)],
+            ImageId='ami-275ffe31',
+            InstanceType='t2.nano'
         )
     )
 
