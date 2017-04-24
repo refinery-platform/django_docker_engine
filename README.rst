@@ -126,6 +126,7 @@ Until then, keep an eye on the web console:
 - `Task Definitions <https://console.aws.amazon.com/ecs/home?region=us-east-1#/taskDefinitions>`_
 - `Clusters <https://console.aws.amazon.com/ecs/home?region=us-east-1#/clusters>`_
 - `Logs <https://console.aws.amazon.com/cloudwatch/home?region=us-east-1#logs:>`_
+- `CloudFormation Stacks <https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks?filter=active>`_
 
 or use AWS-CLI (TODO: Better filtering so we delete only test ones, not the production ones.)::
 
@@ -150,6 +151,12 @@ or use AWS-CLI (TODO: Better filtering so we delete only test ones, not the prod
         --query 'logGroups[].[logGroupName]' \
         --output text | \
     xargs -n 1 aws logs delete-log-group --log-group-name
+
+    aws cloudformation list-stacks \
+        --query 'StackSummaries[].[StackName]' \
+        --output text | \
+    grep django-docker | \
+    xargs -n 1 aws cloudformation delete-stack --stack-name
 
 (It seems that tasks can not be deleted, they can only be "deregistered".)
 
