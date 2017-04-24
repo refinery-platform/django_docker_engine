@@ -13,11 +13,11 @@ PADDING = ' ' * len('INFO:root:')
 
 
 def _format_event(event):
-    formatted = '{:<20} {:<27} {:<42} {:<70}'.format(
+    formatted = '{:<20} {:<27} {} {}'.format(
         event['ResourceStatus'],
         event['ResourceType'],
         event['LogicalResourceId'],
-        event['PhysicalResourceId']).strip()
+        event['PhysicalResourceId'])
     reason = event.get('ResourceStatusReason')
     if reason:
         formatted += '\n' + PADDING + reason
