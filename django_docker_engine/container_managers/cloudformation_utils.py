@@ -6,8 +6,7 @@ import logging
 import pytz
 from pprint import pformat
 import troposphere
-import troposphere.ec2 as ec2
-# import troposphere.ecs as ecs
+from troposphere import ec2, ecs
 
 PADDING = ' ' * len('INFO:root:')
 
@@ -44,6 +43,26 @@ def _expand_tags(tags):
             } for key in tags]
 
 
+def _tail_logs(stack_id, in_progress, complete):
+    client = boto3.client('cloudformation')
+    stack_description = None
+    status = in_progress
+    since = datetime.datetime.min.replace(tzinfo=pytz.UTC)
+    while status == in_progress:
+        time.sleep(1)
+        stack_description = client.describe_stacks(StackName=stack_id)
+        status = stack_description['Stacks'][0]['StackStatus']
+        event_descriptions = \
+            client.describe_stack_events(StackName=stack_id)['StackEvents']
+        logging.info(_format_events(event_descriptions, since))
+        logging.debug(_raw_events(event_descriptions, since))
+        since = event_descriptions[0]['Timestamp']
+    if status != complete:
+        raise RuntimeError(
+            'Stack is %s instead of %s: %s' %
+                (status, complete, pformat(stack_description)))
+
+
 def _create_stack(name, json, tags):
     expanded_tags = _expand_tags(tags)
     client = boto3.client('cloudformation')
@@ -54,28 +73,23 @@ def _create_stack(name, json, tags):
         Tags=expanded_tags
     )
     stack_id = create_stack_response['StackId']
-
-    CREATE_IN_PROGRESS = 'CREATE_IN_PROGRESS'
-    CREATE_COMPLETE = 'CREATE_COMPLETE'
-
-    stack_description = None
-    status = CREATE_IN_PROGRESS
-    since = datetime.datetime.min.replace(tzinfo=pytz.UTC)
-    while status == CREATE_IN_PROGRESS:
-        time.sleep(1)
-        stack_description = client.describe_stacks(StackName=stack_id)
-        status = stack_description['Stacks'][0]['StackStatus']
-        event_descriptions = \
-            client.describe_stack_events(StackName=stack_id)['StackEvents']
-        logging.info(_format_events(event_descriptions, since))
-        logging.debug(_raw_events(event_descriptions, since))
-        since = event_descriptions[0]['Timestamp']
-
-    if status != CREATE_COMPLETE:
-        logging.warn('Stack creation not successful: %s', pformat(stack_description))
+    _tail_logs(stack_id=stack_id,
+               in_progress='CREATE_IN_PROGRESS',
+               complete='CREATE_COMPLETE')
 
 
-def _create_template_json():
+# def _update_stack(stack_name):
+#     stack = boto3.resource('cloudformation').Stack(stack_name)
+#     update_stack_response = stack.update(
+#         TemplateBody=_create_update_template_json()
+#     )
+#     stack_id = update_stack_response['StackId']
+#     _tail_logs(stack_id=stack_id,
+#                in_progress='',
+#                complete='')
+
+
+def _create_template():
     min_port = 32768
     max_port = 65535
     ecs_container_agent_port = 51678
@@ -109,16 +123,64 @@ def _create_template_json():
             InstanceType='t2.nano'
         )
     )
-    # template.add_resource(
-    #     ecs.Cluster(
-    #         'ECS',
-    #
-    #     )
-    # )
+    template.add_resource(
+        ecs.Cluster('ECS')
+    )
+    return template
 
+
+def _create_template_json():
+    template = _create_template()
     json = template.to_json()
-    logging.info(json)
+    logging.info('Generated "create" json: %s', json)
     return json
+
+
+# def _create_update_template_json():
+#     template = _create_template()  # TODO: Or should this be passed in?
+#     container_definition = template.add_resource(
+#         ecs.ContainerDefinition(
+#             'containerDef',
+#             #Essential=True, # TODO: what does this do?
+#             Name='containerDef',
+#             Memory=100,
+#             # Cpu=10, # Causes "Invalid template resource property 'Cpu'"
+#             # With 'Image' I get "Invalid template resource property 'Image'"
+#             # Without, I get "ValueError: Resource Image required"
+#             # Image='amazon/amazon-ecs-sample', # TODO: nginx:alpine, or parameterize?
+#             LogConfiguration=ecs.LogConfiguration(
+#                 LogDriver='awslogs',
+#                 # Options={
+#                 #     'awslogs-group': Ref(web_log_group),
+#                 #     'awslogs-region': Ref(AWS_REGION),
+#                 # }
+#             ),
+#             # Environment=[
+#             #     ecs.Environment(
+#             #         Name="AWS_STORAGE_BUCKET_NAME",
+#             #         Value=Ref(assets_bucket),
+#             #     ),
+#             # ]
+#             # PortMappings=[PortMapping(
+#             #     ContainerPort=web_worker_port,
+#             #     HostPort=web_worker_port,
+#             # )],
+#             # TODO
+#         )
+#     )
+#     task_definition = template.add_resource(
+#         ecs.TaskDefinition(
+#             'taskDef',
+#             ContainerDefinitions=[
+#                 container_definition
+#             ],
+#             # TODO
+#         )
+#     )
+#
+#     json = template.to_json()
+#     logging.info('Generated "update" json: %s', json)
+#     return json
 
 
 def create_default_stack():
@@ -135,6 +197,13 @@ def create_default_stack():
     }
     _create_stack(name, json, tags)
     return name
+
+
+def start_container(stack_name, docker_image):
+    stack = boto3.resource('cloudformation').Stack(stack_name)
+    # stack.update(
+    #     TemplateBody=_create_update_template_json()
+    # )
 
 
 def delete_stack(name):

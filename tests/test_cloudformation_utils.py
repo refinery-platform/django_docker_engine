@@ -1,14 +1,20 @@
 import unittest
-from django_docker_engine.container_managers.cloudformation_utils \
-    import create_default_stack, delete_stack
+import logging
+from django_docker_engine.container_managers.cloudformation_utils import (
+    create_default_stack,
+    start_container,
+    delete_stack
+)
 
 
 class CloudFormationTests(unittest.TestCase):
     def setUp(self):
-        self.stack_name = create_default_stack()
+        # TODO: Is there a better idiom for this?
+        logging.basicConfig(level=logging.INFO)
 
-    def tearDown(self):
+    def addCleanup(self):
         delete_stack(self.stack_name)
 
-    def test_placeholder(self):
-        pass
+    def test_start_container(self):
+        self.stack_name = create_default_stack()
+        start_container(self.stack_name, 'nginx:alpine')
