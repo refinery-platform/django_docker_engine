@@ -1,9 +1,10 @@
 import unittest
 import logging
 from django_docker_engine.container_managers.cloudformation_utils import (
-    create_default_stack,
-    start_container,
-    delete_stack
+    create_stack,
+    delete_stack,
+    create_base_template,
+    create_container_template
 )
 
 
@@ -12,9 +13,8 @@ class CloudFormationTests(unittest.TestCase):
         # TODO: Is there a better idiom for this?
         logging.basicConfig(level=logging.INFO)
 
-    def addCleanup(self):
-        delete_stack(self.stack_name)
 
     def test_start_container(self):
-        self.stack_name = create_default_stack()
-        start_container(self.stack_name, 'nginx:alpine')
+        #self.base_stack_name = create_stack(create_base_template)
+        self.container_stack_name = create_stack(create_container_template)
+        self.addCleanup(delete_stack, self.container_stack_name)

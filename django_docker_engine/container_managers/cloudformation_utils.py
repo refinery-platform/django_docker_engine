@@ -89,7 +89,7 @@ def _create_stack(name, json, tags):
 #                complete='')
 
 
-def _create_template():
+def create_base_template():
     min_port = 32768
     max_port = 65535
     ecs_container_agent_port = 51678
@@ -129,12 +129,40 @@ def _create_template():
     return template
 
 
-def _create_template_json():
-    template = _create_template()
-    json = template.to_json()
-    logging.info('Generated "create" json: %s', json)
-    return json
-
+def create_container_template():
+    template = troposphere.Template()
+    template.add_resource(
+        ecs.TaskDefinition(
+            'taskDef',
+            ContainerDefinitions=[
+                ecs.ContainerDefinition(
+                    'containerDef',
+                    Name='containerDef',
+                    Image='nginx:alpine',
+                    Memory=100
+                )
+            ]
+        )
+    )
+    #     ecs.ContainerDefinition(
+    #         'containerDef',
+    #         #Essential=True, # TODO: what does this do?
+    #         Name='containerDef',
+    #         # Memory=100,
+    #         # Cpu=10, # Causes "Invalid template resource property 'Cpu'"
+    #         # With 'Image' I get "Invalid template resource property 'Image'"
+    #         # Without, I get "ValueError: Resource Image required"
+    #         Image='amazon/amazon-ecs-sample', # TODO: nginx:alpine, or parameterize?
+    #         # LogConfiguration=ecs.LogConfiguration(
+    #         #     LogDriver='awslogs',
+    #         #     # Options={
+    #         #     #     'awslogs-group': Ref(web_log_group),
+    #         #     #     'awslogs-region': Ref(AWS_REGION),
+    #         #     # }
+    #         # ),
+    #     )
+    # )
+    return template
 
 # def _create_update_template_json():
 #     template = _create_template()  # TODO: Or should this be passed in?
@@ -182,31 +210,34 @@ def _create_template_json():
 #     logging.info('Generated "update" json: %s', json)
 #     return json
 
+TAGS = {
+    'department': 'dbmi',
+    'environment': 'test',
+    'project': 'django_docker_engine',
+    'product': 'refinery'
+}
 
-def create_default_stack():
+
+def create_stack(create_template):
     timestamp = re.sub(r'\D', '-', str(datetime.datetime.now()))
     prefix = 'django-docker-'
     name = prefix + timestamp
 
-    json = _create_template_json()
-    tags = {
-        'department': 'dbmi',
-        'environment': 'test',
-        'project': 'django_docker_engine',
-        'product': 'refinery'
-    }
-    _create_stack(name, json, tags)
+    json = create_template().to_json()
+    logging.info(json)
+    _create_stack(name, json, TAGS)
     return name
 
 
-def start_container(stack_name, docker_image):
-    stack = boto3.resource('cloudformation').Stack(stack_name)
-    # stack.update(
-    #     TemplateBody=_create_update_template_json()
-    # )
+# def start_container(stack_name, docker_image):
+#     stack = boto3.resource('cloudformation').Stack(stack_name)
+#     # stack.update(
+#     #     TemplateBody=_create_update_template_json()
+#     # )
 
 
 def delete_stack(name):
+    logging.info('delete_stack: %s', name)
     client = boto3.client('cloudformation')
     client.delete_stack(
         StackName=name
@@ -214,5 +245,5 @@ def delete_stack(name):
 
 
 if __name__ == '__main__':
-    name = create_default_stack()
+    name = create_stack()
     print(name)
