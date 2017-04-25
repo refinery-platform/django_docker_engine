@@ -6,7 +6,7 @@ import logging
 import pytz
 from pprint import pformat
 import troposphere
-from troposphere import ec2, ecs, logs, AWS_REGION, Ref
+from troposphere import ec2, ecs, logs, AWS_REGION, Ref, ImportValue
 
 PADDING = ' ' * len('INFO:root:')
 
@@ -23,17 +23,18 @@ def _format_event(event):
     return formatted
 
 
-def _format_events(events, since):
+def _format_events(events, since, formatter):
     return ('\n' + PADDING). \
-        join([_format_event(event) for event in events[::-1]
+        join([formatter(event) for event in events[::-1]
               if event['Timestamp'] > since])
+
+
+def _readable_events(events, since):
+    return _format_events(events, since, _format_event)
 
 
 def _raw_events(events, since):
-    log_prefix_width = 10
-    return ('\n' + ' ' * log_prefix_width). \
-        join([pformat(event) for event in events[::-1]
-              if event['Timestamp'] > since])
+    return _format_events(events, since, pformat)
 
 
 def _expand_tags(tags):
@@ -54,7 +55,7 @@ def _tail_logs(stack_id, in_progress, complete):
         status = stack_description['Stacks'][0]['StackStatus']
         event_descriptions = \
             client.describe_stack_events(StackName=stack_id)['StackEvents']
-        logging.info(_format_events(event_descriptions, since))
+        logging.info(_readable_events(event_descriptions, since))
         logging.debug(_raw_events(event_descriptions, since))
         since = event_descriptions[0]['Timestamp']
     if status != complete:
@@ -149,7 +150,7 @@ def create_container_template(cluster_ref):
     template.add_resource(
         ecs.Service(
             'service',
-            Cluster=Ref(cluster_ref),
+            Cluster=ImportValue(cluster_ref),
             TaskDefinition=Ref('taskDef'),
             DesiredCount=1
         )
@@ -174,13 +175,6 @@ def create_stack(create_template, *args):
     logging.info(json)
     _create_stack(name, json, TAGS)
     return name
-
-
-# def start_container(stack_name, docker_image):
-#     stack = boto3.resource('cloudformation').Stack(stack_name)
-#     # stack.update(
-#     #     TemplateBody=_create_update_template_json()
-#     # )
 
 
 def delete_stack(name):
