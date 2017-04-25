@@ -6,7 +6,7 @@ import logging
 import pytz
 from pprint import pformat
 import troposphere
-from troposphere import ec2, ecs
+from troposphere import ec2, ecs, logs, AWS_REGION, Ref
 
 PADDING = ' ' * len('INFO:root:')
 
@@ -78,17 +78,6 @@ def _create_stack(name, json, tags):
                complete='CREATE_COMPLETE')
 
 
-# def _update_stack(stack_name):
-#     stack = boto3.resource('cloudformation').Stack(stack_name)
-#     update_stack_response = stack.update(
-#         TemplateBody=_create_update_template_json()
-#     )
-#     stack_id = update_stack_response['StackId']
-#     _tail_logs(stack_id=stack_id,
-#                in_progress='',
-#                complete='')
-
-
 def create_base_template():
     min_port = 32768
     max_port = 65535
@@ -129,7 +118,7 @@ def create_base_template():
     return template
 
 
-def create_container_template():
+def create_container_template(cluster_ref):
     template = troposphere.Template()
     template.add_resource(
         ecs.TaskDefinition(
@@ -139,76 +128,34 @@ def create_container_template():
                     'containerDef',
                     Name='containerDef',
                     Image='nginx:alpine',
-                    Memory=100
+                    Memory=100,
+                    LogConfiguration=ecs.LogConfiguration(
+                        LogDriver='awslogs',
+                        Options={
+                            'awslogs-group': 'logs',  # TODO
+                            'awslogs-region': AWS_REGION,
+                        }
+                    ),
+                    PortMappings=[
+                        ecs.PortMapping(
+                            ContainerPort=80
+                        )
+                        # Assigned to an arbitrary open host port
+                    ]
                 )
             ]
         )
     )
-    #     ecs.ContainerDefinition(
-    #         'containerDef',
-    #         #Essential=True, # TODO: what does this do?
-    #         Name='containerDef',
-    #         # Memory=100,
-    #         # Cpu=10, # Causes "Invalid template resource property 'Cpu'"
-    #         # With 'Image' I get "Invalid template resource property 'Image'"
-    #         # Without, I get "ValueError: Resource Image required"
-    #         Image='amazon/amazon-ecs-sample', # TODO: nginx:alpine, or parameterize?
-    #         # LogConfiguration=ecs.LogConfiguration(
-    #         #     LogDriver='awslogs',
-    #         #     # Options={
-    #         #     #     'awslogs-group': Ref(web_log_group),
-    #         #     #     'awslogs-region': Ref(AWS_REGION),
-    #         #     # }
-    #         # ),
-    #     )
-    # )
+    template.add_resource(
+        ecs.Service(
+            'service',
+            Cluster=Ref(cluster_ref),
+            TaskDefinition=Ref('taskDef'),
+            DesiredCount=1
+        )
+    )
     return template
 
-# def _create_update_template_json():
-#     template = _create_template()  # TODO: Or should this be passed in?
-#     container_definition = template.add_resource(
-#         ecs.ContainerDefinition(
-#             'containerDef',
-#             #Essential=True, # TODO: what does this do?
-#             Name='containerDef',
-#             Memory=100,
-#             # Cpu=10, # Causes "Invalid template resource property 'Cpu'"
-#             # With 'Image' I get "Invalid template resource property 'Image'"
-#             # Without, I get "ValueError: Resource Image required"
-#             # Image='amazon/amazon-ecs-sample', # TODO: nginx:alpine, or parameterize?
-#             LogConfiguration=ecs.LogConfiguration(
-#                 LogDriver='awslogs',
-#                 # Options={
-#                 #     'awslogs-group': Ref(web_log_group),
-#                 #     'awslogs-region': Ref(AWS_REGION),
-#                 # }
-#             ),
-#             # Environment=[
-#             #     ecs.Environment(
-#             #         Name="AWS_STORAGE_BUCKET_NAME",
-#             #         Value=Ref(assets_bucket),
-#             #     ),
-#             # ]
-#             # PortMappings=[PortMapping(
-#             #     ContainerPort=web_worker_port,
-#             #     HostPort=web_worker_port,
-#             # )],
-#             # TODO
-#         )
-#     )
-#     task_definition = template.add_resource(
-#         ecs.TaskDefinition(
-#             'taskDef',
-#             ContainerDefinitions=[
-#                 container_definition
-#             ],
-#             # TODO
-#         )
-#     )
-#
-#     json = template.to_json()
-#     logging.info('Generated "update" json: %s', json)
-#     return json
 
 TAGS = {
     'department': 'dbmi',
@@ -218,12 +165,12 @@ TAGS = {
 }
 
 
-def create_stack(create_template):
+def create_stack(create_template, *args):
     timestamp = re.sub(r'\D', '-', str(datetime.datetime.now()))
     prefix = 'django-docker-'
     name = prefix + timestamp
 
-    json = create_template().to_json()
+    json = create_template(*args).to_json()
     logging.info(json)
     _create_stack(name, json, TAGS)
     return name
@@ -239,9 +186,7 @@ def create_stack(create_template):
 def delete_stack(name):
     logging.info('delete_stack: %s', name)
     client = boto3.client('cloudformation')
-    client.delete_stack(
-        StackName=name
-    )
+    client.delete_stack(StackName=name)
 
 
 if __name__ == '__main__':

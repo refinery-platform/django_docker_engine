@@ -15,6 +15,10 @@ class CloudFormationTests(unittest.TestCase):
 
 
     def test_start_container(self):
-        #self.base_stack_name = create_stack(create_base_template)
-        self.container_stack_name = create_stack(create_container_template)
+        self.base_stack_name = create_stack(create_base_template)
+        self.addCleanup(delete_stack, self.base_stack_name)
+
+        self.container_stack_name = create_stack(
+            create_container_template,
+            self.base_stack_name)
         self.addCleanup(delete_stack, self.container_stack_name)
