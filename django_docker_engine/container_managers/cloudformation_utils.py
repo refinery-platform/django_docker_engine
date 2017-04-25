@@ -6,7 +6,7 @@ import logging
 import pytz
 from pprint import pformat
 import troposphere
-from troposphere import ec2, ecs, logs, AWS_REGION, Ref, ImportValue
+from troposphere import ec2, ecs, logs, AWS_REGION, Ref, ImportValue, Export, Output
 
 PADDING = ' ' * len('INFO:root:')
 
@@ -50,7 +50,7 @@ def _tail_logs(stack_id, in_progress, complete):
     status = in_progress
     since = datetime.datetime.min.replace(tzinfo=pytz.UTC)
     while status == in_progress:
-        time.sleep(1)
+        time.sleep(2)
         stack_description = client.describe_stacks(StackName=stack_id)
         status = stack_description['Stacks'][0]['StackStatus']
         event_descriptions = \
@@ -78,6 +78,7 @@ def _create_stack(name, json, tags):
                in_progress='CREATE_IN_PROGRESS',
                complete='CREATE_COMPLETE')
 
+CLUSTER = 'EcsCluster'
 
 def create_base_template():
     min_port = 32768
@@ -116,10 +117,17 @@ def create_base_template():
     template.add_resource(
         ecs.Cluster('ECS')
     )
+    template.add_output(
+        Output(
+            'cluster',
+            Value=Ref('ECS'),
+            Export=Export(CLUSTER)
+        )
+    )
     return template
 
 
-def create_container_template(cluster_ref):
+def create_container_template():
     template = troposphere.Template()
     template.add_resource(
         ecs.TaskDefinition(
@@ -150,7 +158,7 @@ def create_container_template(cluster_ref):
     template.add_resource(
         ecs.Service(
             'service',
-            Cluster=ImportValue(cluster_ref),
+            Cluster=ImportValue(CLUSTER),
             TaskDefinition=Ref('taskDef'),
             DesiredCount=1
         )
@@ -181,8 +189,3 @@ def delete_stack(name):
     logging.info('delete_stack: %s', name)
     client = boto3.client('cloudformation')
     client.delete_stack(StackName=name)
-
-
-if __name__ == '__main__':
-    name = create_stack()
-    print(name)
