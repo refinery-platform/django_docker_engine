@@ -108,6 +108,18 @@ def create_base_template():
                     ToPort=max_port,
                     CidrIp='0.0.0.0/0'
                 ),
+                ec2.SecurityGroupRule(
+                    IpProtocol='tcp',
+                    FromPort=22,
+                    ToPort=22,
+                    CidrIp='0.0.0.0/0' # TODO: tighten
+                ),
+                ec2.SecurityGroupRule(
+                    IpProtocol='tcp',
+                    FromPort=ecs_container_agent_port,
+                    ToPort=ecs_container_agent_port,
+                    CidrIp='0.0.0.0/0'  # TODO: tighten
+                ),
             ]
         )
     )
