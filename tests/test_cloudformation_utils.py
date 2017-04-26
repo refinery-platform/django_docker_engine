@@ -3,6 +3,7 @@ import logging
 from django_docker_engine.container_managers.cloudformation_utils import (
     create_stack,
     delete_stack,
+    host_port,
     create_base_template,
     create_container_template
 )
@@ -22,3 +23,4 @@ class CloudFormationTests(unittest.TestCase):
         # TODO: self.addCleanup(delete_stack, self.container_stack_name)
 
         # TODO: export port and hit nginx?
+        print(host_port(self.container_stack_name))

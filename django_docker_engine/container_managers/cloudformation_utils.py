@@ -187,6 +187,20 @@ def create_container_template():
             ]
         )
     )
+    template.add_output(
+        Output(
+            'Port',
+            Value='TODO: port',
+            Export=Export('port')
+        )
+    )
+    template.add_output(
+        Output(
+            'Host',
+            Value='TODO: host',
+            Export=Export('host')
+        )
+    )
     template.add_resource(
         ecs.Service(
             'service',
@@ -219,6 +233,13 @@ def create_stack(create_template, *args):
     stack_id = create_template.__name__.replace('_', '-') + '-' + UNIQ_ID
     _create_stack(stack_id, json, TAGS)
     return stack_id
+
+
+def host_port(stack_id):
+    # TODO: Better to get this information with CF Output?
+    cf = boto3.resource('cloudformation')
+    stack = cf.Stack(stack_id)
+    return stack.outputs
 
 
 def delete_stack(name):
