@@ -169,13 +169,14 @@ def create_container_template():
                     Name='containerDef',
                     Image='nginx:alpine',
                     Memory=100,
-                    LogConfiguration=ecs.LogConfiguration(
-                        LogDriver='awslogs',
-                        Options={
-                            'awslogs-group': 'logs',  # TODO
-                            'awslogs-region': AWS_REGION,
-                        }
-                    ),
+                    # TODO:
+                    # LogConfiguration=ecs.LogConfiguration(
+                    #     LogDriver='awslogs',
+                    #     Options={
+                    #         'awslogs-group': 'logs',  # TODO
+                    #         'awslogs-region': Ref(AWS_REGION),
+                    #     }
+                    # ),
                     PortMappings=[
                         ecs.PortMapping(
                             ContainerPort=80
