@@ -8,7 +8,7 @@ from pprint import pformat
 import troposphere
 from troposphere import ec2, ecs, logs, AWS_REGION, Ref, ImportValue, Export, Output
 
-PADDING = ' ' * len('INFO:root:')
+PADDING = ' ' * len('INFO:root:123: ')
 
 
 def _format_event(event):
@@ -44,18 +44,24 @@ def _expand_tags(tags):
             } for key in tags]
 
 
-def _tail_logs(stack_id, in_progress, complete):
+def _tail_logs(stack_id, in_progress, complete, timeout=120, increment=2):
     client = boto3.client('cloudformation')
     stack_description = None
     status = in_progress
     since = datetime.datetime.min.replace(tzinfo=pytz.UTC)
+    t = 0
     while status == in_progress:
-        time.sleep(2)
+        if t > timeout:
+            raise RuntimeError('Timeout: After %s, %s is still %s' % (
+                timeout, stack_id, in_progress
+            ))
+        t += increment
+        time.sleep(increment)
         stack_description = client.describe_stacks(StackName=stack_id)
         status = stack_description['Stacks'][0]['StackStatus']
         event_descriptions = \
             client.describe_stack_events(StackName=stack_id)['StackEvents']
-        logging.info(_readable_events(event_descriptions, since))
+        logging.info('%3s: %s', t, _readable_events(event_descriptions, since))
         logging.debug(_raw_events(event_descriptions, since))
         since = event_descriptions[0]['Timestamp']
     if status != complete:
@@ -78,7 +84,6 @@ def _create_stack(name, json, tags):
                in_progress='CREATE_IN_PROGRESS',
                complete='CREATE_COMPLETE')
 
-CLUSTER = 'EcsCluster'
 
 def create_base_template():
     min_port = 32768
@@ -173,16 +178,20 @@ TAGS = {
     'product': 'refinery'
 }
 
-
-def create_stack(create_template, *args):
+def _uniq_id():
     timestamp = re.sub(r'\D', '-', str(datetime.datetime.now()))
     prefix = 'django-docker-'
-    name = prefix + timestamp
+    return prefix + timestamp
 
+UNIQ_ID = _uniq_id()
+CLUSTER = 'EcsCluster-' + UNIQ_ID
+
+def create_stack(create_template, *args):
     json = create_template(*args).to_json()
     logging.info(json)
-    _create_stack(name, json, TAGS)
-    return name
+    stack_id = create_template.__name__.replace('_', '-') + '-' + UNIQ_ID
+    _create_stack(stack_id, json, TAGS)
+    return stack_id
 
 
 def delete_stack(name):
