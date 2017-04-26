@@ -165,6 +165,12 @@ or use AWS-CLI (TODO: Better filtering so we delete only test ones, not the prod
 
 (It seems that tasks can not be deleted, they can only be "deregistered".)
 
+---------
+Debugging
+---------
+
+ssh -i ~/.ssh/django_docker_cloudformation.pem ec2-user@INSTANCE_IP
+
 ------------
 Dependencies
 ------------

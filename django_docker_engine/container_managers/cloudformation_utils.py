@@ -6,7 +6,11 @@ import logging
 import pytz
 from pprint import pformat
 import troposphere
-from troposphere import ec2, ecs, iam, logs, AWS_REGION, Ref, ImportValue, Export, Output
+from troposphere import (
+    ec2, ecs, iam, logs,
+    AWS_REGION, Ref, ImportValue, Export, Output,
+    Base64, Join, AWS_STACK_NAME
+)
 
 PADDING = ' ' * len('INFO:root:123: ')
 
@@ -123,18 +127,26 @@ def create_base_template():
             ]
         )
     )
+    cluster = template.add_resource(
+        ecs.Cluster('ECS')
+    )
     template.add_resource(
         ec2.Instance(
             'EC2',
-            SecurityGroups=[troposphere.Ref(security_group)],
+            SecurityGroups=[Ref(security_group)],
             ImageId='ami-275ffe31',
             InstanceType='t2.nano',
-            IamInstanceProfile='ecsInstanceRole'
-            # TODO: For a new install, this role needs to be created in IAM.
+            UserData=Base64(Join('', [
+                '#!/bin/bash -xe\n',
+                'echo ECS_CLUSTER=',
+                Ref(cluster),
+                ' >> /etc/ecs/ecs.config\n'
+            ])),
+            KeyName='django_docker_cloudformation',
+            # TODO: For a fresh install, this keypair needs to exist.
+            IamInstanceProfile='ecsInstanceRole',
+            # TODO: For a fresh install, this role needs to exist.
         )
-    )
-    template.add_resource(
-        ecs.Cluster('ECS')
     )
     template.add_output(
         Output(
