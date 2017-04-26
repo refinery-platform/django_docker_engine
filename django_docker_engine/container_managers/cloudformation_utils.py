@@ -6,7 +6,7 @@ import logging
 import pytz
 from pprint import pformat
 import troposphere
-from troposphere import ec2, ecs, logs, AWS_REGION, Ref, ImportValue, Export, Output
+from troposphere import ec2, ecs, iam, logs, AWS_REGION, Ref, ImportValue, Export, Output
 
 PADDING = ' ' * len('INFO:root:123: ')
 
@@ -44,7 +44,7 @@ def _expand_tags(tags):
             } for key in tags]
 
 
-def _tail_logs(stack_id, in_progress, complete, timeout=120, increment=2):
+def _tail_logs(stack_id, in_progress, complete, timeout=300, increment=2):
     client = boto3.client('cloudformation')
     stack_description = None
     status = in_progress
@@ -116,7 +116,9 @@ def create_base_template():
             'EC2',
             SecurityGroups=[troposphere.Ref(security_group)],
             ImageId='ami-275ffe31',
-            InstanceType='t2.nano'
+            InstanceType='t2.nano',
+            IamInstanceProfile='ecsInstanceRole'
+            # TODO: For a new install, this role needs to be created in IAM.
         )
     )
     template.add_resource(
