@@ -169,6 +169,7 @@ or use AWS-CLI (TODO: Better filtering so we delete only test ones, not the prod
 Debugging
 ---------
 
+
 ssh -i ~/.ssh/django_docker_cloudformation.pem ec2-user@INSTANCE_IP
 
 ------------
