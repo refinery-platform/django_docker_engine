@@ -7,9 +7,7 @@ import pytz
 from pprint import pformat
 import troposphere
 from troposphere import (
-    ec2, ecs, iam, logs,
-    AWS_REGION, Ref, ImportValue, Export, Output,
-    Base64, Join, AWS_STACK_NAME
+    ec2, Ref,
 )
 
 PADDING = ' ' * len('INFO:root:123: ')
@@ -71,7 +69,7 @@ def _tail_logs(stack_id, in_progress, complete, timeout=300, increment=2):
     if status != complete:
         raise RuntimeError(
             'Stack is %s instead of %s: %s' %
-                (status, complete, pformat(stack_description)))
+            (status, complete, pformat(stack_description)))
 
 
 def _create_stack(name, json, tags):
@@ -89,7 +87,7 @@ def _create_stack(name, json, tags):
                complete='CREATE_COMPLETE')
 
 
-def create_base_template():
+def create_ec2_template():
     min_port = 32768
     max_port = 65535
     ecs_container_agent_port = 51678
@@ -112,101 +110,42 @@ def create_base_template():
                     ToPort=max_port,
                     CidrIp='0.0.0.0/0'
                 ),
-                ec2.SecurityGroupRule(
-                    IpProtocol='tcp',
-                    FromPort=22,
-                    ToPort=22,
-                    CidrIp='0.0.0.0/0' # TODO: tighten
-                ),
-                ec2.SecurityGroupRule(
-                    IpProtocol='tcp',
-                    FromPort=ecs_container_agent_port,
-                    ToPort=ecs_container_agent_port,
-                    CidrIp='0.0.0.0/0'  # TODO: tighten
-                ),
+
+                # Uncomment for debugging: (tighten CIDR)
+                # ec2.SecurityGroupRule(
+                #     IpProtocol='tcp',
+                #     FromPort=22,
+                #     ToPort=22,
+                #     CidrIp='0.0.0.0/0'
+                # ),
+
+                # Uncomment for ECS: (tighten CIDR)
+                # ec2.SecurityGroupRule(
+                #     IpProtocol='tcp',
+                #     FromPort=ecs_container_agent_port,
+                #     ToPort=ecs_container_agent_port,
+                #     CidrIp='0.0.0.0/0'
+                # ),
             ]
         )
-    )
-    cluster = template.add_resource(
-        ecs.Cluster('ECS')
     )
     template.add_resource(
         ec2.Instance(
             'EC2',
             SecurityGroups=[Ref(security_group)],
-            ImageId='ami-275ffe31',
+            ImageId='ami-275ffe31',  # Any image with Docker Engine would do.
             InstanceType='t2.nano',
-            UserData=Base64(Join('', [
-                '#!/bin/bash -xe\n',
-                'echo ECS_CLUSTER=',
-                Ref(cluster),
-                ' >> /etc/ecs/ecs.config\n'
-            ])),
+
             KeyName='django_docker_cloudformation',
-            # TODO: For a fresh install, this keypair needs to exist.
-            IamInstanceProfile='ecsInstanceRole',
-            # TODO: For a fresh install, this role needs to exist.
-        )
-    )
-    template.add_output(
-        Output(
-            'cluster',
-            Value=Ref('ECS'),
-            Export=Export(CLUSTER)
-        )
-    )
-    return template
+            # On a fresh install, this keypair needs to exist.
 
-
-def create_container_template():
-    template = troposphere.Template()
-    template.add_resource(
-        ecs.TaskDefinition(
-            'taskDef',
-            ContainerDefinitions=[
-                ecs.ContainerDefinition(
-                    'containerDef',
-                    Name='containerDef',
-                    Image='nginx:alpine',
-                    Memory=100,
-                    # TODO:
-                    # LogConfiguration=ecs.LogConfiguration(
-                    #     LogDriver='awslogs',
-                    #     Options={
-                    #         'awslogs-group': 'logs',  # TODO
-                    #         'awslogs-region': Ref(AWS_REGION),
-                    #     }
-                    # ),
-                    PortMappings=[
-                        ecs.PortMapping(
-                            ContainerPort=80
-                        )
-                        # Assigned to an arbitrary open host port
-                    ]
-                )
-            ]
-        )
-    )
-    template.add_output(
-        Output(
-            'Port',
-            Value='TODO: port',
-            Export=Export('port')
-        )
-    )
-    template.add_output(
-        Output(
-            'Host',
-            Value='TODO: host',
-            Export=Export('host')
-        )
-    )
-    template.add_resource(
-        ecs.Service(
-            'service',
-            Cluster=ImportValue(CLUSTER),
-            TaskDefinition=Ref('taskDef'),
-            DesiredCount=1
+            # IamInstanceProfile='ecsInstanceRole', # Created by hand
+            # UserData=Base64(Join('', [
+            #     '#!/bin/bash -xe\n',
+            #     'echo ECS_CLUSTER=',
+            #     Ref(cluster),
+            #     ' >> /etc/ecs/ecs.config\n'
+            # ])),
         )
     )
     return template
@@ -219,13 +158,16 @@ TAGS = {
     'product': 'refinery'
 }
 
+
 def _uniq_id():
     timestamp = re.sub(r'\D', '-', str(datetime.datetime.now()))
     prefix = 'django-docker-'
     return prefix + timestamp
 
+
 UNIQ_ID = _uniq_id()
 CLUSTER = 'EcsCluster-' + UNIQ_ID
+
 
 def create_stack(create_template, *args):
     json = create_template(*args).to_json()
@@ -233,13 +175,6 @@ def create_stack(create_template, *args):
     stack_id = create_template.__name__.replace('_', '-') + '-' + UNIQ_ID
     _create_stack(stack_id, json, TAGS)
     return stack_id
-
-
-def host_port(stack_id):
-    # TODO: Better to get this information with CF Output?
-    cf = boto3.resource('cloudformation')
-    stack = cf.Stack(stack_id)
-    return stack.outputs
 
 
 def delete_stack(name):
