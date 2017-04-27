@@ -7,8 +7,9 @@ import pytz
 from pprint import pformat
 import troposphere
 from troposphere import (
-    ec2, Ref,
+    ec2, Ref, Output, Export
 )
+import sys
 
 PADDING = ' ' * len('INFO:root:123: ')
 
@@ -131,7 +132,7 @@ def create_ec2_template():
     )
     template.add_resource(
         ec2.Instance(
-            'EC2',
+            EC2_REF,
             SecurityGroups=[Ref(security_group)],
             ImageId='ami-275ffe31',  # Any image with Docker Engine would do.
             InstanceType='t2.nano',
@@ -148,8 +149,16 @@ def create_ec2_template():
             # ])),
         )
     )
+    template.add_output(
+        Output(
+            EC2_OUTPUT_KEY,
+            Value=Ref(EC2_REF)
+        )
+    )
     return template
 
+KEY_NAME = 'django_docker_cloudformation'
+EC2_REF = 'EC2'
 
 TAGS = {
     'department': 'dbmi',
@@ -168,6 +177,7 @@ def _uniq_id():
 UNIQ_ID = _uniq_id()
 CLUSTER = 'EcsCluster-' + UNIQ_ID
 
+EC2_OUTPUT_KEY = 'ec2'
 
 def create_stack(create_template, *args):
     json = create_template(*args).to_json()
@@ -176,6 +186,24 @@ def create_stack(create_template, *args):
     _create_stack(stack_id, json, TAGS)
     return stack_id
 
+def get_ip_for_stack(stack_id):
+    stack = boto3.resource('cloudformation').Stack(stack_id)
+    logging.info('stack.output: %s', stack.outputs)
+
+    ec2_ids = [
+        output['OutputValue']
+        for output in stack.outputs
+        if output['OutputKey'] == EC2_OUTPUT_KEY
+        ]
+    assert len(ec2_ids) == 1, 'Should be exactly one ec2_id: %s' % ec2_ids
+    ec2_id = ec2_ids[0]
+    logging.info('ec2 ID: %s', ec2_id)
+
+    instance = boto3.resource('ec2').Instance(ec2_id)
+    ip = instance.public_ip_address
+    logging.info('IP: %s', ip)
+
+    return ip
 
 def delete_stack(name):
     logging.info('delete_stack: %s', name)
@@ -184,11 +212,12 @@ def delete_stack(name):
 
 
 if __name__ == "__main__":
-    import sys
-    if len(sys.argv) == 1:
-        logging.basicConfig(level=logging.INFO)
-        stack_name = create_stack(create_ec2_template)
-        print(stack_name)
-    else:
+    if len(sys.argv) != 1:
         print('No arguments: Creates a new EC2 with CloudFormation')
         exit(1)
+
+    logging.basicConfig(level=logging.INFO)
+
+    stack_id = create_stack(create_ec2_template)
+    ip = get_ip_for_stack(stack_id)
+    logging.info('ssh -i ~/.ssh/%s.pem ec2-user@%s', KEY_NAME, ip)
