@@ -181,3 +181,14 @@ def delete_stack(name):
     logging.info('delete_stack: %s', name)
     client = boto3.client('cloudformation')
     client.delete_stack(StackName=name)
+
+
+if __name__ == "__main__":
+    import sys
+    if len(sys.argv) == 1:
+        logging.basicConfig(level=logging.INFO)
+        stack_name = create_stack(create_ec2_template)
+        print(stack_name)
+    else:
+        print('No arguments: Creates a new EC2 with CloudFormation')
+        exit(1)
