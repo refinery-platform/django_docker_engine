@@ -7,7 +7,7 @@ import pytz
 from pprint import pformat
 import troposphere
 from troposphere import (
-    ec2, Ref, Output, Export
+    ec2, Ref, Output, Base64, Join,
 )
 import sys
 
@@ -87,11 +87,13 @@ def _create_stack(name, json, tags):
                in_progress='CREATE_IN_PROGRESS',
                complete='CREATE_COMPLETE')
 
+DOCKERD_PORT = 2375
 
 def create_ec2_template():
     min_port = 32768
     max_port = 65535
     ecs_container_agent_port = 51678
+    ssh_port = 22
 
     template = troposphere.Template()
     security_group = template.add_resource(
@@ -112,13 +114,20 @@ def create_ec2_template():
                     CidrIp='0.0.0.0/0'
                 ),
 
+                ec2.SecurityGroupRule(
+                    IpProtocol='tcp',
+                    FromPort=DOCKERD_PORT,
+                    ToPort=DOCKERD_PORT,
+                    CidrIp='0.0.0.0/0' # NO! Use SSL, or restrict access.
+                ),
+
                 # Uncomment for debugging: (tighten CIDR)
-                # ec2.SecurityGroupRule(
-                #     IpProtocol='tcp',
-                #     FromPort=22,
-                #     ToPort=22,
-                #     CidrIp='0.0.0.0/0'
-                # ),
+                ec2.SecurityGroupRule(
+                    IpProtocol='tcp',
+                    FromPort=ssh_port,
+                    ToPort=22,
+                    CidrIp='0.0.0.0/0'
+                ),
 
                 # Uncomment for ECS: (tighten CIDR)
                 # ec2.SecurityGroupRule(
@@ -134,12 +143,22 @@ def create_ec2_template():
         ec2.Instance(
             EC2_REF,
             SecurityGroups=[Ref(security_group)],
-            ImageId='ami-275ffe31',  # Any image with Docker Engine would do.
+            # ImageId='ami-c58c1dd3', # plain Amazon Linux AMI
+            # ImageId='ami-80861296', # Ubuntu ebs, hvm; "Permission denied (publickey)"
+            ImageId='ami-275ffe31',  # ECS Optimized
             InstanceType='t2.nano',
 
             KeyName='django_docker_cloudformation',
             # On a fresh install, this keypair needs to exist.
 
+            UserData=Base64(Join('\n', [
+                '#!/bin/bash -xe',
+                "echo 'OPTIONS=\"$OPTIONS -H tcp://0.0.0.0:2375\"' >> /etc/sysconfig/docker"
+            ])),
+
+
+            # These are critical for ECS, but we're not using ECS:
+            #
             # IamInstanceProfile='ecsInstanceRole', # Created by hand
             # UserData=Base64(Join('', [
             #     '#!/bin/bash -xe\n',
@@ -221,3 +240,4 @@ if __name__ == "__main__":
     stack_id = create_stack(create_ec2_template)
     ip = get_ip_for_stack(stack_id)
     logging.info('ssh -i ~/.ssh/%s.pem ec2-user@%s', KEY_NAME, ip)
+    logging.info('docker -H tcp://%s:%s ps', ip, DOCKERD_PORT)
