@@ -11,6 +11,7 @@ from troposphere import (
 )
 import requests
 import sys
+import subprocess
 
 PADDING = ' ' * len('INFO:root:123: ')
 
@@ -137,7 +138,7 @@ def create_ec2_template(
                 IpProtocol='tcp',
                 FromPort=SSH_PORT,
                 ToPort=SSH_PORT,
-                CidrIp=sg_cidr
+                CidrIp='0.0.0.0/0' # SSH is protected by key
             ),
         )
 
@@ -158,7 +159,7 @@ def create_ec2_template(
         ec2.Instance(
             EC2_REF,
             SecurityGroups=[Ref(sg) for sg in all_security_groups],
-            # ImageId='ami-c58c1dd3', # plain Amazon Linux AMI
+            # ImageId='ami-c58c1dd3', # plain Amazon Linux AMI, needs docker installed
             # ImageId='ami-80861296', # Ubuntu ebs, hvm; "Permission denied (publickey)"
             ImageId='ami-275ffe31',  # ECS Optimized
             InstanceType='t2.nano',
@@ -253,12 +254,38 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
 
     host_ip = requests.get('http://ipinfo.io/ip').text.strip()
-    host_cidr = host_ip + '/0' # TODO: 32
-    host_cidr = '0.0.0.0/0'
+    host_cidr = host_ip + '/32'
+    enable_ssh = True  # Helps with debugging, but default should be False
     stack_id = create_stack(
         create_ec2_template,
         host_cidr=host_cidr,
-        enable_ssh=True)
-    ip = get_ip_for_stack(stack_id)
-    logging.info('ssh -i ~/.ssh/%s.pem ec2-user@%s \'cat /etc/sysconfig/docker; echo; ps aux | grep dockerd\'', KEY_NAME, ip)
-    logging.info('docker -H tcp://%s:%s ps', ip, DOCKERD_PORT)
+        enable_ssh=enable_ssh)
+    stack_ip = get_ip_for_stack(stack_id)
+
+    docker_command_tokens = [
+        'docker', '-H',
+        'tcp://{}:{}'.format(stack_ip, DOCKERD_PORT),
+        'info']
+
+    docker_output = None
+    t = 0
+    while not docker_output and t < 30:
+        t += 1
+        try:
+            docker_output = subprocess.check_output(docker_command_tokens)
+        except subprocess.CalledProcessError:
+            pass
+    if not docker_output:
+        raise RuntimeError('Docker never came up')
+
+    logging.info(' '.join(docker_command_tokens))
+    logging.info(docker_output)
+    if enable_ssh:
+        commands = '; '.join([
+            'cat /etc/sysconfig/docker',
+            'echo'
+            'ps aux | grep dockerd'
+        ])
+        ssh_command = 'ssh -i ~/.ssh/{}.pem ec2-user@{} \'{}\'' \
+            .format(KEY_NAME, stack_ip, commands)
+        logging.info(ssh_command)
