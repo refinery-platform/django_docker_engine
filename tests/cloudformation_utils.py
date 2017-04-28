@@ -9,6 +9,7 @@ import troposphere
 from troposphere import (
     ec2, Ref, Output, Base64, Join,
 )
+import requests
 import sys
 
 PADDING = ' ' * len('INFO:root:123: ')
@@ -88,61 +89,71 @@ def _create_stack(name, json, tags):
                complete='CREATE_COMPLETE')
 
 DOCKERD_PORT = 2375
+SSH_PORT = 22
 
-def create_ec2_template():
+def create_ec2_template(
+        host_cidr=None,
+        extra_security_groups=(),
+        enable_ssh=False):
+    if not (host_cidr or extra_security_groups):
+        raise RuntimeError('Either a CIDR or a AWS Security Group must be given')
+    sg_cidr = host_cidr or '0.0.0.0/0'
+
     min_port = 32768
     max_port = 65535
     ecs_container_agent_port = 51678
-    ssh_port = 22
+    # For now, we are using an ECS image, even if we are not using ECS.
+
+    security_group_rules = [
+        ec2.SecurityGroupRule(
+            IpProtocol='tcp',
+            FromPort=min_port,
+            ToPort=ecs_container_agent_port - 1,
+            CidrIp=sg_cidr,
+        ),
+        ec2.SecurityGroupRule(
+            IpProtocol='tcp',
+            FromPort=ecs_container_agent_port + 1,
+            ToPort=max_port,
+            CidrIp=sg_cidr
+        ),
+        ec2.SecurityGroupRule(
+            IpProtocol='tcp',
+            FromPort=DOCKERD_PORT,
+            ToPort=DOCKERD_PORT,
+            CidrIp=sg_cidr
+        )
+        # Uncomment for ECS:
+        # ec2.SecurityGroupRule(
+        #     IpProtocol='tcp',
+        #     FromPort=ecs_container_agent_port,
+        #     ToPort=ecs_container_agent_port,
+        #     CidrIp=sg_cidr
+        # )
+    ]
+    if enable_ssh:
+        security_group_rules.append(
+            ec2.SecurityGroupRule(
+                IpProtocol='tcp',
+                FromPort=SSH_PORT,
+                ToPort=SSH_PORT,
+                CidrIp=sg_cidr
+            ),
+        )
 
     template = troposphere.Template()
-    security_group = template.add_resource(
+    default_security_group = template.add_resource(
         ec2.SecurityGroup(
             'SG',
             GroupDescription='All high ports are open',
-            SecurityGroupIngress=[
-                ec2.SecurityGroupRule(
-                    IpProtocol='tcp',
-                    FromPort=min_port,
-                    ToPort=ecs_container_agent_port - 1,
-                    CidrIp='0.0.0.0/0',
-                ),
-                ec2.SecurityGroupRule(
-                    IpProtocol='tcp',
-                    FromPort=ecs_container_agent_port + 1,
-                    ToPort=max_port,
-                    CidrIp='0.0.0.0/0'
-                ),
-
-                ec2.SecurityGroupRule(
-                    IpProtocol='tcp',
-                    FromPort=DOCKERD_PORT,
-                    ToPort=DOCKERD_PORT,
-                    CidrIp='0.0.0.0/0' # NO! Use SSL, or restrict access.
-                ),
-
-                # Uncomment for debugging: (tighten CIDR)
-                ec2.SecurityGroupRule(
-                    IpProtocol='tcp',
-                    FromPort=ssh_port,
-                    ToPort=22,
-                    CidrIp='0.0.0.0/0'
-                ),
-
-                # Uncomment for ECS: (tighten CIDR)
-                # ec2.SecurityGroupRule(
-                #     IpProtocol='tcp',
-                #     FromPort=ecs_container_agent_port,
-                #     ToPort=ecs_container_agent_port,
-                #     CidrIp='0.0.0.0/0'
-                # ),
-            ]
+            SecurityGroupIngress=security_group_rules
         )
     )
+    all_security_groups = list(extra_security_groups) + [default_security_group]
     template.add_resource(
         ec2.Instance(
             EC2_REF,
-            SecurityGroups=[Ref(security_group)],
+            SecurityGroups=[Ref(sg) for sg in all_security_groups],
             # ImageId='ami-c58c1dd3', # plain Amazon Linux AMI
             # ImageId='ami-80861296', # Ubuntu ebs, hvm; "Permission denied (publickey)"
             ImageId='ami-275ffe31',  # ECS Optimized
@@ -155,7 +166,6 @@ def create_ec2_template():
                 '#!/bin/bash -xe',
                 "echo 'OPTIONS=\"$OPTIONS -H tcp://0.0.0.0:2375\"' >> /etc/sysconfig/docker"
             ])),
-
 
             # These are critical for ECS, but we're not using ECS:
             #
@@ -198,8 +208,8 @@ CLUSTER = 'EcsCluster-' + UNIQ_ID
 
 EC2_OUTPUT_KEY = 'ec2'
 
-def create_stack(create_template, *args):
-    json = create_template(*args).to_json()
+def create_stack(create_template, **args):
+    json = create_template(**args).to_json()
     logging.info(json)
     stack_id = create_template.__name__.replace('_', '-') + '-' + UNIQ_ID
     _create_stack(stack_id, json, TAGS)
@@ -237,7 +247,13 @@ if __name__ == "__main__":
 
     logging.basicConfig(level=logging.INFO)
 
-    stack_id = create_stack(create_ec2_template)
+    host_ip = requests.get('http://ipinfo.io/ip').text.strip()
+    host_cidr = host_ip + '/0' # TODO: 32
+    host_cidr = '0.0.0.0/0'
+    stack_id = create_stack(
+        create_ec2_template,
+        host_cidr=host_cidr,
+        enable_ssh=True)
     ip = get_ip_for_stack(stack_id)
-    logging.info('ssh -i ~/.ssh/%s.pem ec2-user@%s', KEY_NAME, ip)
+    logging.info('ssh -i ~/.ssh/%s.pem ec2-user@%s \'cat /etc/sysconfig/docker; echo; ps aux | grep dockerd\'', KEY_NAME, ip)
     logging.info('docker -H tcp://%s:%s ps', ip, DOCKERD_PORT)

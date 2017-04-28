@@ -134,9 +134,11 @@ When you delete a CloudFormation stack, it should also take care of the lower le
 or use AWS-CLI (TODO: Better filtering so we delete only test ones, not the production ones.)::
 
     aws cloudformation list-stacks \
-        --query 'StackSummaries[].[StackName]' \
+        --query 'StackSummaries[].[StackName,StackStatus]' \
         --output text | \
+    grep -v DELETE_COMPLETE | \
     grep django-docker | \
+    cut -f 1 | \
     xargs -n 1 aws cloudformation delete-stack --stack-name
 
 ... and, again, you can consider the lower level resources, though that shouldn't be necessary::
