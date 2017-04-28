@@ -27,14 +27,7 @@ _SSH_PORT = 22
 _UNIQ_ID = _uniq_id()
 _CLUSTER = 'EcsCluster-' + _UNIQ_ID
 _EC2_OUTPUT_KEY = 'ec2'
-_KEY_NAME = 'django_docker_cloudformation'
 _EC2_REF = 'EC2'
-_TAGS = {
-    'department': 'dbmi',
-    'environment': 'test',
-    'project': 'django_docker_engine',
-    'product': 'refinery'
-}
 _PADDING = ' ' * len('INFO:root:123: ')
 
 
@@ -98,9 +91,14 @@ def _tail_logs(stack_id, in_progress, complete, timeout=300, increment=2):
 
 
 def _create_ec2_template(
-        host_cidr=None,
-        extra_security_groups=(),
-        enable_ssh=False):
+        key_name,
+        host_cidr,
+        ami,
+        instance_type,
+        extra_security_groups,
+        enable_ssh):
+    if not(key_name):
+        raise RuntimeError('key_name is required')
     if not (host_cidr or extra_security_groups):
         raise RuntimeError('Either a CIDR or a AWS Security Group must be given')
     sg_cidr = host_cidr or '0.0.0.0/0'
@@ -167,11 +165,9 @@ def _create_ec2_template(
             SecurityGroups=[Ref(sg) for sg in all_security_groups],
             # ImageId='ami-c58c1dd3', # plain Amazon Linux AMI, needs docker installed
             # ImageId='ami-80861296', # Ubuntu ebs, hvm; "Permission denied (publickey)"
-            ImageId='ami-275ffe31',  # ECS Optimized
-            InstanceType='t2.nano',
-
-            KeyName='django_docker_cloudformation',
-            # On a fresh install, this keypair needs to exist.
+            ImageId=ami,
+            InstanceType=instance_type,
+            KeyName=key_name,
 
             UserData=Base64('\n'.join([
                 '#!/bin/bash -xe',
@@ -199,7 +195,7 @@ def _create_ec2_template(
     return template
 
 
-def _create_stack(create_template, tags=_TAGS, **args):
+def _create_stack(create_template, tags={}, **args):
     json = create_template(**args).to_json()
     logging.info(json)
     stack_name = create_template.__name__.replace('_', '') + '-' + _UNIQ_ID
@@ -238,7 +234,13 @@ def _get_ip_for_stack(stack_id):
     return ip
 
 
-def build(enable_ssh=False):
+def build(host_cidr,
+          tags,
+          enable_ssh=False,
+          key_name='django_docker_cloudformation',
+          ami='ami-275ffe31',  # ECS Optimized
+          instance_type='t2.nano',
+          extra_security_groups=()):
     """
     Builds a Cloudformation stack with a single EC2 running Docker.
     Access will be restricted, either to originating IP, or to
@@ -247,12 +249,14 @@ def build(enable_ssh=False):
     Returns the stack id, and a TCP URL for use with the
     "-H" parameter of the Docker CLI.
     """
-
-    host_ip = requests.get('http://ipinfo.io/ip').text.strip()
-    host_cidr = host_ip + '/32'
     stack_id = _create_stack(
         _create_ec2_template,
+        tags=tags,
         host_cidr=host_cidr,
+        key_name=key_name,
+        ami=ami,
+        instance_type=instance_type,
+        extra_security_groups=extra_security_groups,
         enable_ssh=enable_ssh)
     stack_ip = _get_ip_for_stack(stack_id)
     docker_h_url = 'tcp://{}:{}'.format(stack_ip, _DOCKERD_PORT)
@@ -260,7 +264,7 @@ def build(enable_ssh=False):
 
     docker_output = None
     t = 0
-    while not docker_output and t < 30:
+    while not docker_output and t < 60:
         t += 1
         try:
             docker_output = subprocess.check_output(docker_command_tokens)
@@ -279,7 +283,7 @@ def build(enable_ssh=False):
             'ps aux | grep dockerd'
         ])
         ssh_command = 'ssh -i ~/.ssh/{}.pem ec2-user@{} \'{}\'' \
-            .format(_KEY_NAME, stack_ip, commands)
+            .format(key_name, stack_ip, commands)
         logging.info(ssh_command)
 
     DockerStackInfo = collections.namedtuple('DockerStackInfo', ['id', 'url'])
@@ -293,5 +297,13 @@ if __name__ == "__main__":
 
     logging.basicConfig(level=logging.INFO)
 
-    url = build().url
+    host_ip = requests.get('http://ipinfo.io/ip').text.strip()
+    host_cidr = host_ip + '/32'
+    tags = {
+        'department': 'dbmi',
+        'environment': 'test',
+        'project': 'django_docker_engine',
+        'product': 'refinery'
+    }
+    url = build(host_cidr=host_cidr, tags=tags).url
     logging.info(url)
