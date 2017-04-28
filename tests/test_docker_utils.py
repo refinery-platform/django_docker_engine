@@ -4,6 +4,7 @@ import datetime
 import re
 import requests
 import django
+import errno
 from shutil import rmtree
 from time import sleep
 from django_docker_engine.docker_utils import DockerClientWrapper, DockerContainerSpec
@@ -15,14 +16,10 @@ class DockerTests(unittest.TestCase):
         # mkdtemp is the obvious way to do this, but
         # the resulting directory is not visible to Docker.
         base = '/tmp/django-docker-tests'
-        try:
-            os.mkdir(base)
-        except BaseException:
-            pass  # May already exist
         self.tmp = os.path.join(
             base,
             re.sub(r'\W', '_', str(datetime.datetime.now())))
-        os.mkdir(self.tmp)
+        self.mkdir_on_host(self.tmp)
         self.manager = docker_engine.DockerEngineManager()
         self.client = DockerClientWrapper(manager=self.manager)
         self.test_label = self.client.root_label + '.test'
@@ -37,6 +34,37 @@ class DockerTests(unittest.TestCase):
         final_containers = self.client.list()
         self.assertEqual(self.initial_containers, final_containers)
 
+    def mkdir_on_host(self, path):
+        """
+        mkdir, where ever Docker is running.
+        If Docker is remote (ie, DOCKER_HOST is set) we will
+        try to ssh to that machine to put the file in place;
+        port 22 must be open, and we must have the necessary key.
+        """
+        if os.environ.get('DOCKER_HOST'):
+            raise NotImplementedError()
+        else:
+            try:
+                os.makedirs(path)
+            except OSError as exc:
+                if exc.errno == errno.EEXIST and os.path.isdir(path):
+                    pass
+                else:
+                    raise
+
+    def write_to_host(self, content, path):
+        """
+        Writes content to path, where ever Docker is running.
+        If Docker is remote (ie, DOCKER_HOST is set) we will
+        try to ssh to that machine to put the file in place;
+        port 22 must be open, and we must have the necessary key.
+        """
+        if os.environ.get('DOCKER_HOST'):
+            raise NotImplementedError()
+        else:
+            with open(path, 'w') as file:
+                file.write(content)
+
     def timestamp(self):
         return re.sub(r'\W', '_', str(datetime.datetime.now()))
 
@@ -46,8 +74,7 @@ class DockerTests(unittest.TestCase):
         ))
 
     def one_file_server(self, container_name, html):
-        with open(os.path.join(self.tmp, 'index.html'), 'w') as file:
-            file.write(html)
+        self.write_to_host(html, os.path.join(self.tmp, 'index.html'))
         volume_spec = {
             self.tmp: {
                 'bind': '/usr/share/nginx/html',
@@ -85,8 +112,7 @@ class DockerTests(unittest.TestCase):
 
     def test_volumes(self):
         input = 'hello world\n'
-        with open(os.path.join(self.tmp, 'world.txt'), 'w') as file:
-            file.write(input)
+        self.write_to_host(input, os.path.join(self.tmp, 'world.txt'))
         volume_spec = {self.tmp: {'bind': '/hello', 'mode': 'ro'}}
         output = self.client.run(
             'alpine:3.4',
