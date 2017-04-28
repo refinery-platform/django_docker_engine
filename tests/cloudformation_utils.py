@@ -280,10 +280,11 @@ if __name__ == "__main__":
 
     logging.info(' '.join(docker_command_tokens))
     logging.info(docker_output)
+
     if enable_ssh:
         commands = '; '.join([
             'cat /etc/sysconfig/docker',
-            'echo'
+            'echo',
             'ps aux | grep dockerd'
         ])
         ssh_command = 'ssh -i ~/.ssh/{}.pem ec2-user@{} \'{}\'' \
