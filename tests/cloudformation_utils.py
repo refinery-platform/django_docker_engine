@@ -150,6 +150,10 @@ def create_ec2_template(
         )
     )
     all_security_groups = list(extra_security_groups) + [default_security_group]
+    warning = 'WARNING: dockerd should not be open unless security is provided at a higher level'
+    command = "echo 'OPTIONS=\"$OPTIONS -H tcp://0.0.0.0:2375\" # {}' >> /etc/sysconfig/docker" \
+        .format(warning)
+
     template.add_resource(
         ec2.Instance(
             EC2_REF,
@@ -162,9 +166,10 @@ def create_ec2_template(
             KeyName='django_docker_cloudformation',
             # On a fresh install, this keypair needs to exist.
 
-            UserData=Base64(Join('\n', [
+            UserData=Base64('\n'.join([
                 '#!/bin/bash -xe',
-                "echo 'OPTIONS=\"$OPTIONS -H tcp://0.0.0.0:2375\"' >> /etc/sysconfig/docker"
+                command,
+                'service docker restart'
             ])),
 
             # These are critical for ECS, but we're not using ECS:
