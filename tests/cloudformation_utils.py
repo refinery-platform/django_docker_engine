@@ -5,16 +5,37 @@ import time
 import logging
 import pytz
 import collections
-from pprint import pformat
-import troposphere
-from troposphere import (
-    ec2, Ref, Output, Base64,
-)
 import requests
 import sys
 import subprocess
+import troposphere
 
-PADDING = ' ' * len('INFO:root:123: ')
+from pprint import pformat
+from troposphere import (
+    ec2, Ref, Output, Base64,
+)
+
+
+def _uniq_id():
+    timestamp = re.sub(r'\D', '-', str(datetime.datetime.now()))
+    prefix = 'django-docker-'
+    return prefix + timestamp
+
+
+_DOCKERD_PORT = 2375
+_SSH_PORT = 22
+_UNIQ_ID = _uniq_id()
+_CLUSTER = 'EcsCluster-' + _UNIQ_ID
+_EC2_OUTPUT_KEY = 'ec2'
+_KEY_NAME = 'django_docker_cloudformation'
+_EC2_REF = 'EC2'
+_TAGS = {
+    'department': 'dbmi',
+    'environment': 'test',
+    'project': 'django_docker_engine',
+    'product': 'refinery'
+}
+_PADDING = ' ' * len('INFO:root:123: ')
 
 
 def _format_event(event):
@@ -25,12 +46,12 @@ def _format_event(event):
         event['PhysicalResourceId'])
     reason = event.get('ResourceStatusReason')
     if reason:
-        formatted += '\n' + PADDING + reason
+        formatted += '\n' + _PADDING + reason
     return formatted
 
 
 def _format_events(events, since, formatter):
-    return ('\n' + PADDING). \
+    return ('\n' + _PADDING). \
         join([formatter(event) for event in events[::-1]
               if event['Timestamp'] > since])
 
@@ -76,26 +97,7 @@ def _tail_logs(stack_id, in_progress, complete, timeout=300, increment=2):
             (status, complete, pformat(stack_description)))
 
 
-def _create_stack(name, json, tags):
-    expanded_tags = _expand_tags(tags)
-    client = boto3.client('cloudformation')
-
-    create_stack_response = client.create_stack(
-        StackName=name,
-        TemplateBody=json,
-        Tags=expanded_tags
-    )
-    stack_id = create_stack_response['StackId']
-    _tail_logs(stack_id=stack_id,
-               in_progress='CREATE_IN_PROGRESS',
-               complete='CREATE_COMPLETE')
-
-
-DOCKERD_PORT = 2375
-SSH_PORT = 22
-
-
-def create_ec2_template(
+def _create_ec2_template(
         host_cidr=None,
         extra_security_groups=(),
         enable_ssh=False):
@@ -123,8 +125,8 @@ def create_ec2_template(
         ),
         ec2.SecurityGroupRule(
             IpProtocol='tcp',
-            FromPort=DOCKERD_PORT,
-            ToPort=DOCKERD_PORT,
+            FromPort=_DOCKERD_PORT,
+            ToPort=_DOCKERD_PORT,
             CidrIp=sg_cidr
         )
         # Uncomment for ECS:
@@ -139,8 +141,8 @@ def create_ec2_template(
         security_group_rules.append(
             ec2.SecurityGroupRule(
                 IpProtocol='tcp',
-                FromPort=SSH_PORT,
-                ToPort=SSH_PORT,
+                FromPort=_SSH_PORT,
+                ToPort=_SSH_PORT,
                 CidrIp='0.0.0.0/0'  # SSH is protected by key
             ),
         )
@@ -161,7 +163,7 @@ def create_ec2_template(
 
     template.add_resource(
         ec2.Instance(
-            EC2_REF,
+            _EC2_REF,
             SecurityGroups=[Ref(sg) for sg in all_security_groups],
             # ImageId='ami-c58c1dd3', # plain Amazon Linux AMI, needs docker installed
             # ImageId='ami-80861296', # Ubuntu ebs, hvm; "Permission denied (publickey)"
@@ -190,123 +192,98 @@ def create_ec2_template(
     )
     template.add_output(
         Output(
-            EC2_OUTPUT_KEY,
-            Value=Ref(EC2_REF)
+            _EC2_OUTPUT_KEY,
+            Value=Ref(_EC2_REF)
         )
     )
     return template
 
 
-KEY_NAME = 'django_docker_cloudformation'
-EC2_REF = 'EC2'
-
-TAGS = {
-    'department': 'dbmi',
-    'environment': 'test',
-    'project': 'django_docker_engine',
-    'product': 'refinery'
-}
-
-
-def _uniq_id():
-    timestamp = re.sub(r'\D', '-', str(datetime.datetime.now()))
-    prefix = 'django-docker-'
-    return prefix + timestamp
-
-
-UNIQ_ID = _uniq_id()
-CLUSTER = 'EcsCluster-' + UNIQ_ID
-
-EC2_OUTPUT_KEY = 'ec2'
-
-
-def create_stack(create_template, **args):
+def _create_stack(create_template, tags=_TAGS, **args):
     json = create_template(**args).to_json()
     logging.info(json)
-    stack_id = create_template.__name__.replace('_', '-') + '-' + UNIQ_ID
-    _create_stack(stack_id, json, TAGS)
+    stack_name = create_template.__name__.replace('_', '') + '-' + _UNIQ_ID
+
+    expanded_tags = _expand_tags(tags)
+    client = boto3.client('cloudformation')
+
+    create_stack_response = client.create_stack(
+        StackName=stack_name,
+        TemplateBody=json,
+        Tags=expanded_tags
+    )
+    stack_id = create_stack_response['StackId']
+    _tail_logs(stack_id=stack_id,
+               in_progress='CREATE_IN_PROGRESS',
+               complete='CREATE_COMPLETE')
     return stack_id
 
 
+def _get_ip_for_stack(stack_id):
+    stack = boto3.resource('cloudformation').Stack(stack_id)
+    logging.info('stack.output: %s', stack.outputs)
+
+    ec2_ids = [
+        output['OutputValue']
+        for output in stack.outputs
+        if output['OutputKey'] == _EC2_OUTPUT_KEY
+        ]
+    assert len(ec2_ids) == 1, 'Should be exactly one ec2_id: %s' % ec2_ids
+    ec2_id = ec2_ids[0]
+    logging.info('ec2 ID: %s', ec2_id)
+
+    instance = boto3.resource('ec2').Instance(ec2_id)
+    ip = instance.public_ip_address
+    logging.info('IP: %s', ip)
+    return ip
 
 
+def build(enable_ssh=False):
+    """
+    Builds a Cloudformation stack with a single EC2 running Docker.
+    Access will be restricted, either to originating IP, or to
+    an AWS Security Group.
 
-def delete_stack(name):
-    logging.info('delete_stack: %s', name)
-    client = boto3.client('cloudformation')
-    client.delete_stack(StackName=name)
+    Returns the stack id, and a TCP URL for use with the
+    "-H" parameter of the Docker CLI.
+    """
 
-DockerStackInfo = collections.namedtuple('DockerStackInfo', ['id', 'url'])
+    host_ip = requests.get('http://ipinfo.io/ip').text.strip()
+    host_cidr = host_ip + '/32'
+    stack_id = _create_stack(
+        _create_ec2_template,
+        host_cidr=host_cidr,
+        enable_ssh=enable_ssh)
+    stack_ip = _get_ip_for_stack(stack_id)
+    docker_h_url = 'tcp://{}:{}'.format(stack_ip, _DOCKERD_PORT)
+    docker_command_tokens = ['docker', '-H', docker_h_url, 'info']
 
-class DockerStackBuilder():
+    docker_output = None
+    t = 0
+    while not docker_output and t < 30:
+        t += 1
+        try:
+            docker_output = subprocess.check_output(docker_command_tokens)
+        except subprocess.CalledProcessError:
+            time.sleep(1)
+    if not docker_output:
+        raise RuntimeError('Docker never came up')
 
-    def build(self,
-              enable_ssh=False):
-        """
-        Builds a Cloudformation stack with a single EC2 running Docker.
-        Access will be restricted, either to originating IP, or to
-        an AWS Security Group.
+    logging.info(' '.join(docker_command_tokens))
+    logging.info(docker_output)
 
-        Returns the stack id, and a TCP URL for use with the
-        "-H" parameter of the Docker CLI.
-        """
+    if enable_ssh:
+        commands = '; '.join([
+            'cat /etc/sysconfig/docker',
+            'echo',
+            'ps aux | grep dockerd'
+        ])
+        ssh_command = 'ssh -i ~/.ssh/{}.pem ec2-user@{} \'{}\'' \
+            .format(_KEY_NAME, stack_ip, commands)
+        logging.info(ssh_command)
 
-        host_ip = requests.get('http://ipinfo.io/ip').text.strip()
-        host_cidr = host_ip + '/32'
-        stack_id = create_stack(
-            create_ec2_template,
-            host_cidr=host_cidr,
-            enable_ssh=enable_ssh)
-        stack_ip = DockerStackBuilder._get_ip_for_stack(stack_id)
-        docker_h_url = 'tcp://{}:{}'.format(stack_ip, DOCKERD_PORT)
-        docker_command_tokens = ['docker', '-H', docker_h_url, 'info']
-
-        docker_output = None
-        t = 0
-        while not docker_output and t < 30:
-            t += 1
-            try:
-                docker_output = subprocess.check_output(docker_command_tokens)
-            except subprocess.CalledProcessError:
-                time.sleep(1)
-        if not docker_output:
-            raise RuntimeError('Docker never came up')
-
-        logging.info(' '.join(docker_command_tokens))
-        logging.info(docker_output)
-
-        if enable_ssh:
-            commands = '; '.join([
-                'cat /etc/sysconfig/docker',
-                'echo',
-                'ps aux | grep dockerd'
-            ])
-            ssh_command = 'ssh -i ~/.ssh/{}.pem ec2-user@{} \'{}\'' \
-                .format(KEY_NAME, stack_ip, commands)
-            logging.info(ssh_command)
-
-        return DockerStackInfo(id=stack_id, url=docker_h_url)
-
-    @staticmethod
-    def _get_ip_for_stack(stack_id):
-        stack = boto3.resource('cloudformation').Stack(stack_id)
-        logging.info('stack.output: %s', stack.outputs)
-
-        ec2_ids = [
-            output['OutputValue']
-            for output in stack.outputs
-            if output['OutputKey'] == EC2_OUTPUT_KEY
-            ]
-        assert len(ec2_ids) == 1, 'Should be exactly one ec2_id: %s' % ec2_ids
-        ec2_id = ec2_ids[0]
-        logging.info('ec2 ID: %s', ec2_id)
-
-        instance = boto3.resource('ec2').Instance(ec2_id)
-        ip = instance.public_ip_address
-        logging.info('IP: %s', ip)
-
-        return ip
-
+    DockerStackInfo = collections.namedtuple('DockerStackInfo', ['id', 'url'])
+    return DockerStackInfo(id=stack_id, url=docker_h_url)
 
 
 if __name__ == "__main__":
@@ -316,5 +293,5 @@ if __name__ == "__main__":
 
     logging.basicConfig(level=logging.INFO)
 
-    url = DockerStackBuilder().build().url
+    url = build().url
     logging.info(url)
