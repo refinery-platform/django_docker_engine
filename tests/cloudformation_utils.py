@@ -4,6 +4,7 @@ import datetime
 import time
 import logging
 import pytz
+import collections
 from pprint import pformat
 import troposphere
 from troposphere import (
@@ -227,30 +228,85 @@ def create_stack(create_template, **args):
     return stack_id
 
 
-def get_ip_for_stack(stack_id):
-    stack = boto3.resource('cloudformation').Stack(stack_id)
-    logging.info('stack.output: %s', stack.outputs)
 
-    ec2_ids = [
-        output['OutputValue']
-        for output in stack.outputs
-        if output['OutputKey'] == EC2_OUTPUT_KEY
-        ]
-    assert len(ec2_ids) == 1, 'Should be exactly one ec2_id: %s' % ec2_ids
-    ec2_id = ec2_ids[0]
-    logging.info('ec2 ID: %s', ec2_id)
-
-    instance = boto3.resource('ec2').Instance(ec2_id)
-    ip = instance.public_ip_address
-    logging.info('IP: %s', ip)
-
-    return ip
 
 
 def delete_stack(name):
     logging.info('delete_stack: %s', name)
     client = boto3.client('cloudformation')
     client.delete_stack(StackName=name)
+
+DockerStackInfo = collections.namedtuple('DockerStackInfo', ['id', 'url'])
+
+class DockerStackBuilder():
+
+    def build(self,
+              enable_ssh=False):
+        """
+        Builds a Cloudformation stack with a single EC2 running Docker.
+        Access will be restricted, either to originating IP, or to
+        an AWS Security Group.
+
+        Returns the stack id, and a TCP URL for use with the
+        "-H" parameter of the Docker CLI.
+        """
+
+        host_ip = requests.get('http://ipinfo.io/ip').text.strip()
+        host_cidr = host_ip + '/32'
+        stack_id = create_stack(
+            create_ec2_template,
+            host_cidr=host_cidr,
+            enable_ssh=enable_ssh)
+        stack_ip = DockerStackBuilder._get_ip_for_stack(stack_id)
+        docker_h_url = 'tcp://{}:{}'.format(stack_ip, DOCKERD_PORT)
+        docker_command_tokens = ['docker', '-H', docker_h_url, 'info']
+
+        docker_output = None
+        t = 0
+        while not docker_output and t < 30:
+            t += 1
+            try:
+                docker_output = subprocess.check_output(docker_command_tokens)
+            except subprocess.CalledProcessError:
+                time.sleep(1)
+        if not docker_output:
+            raise RuntimeError('Docker never came up')
+
+        logging.info(' '.join(docker_command_tokens))
+        logging.info(docker_output)
+
+        if enable_ssh:
+            commands = '; '.join([
+                'cat /etc/sysconfig/docker',
+                'echo',
+                'ps aux | grep dockerd'
+            ])
+            ssh_command = 'ssh -i ~/.ssh/{}.pem ec2-user@{} \'{}\'' \
+                .format(KEY_NAME, stack_ip, commands)
+            logging.info(ssh_command)
+
+        return DockerStackInfo(id=stack_id, url=docker_h_url)
+
+    @staticmethod
+    def _get_ip_for_stack(stack_id):
+        stack = boto3.resource('cloudformation').Stack(stack_id)
+        logging.info('stack.output: %s', stack.outputs)
+
+        ec2_ids = [
+            output['OutputValue']
+            for output in stack.outputs
+            if output['OutputKey'] == EC2_OUTPUT_KEY
+            ]
+        assert len(ec2_ids) == 1, 'Should be exactly one ec2_id: %s' % ec2_ids
+        ec2_id = ec2_ids[0]
+        logging.info('ec2 ID: %s', ec2_id)
+
+        instance = boto3.resource('ec2').Instance(ec2_id)
+        ip = instance.public_ip_address
+        logging.info('IP: %s', ip)
+
+        return ip
+
 
 
 if __name__ == "__main__":
@@ -260,40 +316,5 @@ if __name__ == "__main__":
 
     logging.basicConfig(level=logging.INFO)
 
-    host_ip = requests.get('http://ipinfo.io/ip').text.strip()
-    host_cidr = host_ip + '/32'
-    enable_ssh = True  # Helps with debugging, but default should be False
-    stack_id = create_stack(
-        create_ec2_template,
-        host_cidr=host_cidr,
-        enable_ssh=enable_ssh)
-    stack_ip = get_ip_for_stack(stack_id)
-
-    docker_command_tokens = [
-        'docker', '-H',
-        'tcp://{}:{}'.format(stack_ip, DOCKERD_PORT),
-        'info']
-
-    docker_output = None
-    t = 0
-    while not docker_output and t < 30:
-        t += 1
-        try:
-            docker_output = subprocess.check_output(docker_command_tokens)
-        except subprocess.CalledProcessError:
-            pass
-    if not docker_output:
-        raise RuntimeError('Docker never came up')
-
-    logging.info(' '.join(docker_command_tokens))
-    logging.info(docker_output)
-
-    if enable_ssh:
-        commands = '; '.join([
-            'cat /etc/sysconfig/docker',
-            'echo',
-            'ps aux | grep dockerd'
-        ])
-        ssh_command = 'ssh -i ~/.ssh/{}.pem ec2-user@{} \'{}\'' \
-            .format(KEY_NAME, stack_ip, commands)
-        logging.info(ssh_command)
+    url = DockerStackBuilder().build().url
+    logging.info(url)
