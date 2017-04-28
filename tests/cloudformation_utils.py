@@ -7,7 +7,7 @@ import pytz
 from pprint import pformat
 import troposphere
 from troposphere import (
-    ec2, Ref, Output, Base64, Join,
+    ec2, Ref, Output, Base64,
 )
 import requests
 import sys
@@ -89,8 +89,10 @@ def _create_stack(name, json, tags):
                in_progress='CREATE_IN_PROGRESS',
                complete='CREATE_COMPLETE')
 
+
 DOCKERD_PORT = 2375
 SSH_PORT = 22
+
 
 def create_ec2_template(
         host_cidr=None,
@@ -138,7 +140,7 @@ def create_ec2_template(
                 IpProtocol='tcp',
                 FromPort=SSH_PORT,
                 ToPort=SSH_PORT,
-                CidrIp='0.0.0.0/0' # SSH is protected by key
+                CidrIp='0.0.0.0/0'  # SSH is protected by key
             ),
         )
 
@@ -151,9 +153,10 @@ def create_ec2_template(
         )
     )
     all_security_groups = list(extra_security_groups) + [default_security_group]
-    warning = 'WARNING: dockerd should not be open unless security is provided at a higher level'
-    command = "echo 'OPTIONS=\"$OPTIONS -H tcp://0.0.0.0:2375\" # {}' >> /etc/sysconfig/docker" \
-        .format(warning)
+    warning = 'WARNING: dockerd should not be open unless ' \
+              'security is provided at a higher level'
+    command = "echo 'OPTIONS=\"$OPTIONS -H tcp://0.0.0.0:2375\" # {}' " \
+              ">> /etc/sysconfig/docker".format(warning)
 
     template.add_resource(
         ec2.Instance(
@@ -192,6 +195,7 @@ def create_ec2_template(
     )
     return template
 
+
 KEY_NAME = 'django_docker_cloudformation'
 EC2_REF = 'EC2'
 
@@ -214,12 +218,14 @@ CLUSTER = 'EcsCluster-' + UNIQ_ID
 
 EC2_OUTPUT_KEY = 'ec2'
 
+
 def create_stack(create_template, **args):
     json = create_template(**args).to_json()
     logging.info(json)
     stack_id = create_template.__name__.replace('_', '-') + '-' + UNIQ_ID
     _create_stack(stack_id, json, TAGS)
     return stack_id
+
 
 def get_ip_for_stack(stack_id):
     stack = boto3.resource('cloudformation').Stack(stack_id)
@@ -239,6 +245,7 @@ def get_ip_for_stack(stack_id):
     logging.info('IP: %s', ip)
 
     return ip
+
 
 def delete_stack(name):
     logging.info('delete_stack: %s', name)
