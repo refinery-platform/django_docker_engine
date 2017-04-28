@@ -306,4 +306,4 @@ if __name__ == "__main__":
         'product': 'refinery'
     }
     url = build(host_cidr=host_cidr, tags=tags).url
-    logging.info(url)
+    print url

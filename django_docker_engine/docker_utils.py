@@ -3,12 +3,12 @@ import os
 import re
 from datetime import datetime
 from time import time
-from container_managers import local as local_manager
+from container_managers import docker_engine
 
 
 class DockerClientWrapper():
     def __init__(self,
-                 manager=local_manager.LocalManager(),
+                 manager=docker_engine.DockerEngineManager(),
                  root_label='io.github.refinery-project.django_docker_engine'):
         self._containers_manager = manager
         self.root_label = root_label
