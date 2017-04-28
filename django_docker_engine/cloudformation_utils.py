@@ -305,5 +305,6 @@ if __name__ == "__main__":
         'project': 'django_docker_engine',
         'product': 'refinery'
     }
-    url = build(host_cidr=host_cidr, tags=tags).url
-    print url
+    info = build(host_cidr=host_cidr, tags=tags, enable_ssh=True)
+    print 'export DOCKER_HOST={}; export DOCKER_EC2_ID={}' \
+        .format(info.url, info.id)

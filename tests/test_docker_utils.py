@@ -5,6 +5,8 @@ import re
 import requests
 import django
 import errno
+import subprocess
+import tempfile
 from shutil import rmtree
 from time import sleep
 from django_docker_engine.docker_utils import DockerClientWrapper, DockerContainerSpec
@@ -34,15 +36,27 @@ class DockerTests(unittest.TestCase):
         final_containers = self.client.list()
         self.assertEqual(self.initial_containers, final_containers)
 
+    def docker_host_ip(self):
+        return re.search(
+            r'^tcp://(\d+\.\d+\.\d+\.\d+):\d+$',
+            os.environ['DOCKER_HOST']
+        ).group(1)
+
     def mkdir_on_host(self, path):
         """
-        mkdir, where ever Docker is running.
+        mkdir, wherever Docker is running.
         If Docker is remote (ie, DOCKER_HOST is set) we will
         try to ssh to that machine to put the file in place;
         port 22 must be open, and we must have the necessary key.
         """
         if os.environ.get('DOCKER_HOST'):
-            raise NotImplementedError()
+            ip = self.docker_host_ip()
+            subprocess.check_call([
+                'ssh',
+                '-i', 'django_docker_cloudformation.pem',
+                'ec2-user@{}'.format(ip),
+                "'mkdir -p {}'".format(path)
+            ])
         else:
             try:
                 os.makedirs(path)
@@ -54,13 +68,21 @@ class DockerTests(unittest.TestCase):
 
     def write_to_host(self, content, path):
         """
-        Writes content to path, where ever Docker is running.
+        Writes content to path, wherever Docker is running.
         If Docker is remote (ie, DOCKER_HOST is set) we will
         try to ssh to that machine to put the file in place;
         port 22 must be open, and we must have the necessary key.
         """
         if os.environ.get('DOCKER_HOST'):
-            raise NotImplementedError()
+            ip = self.docker_host_ip()
+            (handle, temp_path) = tempfile.mkstemp()
+            handle.write(content)
+            subprocess.check_call([
+                'scp',
+                '-i', 'django_docker_cloudformation.pem',
+                temp_path,
+                'ec2-user@{}:{}'.format(ip, path)
+            ])
         else:
             with open(path, 'w') as file:
                 file.write(content)
