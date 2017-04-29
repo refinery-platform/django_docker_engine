@@ -91,8 +91,9 @@ class DockerTests(unittest.TestCase):
         """
         if os.environ.get('DOCKER_HOST'):
             ip = self.docker_host_ip()
-            (handle, temp_path) = tempfile.mkstemp()
-            handle.write(content)
+            (os_handle, temp_path) = tempfile.mkstemp()
+            with open(temp_path, 'w') as f:
+                f.write(content)
             subprocess.check_call([
                 'scp',
                 '-o', 'StrictHostKeyChecking=no',
