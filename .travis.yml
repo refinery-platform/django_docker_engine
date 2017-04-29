@@ -22,7 +22,7 @@ script:
 
 # Start an EC2 instance with Docker engine and envvar
 - start cloudformation_docker
-- $(python django_docker_engine/cloudformation_utils.py)
+- $(python django_docker_engine/cloudformation_utils.py --create)
 - end cloudformation_docker
 
 # Test a range of django versions:
