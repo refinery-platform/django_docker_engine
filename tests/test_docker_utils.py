@@ -199,6 +199,8 @@ class DockerTests(unittest.TestCase):
         self.assert_url_content(url, '{"foo": "bar"}')
 
     def test_container_active(self):
+        self.assertEqual(0, self.count_my_containers())
+
         container_name = self.timestamp()
         DockerContainerSpec(
             manager=self.manager,
@@ -214,9 +216,13 @@ class DockerTests(unittest.TestCase):
         sleep(2)
 
         url = '/docker/{}/'.format(container_name)
-        django.test.Client().get(url)
+        self.assert_url_content(url, 'Welcome to nginx!')
 
-        self.client.purge_inactive(1)
+        # Be careful of race conditions if developing locally:
+        # I had to give a bit more time for the same test to pass with remote Docker.
+        self.client.purge_inactive(2)
+        sleep(1)
+
         self.assertEqual(1, self.count_my_containers())
         # With a tighter time limit, recent activity should keep it alive.
 
