@@ -282,7 +282,7 @@ def build(host_cidr,
             'echo',
             'ps aux | grep dockerd'
         ])
-        ssh_command = 'ssh -i ~/.ssh/{}.pem ec2-user@{} \'{}\'' \
+        ssh_command = 'ssh -i {}.pem ec2-user@{} \'{}\'' \
             .format(key_name, stack_ip, commands)
         logging.info(ssh_command)
 

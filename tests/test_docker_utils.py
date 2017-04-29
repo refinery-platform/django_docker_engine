@@ -42,7 +42,7 @@ class DockerTests(unittest.TestCase):
             os.environ['DOCKER_HOST']
         ).group(1)
 
-    PEM = '~/.ssh/django_docker_cloudformation.pem'
+    PEM = 'django_docker_cloudformation.pem'
 
     def mkdir_on_host(self, path):
         """
