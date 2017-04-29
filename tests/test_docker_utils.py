@@ -42,6 +42,8 @@ class DockerTests(unittest.TestCase):
             os.environ['DOCKER_HOST']
         ).group(1)
 
+    PEM = '~/.ssh/django_docker_cloudformation.pem'
+
     def mkdir_on_host(self, path):
         """
         mkdir, wherever Docker is running.
@@ -53,7 +55,7 @@ class DockerTests(unittest.TestCase):
             ip = self.docker_host_ip()
             subprocess.check_call([
                 'ssh',
-                '-i', 'django_docker_cloudformation.pem',
+                '-i', DockerTests.PEM,
                 'ec2-user@{}'.format(ip),
                 "'mkdir -p {}'".format(path)
             ])
@@ -79,7 +81,7 @@ class DockerTests(unittest.TestCase):
             handle.write(content)
             subprocess.check_call([
                 'scp',
-                '-i', 'django_docker_cloudformation.pem',
+                '-i', DockerTests.PEM,
                 temp_path,
                 'ec2-user@{}:{}'.format(ip, path)
             ])

@@ -306,5 +306,5 @@ if __name__ == "__main__":
         'product': 'refinery'
     }
     info = build(host_cidr=host_cidr, tags=tags, enable_ssh=True)
-    print 'export DOCKER_HOST={}; export DOCKER_EC2_ID={}' \
+    print 'export DOCKER_HOST={} DOCKER_STACK_ID={}' \
         .format(info.url, info.id)
