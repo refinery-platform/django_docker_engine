@@ -12,7 +12,8 @@ install:
           -K $encrypted_80c19366536f_key \
           -iv $encrypted_80c19366536f_iv \
           -in django_docker_cloudformation.pem.enc \
-          -out ~/.ssh/django_docker_cloudformation.pem -d
+          -out django_docker_cloudformation.pem -d
+- chmod 600 django_docker_cloudformation.pem
 script:
 - set -o errexit
 - export AWS_DEFAULT_REGION=us-east-1
