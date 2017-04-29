@@ -97,12 +97,17 @@ class DockerContainerSpec():
         os.mkdir(dir)
         return dir
 
-    def run(self):
+    def _write_input_to_host(self):
+        # TODO: write to remote host, as appropriate
         host_input_dir = self._mkdtemp()
-        # Host filename is arbitrary.
+        # The host filename "input.json" is arbitrary.
         host_input_path = os.path.join(host_input_dir, 'input.json')
         with open(host_input_path, 'w') as file:
             file.write(json.dumps(self.input))
+        return host_input_path
+
+    def run(self):
+        host_input_path = self._write_input_to_host()
         volume_spec = {
             host_input_path: {
                 # Path inside container might need to be configurable?
