@@ -22,15 +22,20 @@ script:
 
 - |-
   for WHERE_IS_DOCKER in 'local' 'remote'; do
+
     if [ "$WHERE_IS_DOCKER" == 'remote' ]; then
+      start build-stack
       $(python django_docker_engine/cloudformation_utils.py --create)
+      end build-stack
     fi
+
     for VERSION in '1.7.1' '1.8.17' '1.9.12' '1.10.6'; do
       start docker-$WHERE_IS_DOCKER-django-$VERSION
       pip install django==$VERSION
       python manage.py test tests --verbosity=2
       end docker-$WHERE_IS_DOCKER-django-$VERSION
     done
+
   done
 
 # Check packaging and formatting:
