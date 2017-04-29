@@ -20,7 +20,7 @@ script:
 - start() { echo travis_fold':'start:$1; }
 - end() { echo travis_fold':'end:$1; }
 
-# Start an EC2 instance with Docker engine and envvar
+# Start an EC2 instance with Docker Engine. DOCKER_HOST and DOCKER_STACK_ID will be set.
 - start cloudformation_docker
 - $(python django_docker_engine/cloudformation_utils.py --create)
 - end cloudformation_docker
@@ -44,7 +44,7 @@ script:
 - start egg
 
 after_script:
-- echo "TODO - Shut down EC2 $DOCKER_EC2_ID"
+- python django_docker_engine/cloudformation_utils.py --delete $DOCKER_STACK_ID
 
 env:
   global:
