@@ -20,18 +20,17 @@ script:
 - start() { echo travis_fold':'start:$1; }
 - end() { echo travis_fold':'end:$1; }
 
-# Start an EC2 instance with Docker Engine. DOCKER_HOST and DOCKER_STACK_ID will be set.
-- start cloudformation_docker
-- $(python django_docker_engine/cloudformation_utils.py --create)
-- end cloudformation_docker
-
-# Test a range of django versions:
 - |-
-  for VERSION in '1.7.1' '1.8.17' '1.9.12' '1.10.6'; do
-    start django-$VERSION
-    pip install django==$VERSION
-    python manage.py test tests --verbosity=2
-    end django-$VERSION
+  for WHERE_IS_DOCKER in 'local' 'remote'; do
+    if [ "$WHERE_IS_DOCKER" == 'remote' ]; then
+      $(python django_docker_engine/cloudformation_utils.py --create)
+    fi
+    for VERSION in '1.7.1' '1.8.17' '1.9.12' '1.10.6'; do
+      start docker-$WHERE_IS_DOCKER-django-$VERSION
+      pip install django==$VERSION
+      python manage.py test tests --verbosity=2
+      end docker-$WHERE_IS_DOCKER-django-$VERSION
+    done
   done
 
 # Check packaging and formatting:
