@@ -55,6 +55,7 @@ class DockerTests(unittest.TestCase):
             ip = self.docker_host_ip()
             subprocess.check_call([
                 'ssh',
+                '-o', 'StrictHostKeyChecking=no',
                 '-i', DockerTests.PEM,
                 'ec2-user@{}'.format(ip),
                 "'mkdir -p {}'".format(path)
@@ -81,6 +82,7 @@ class DockerTests(unittest.TestCase):
             handle.write(content)
             subprocess.check_call([
                 'scp',
+                '-o', 'StrictHostKeyChecking=no',
                 '-i', DockerTests.PEM,
                 temp_path,
                 'ec2-user@{}:{}'.format(ip, path)

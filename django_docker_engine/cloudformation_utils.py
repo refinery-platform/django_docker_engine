@@ -291,20 +291,32 @@ def build(host_cidr,
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 1:
-        print('No arguments: Creates a new EC2 with CloudFormation')
-        exit(1)
-
     logging.basicConfig(level=logging.INFO)
 
-    host_ip = requests.get('http://ipinfo.io/ip').text.strip()
-    host_cidr = host_ip + '/32'
-    tags = {
-        'department': 'dbmi',
-        'environment': 'test',
-        'project': 'django_docker_engine',
-        'product': 'refinery'
-    }
-    info = build(host_cidr=host_cidr, tags=tags, enable_ssh=True)
-    print 'export DOCKER_HOST={} DOCKER_STACK_ID={}' \
-        .format(info.url, info.id)
+    args = sys.argv[1:]
+
+    if args == ['--create']:
+        host_ip = requests.get('http://ipinfo.io/ip').text.strip()
+        host_cidr = host_ip + '/32'
+        tags = {
+            'department': 'dbmi',
+            'environment': 'test',
+            'project': 'django_docker_engine',
+            'product': 'refinery'
+        }
+        info = build(host_cidr=host_cidr, tags=tags, enable_ssh=True)
+        print 'export DOCKER_HOST={} DOCKER_STACK_ID={}' \
+            .format(info.url, info.id)
+    elif len(args) == 2 and args[0] == '--delete':
+        stack_id = args[1]
+        stack = boto3.resource('cloudformation').Stack(stack_id)
+        stack.delete()
+    else:
+        print 'Usage: $( {name} --create ) \n\tor\n\t{name} --delete STACK_ID' \
+              .format(name=sys.argv[0])
+        print '--create: Creates a CloudFormation stack. ' \
+              'A shell statement is returned on STDOUT with the connection information ' \
+              'for Docker Engine, and the ID of the stack.'
+        print '--delete: Deletes a stack, given its ID.'
+
+        exit(1)
