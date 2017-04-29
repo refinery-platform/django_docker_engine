@@ -84,27 +84,42 @@ class DockerContainerSpec():
         self.labels = labels
 
     def _mkdtemp(self):
-        # mkdtemp is the obvious way to do this, but
-        # the resulting directory is not visible to Docker.
-        # Tried chmod, but that didn't help.
-        base = '/tmp/django-docker'
-        try:
-            os.mkdir(base)
-        except BaseException:
-            pass  # May already exist
-        timestamp = re.sub(r'\W', '_', str(datetime.now()))
-        dir = os.path.join(base, timestamp)
-        os.mkdir(dir)
-        return dir
+        # TODO: If-thens all over the place: needs refactoring.
+        remote_host_match = re.match(r'^http://([^:]+):\d+$', self.manager._base_url)
+        if remote_host_match:
+            host = remote_host_match.group(1)
+            raise NotImplementedError()
+        elif self.manager._base_url == 'http+docker://localunixsocket':
+            # mkdtemp is the obvious way to do this, but
+            # the resulting directory is not visible to Docker.
+            # Tried chmod, but that didn't help.
+            base = '/tmp/django-docker'
+            try:
+                os.mkdir(base)
+            except BaseException:
+                pass  # May already exist
+            timestamp = re.sub(r'\W', '_', str(datetime.now()))
+            dir = os.path.join(base, timestamp)
+            os.mkdir(dir)
+            return dir
+        else:
+            raise RuntimeError('Unexpected client base_url: %s', self._base_url)
 
     def _write_input_to_host(self):
-        # TODO: write to remote host, as appropriate
-        host_input_dir = self._mkdtemp()
-        # The host filename "input.json" is arbitrary.
-        host_input_path = os.path.join(host_input_dir, 'input.json')
-        with open(host_input_path, 'w') as file:
-            file.write(json.dumps(self.input))
-        return host_input_path
+        # TODO: If-thens all over the place: needs refactoring.
+        remote_host_match = re.match(r'^http://([^:]+):\d+$', self.manager._base_url)
+        if remote_host_match:
+            host = remote_host_match.group(1)
+            raise NotImplementedError()
+        elif self.manager._base_url == 'http+docker://localunixsocket':
+            host_input_dir = self._mkdtemp()
+            # The host filename "input.json" is arbitrary.
+            host_input_path = os.path.join(host_input_dir, 'input.json')
+            with open(host_input_path, 'w') as file:
+                file.write(json.dumps(self.input))
+            return host_input_path
+        else:
+            raise RuntimeError('Unexpected client base_url: %s', self._base_url)
 
     def run(self):
         host_input_path = self._write_input_to_host()
