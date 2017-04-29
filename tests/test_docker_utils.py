@@ -31,7 +31,7 @@ class DockerTests(unittest.TestCase):
         self.assertEqual(0, self.count_my_containers())
 
     def tearDown(self):
-        rmtree(self.tmp)
+        self.rmdir_on_host(self.tmp)
         self.client.purge_by_label(self.test_label)
         final_containers = self.client.list()
         self.assertEqual(self.initial_containers, final_containers)
@@ -43,6 +43,19 @@ class DockerTests(unittest.TestCase):
         ).group(1)
 
     PEM = 'django_docker_cloudformation.pem'
+
+    def rmdir_on_host(self, path):
+        if os.environ.get('DOCKER_HOST'):
+            ip = self.docker_host_ip()
+            subprocess.check_call([
+                'ssh',
+                '-o', 'StrictHostKeyChecking=no',
+                '-i', DockerTests.PEM,
+                'ec2-user@{}'.format(ip),
+                'rm -rf {}'.format(path)
+            ])
+        else:
+            rmtree(self.tmp)
 
     def mkdir_on_host(self, path):
         """
@@ -58,7 +71,7 @@ class DockerTests(unittest.TestCase):
                 '-o', 'StrictHostKeyChecking=no',
                 '-i', DockerTests.PEM,
                 'ec2-user@{}'.format(ip),
-                "'mkdir -p {}'".format(path)
+                'mkdir -p {}'.format(path)
             ])
         else:
             try:
