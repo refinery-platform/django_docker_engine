@@ -5,9 +5,10 @@ from base import BaseManager, BaseContainer
 
 class DockerEngineManager(BaseManager):
 
-    def __init__(self, client=docker.from_env()):
+    def __init__(self, client=docker.from_env(), pem='django_docker_cloudformation.pem'):
         self._base_url = client.api.base_url
         self._containers_client = client.containers
+        self.pem = pem
 
     def run(self, image_name, cmd, **kwargs):
         return self._containers_client.run(image_name, cmd, **kwargs)

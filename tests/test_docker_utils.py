@@ -108,6 +108,7 @@ class DockerTests(unittest.TestCase):
                 'ec2-user@{}'.format(ip),
                 'chmod 644 {}'.format(path)
             ])
+            os.unlink(temp_path)
         else:
             with open(path, 'w') as file:
                 file.write(content)
