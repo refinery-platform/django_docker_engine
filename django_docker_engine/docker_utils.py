@@ -145,9 +145,9 @@ class DockerContainerSpec():
         elif self.manager._base_url == 'http+docker://localunixsocket':
             with open(host_input_path, 'w') as file:
                 file.write(content)
-            return host_input_path
         else:
             raise RuntimeError('Unexpected client base_url: %s', self._base_url)
+        return host_input_path
 
     def run(self):
         host_input_path = self._write_input_to_host()

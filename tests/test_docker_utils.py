@@ -207,6 +207,10 @@ class DockerTests(unittest.TestCase):
         self.assert_url_content(url, '{"foo": "bar"}')
 
     def test_container_active(self):
+        """
+        WARNING: I think this is prone to race conditions.
+        If you get an error, try just giving it more time.
+        """
         self.assertEqual(0, self.count_my_containers())
 
         container_name = self.timestamp()
@@ -228,8 +232,8 @@ class DockerTests(unittest.TestCase):
 
         # Be careful of race conditions if developing locally:
         # I had to give a bit more time for the same test to pass with remote Docker.
-        self.client.purge_inactive(2)
-        sleep(1)
+        self.client.purge_inactive(4)
+        sleep(2)
 
         self.assertEqual(1, self.count_my_containers())
         # With a tighter time limit, recent activity should keep it alive.
