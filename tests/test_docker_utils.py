@@ -101,6 +101,13 @@ class DockerTests(unittest.TestCase):
                 temp_path,
                 'ec2-user@{}:{}'.format(ip, path)
             ])
+            subprocess.check_call([
+                'ssh',
+                '-o', 'StrictHostKeyChecking=no',
+                '-i', DockerTests.PEM,
+                'ec2-user@{}'.format(ip),
+                'chmod 644 {}'.format(path)
+            ])
         else:
             with open(path, 'w') as file:
                 file.write(content)
