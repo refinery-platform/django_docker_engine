@@ -1,14 +1,16 @@
 import json
 import os
 import re
+import subprocess
+import tempfile
 from datetime import datetime
 from time import time
-from container_managers import local as local_manager
+from container_managers import docker_engine
 
 
 class DockerClientWrapper():
     def __init__(self,
-                 manager=local_manager.LocalManager(),
+                 manager=docker_engine.DockerEngineManager(),
                  root_label='io.github.refinery-project.django_docker_engine'):
         self._containers_manager = manager
         self.root_label = root_label
@@ -84,25 +86,71 @@ class DockerContainerSpec():
         self.labels = labels
 
     def _mkdtemp(self):
-        # mkdtemp is the obvious way to do this, but
-        # the resulting directory is not visible to Docker.
-        # Tried chmod, but that didn't help.
+        # TODO: If-thens all over the place: needs refactoring.
         base = '/tmp/django-docker'
-        try:
-            os.mkdir(base)
-        except BaseException:
-            pass  # May already exist
         timestamp = re.sub(r'\W', '_', str(datetime.now()))
         dir = os.path.join(base, timestamp)
-        os.mkdir(dir)
+
+        remote_host_match = re.match(r'^http://([^:]+):\d+$', self.manager._base_url)
+        if remote_host_match:
+            host = remote_host_match.group(1)
+            subprocess.check_call([
+                'ssh',
+                '-o', 'StrictHostKeyChecking=no',
+                '-i', self.manager.pem,
+                'ec2-user@{}'.format(host),
+                'mkdir -p {}'.format(dir)
+            ])
+        elif self.manager._base_url == 'http+docker://localunixsocket':
+            # mkdtemp is the obvious way to do this, but
+            # the resulting directory is not visible to Docker.
+            # Tried chmod, but that didn't help.
+            try:
+                os.mkdir(base)
+            except BaseException:
+                pass  # May already exist
+            os.mkdir(dir)
+        else:
+            raise RuntimeError('Unexpected client base_url: %s', self._base_url)
         return dir
 
-    def run(self):
+    def _write_input_to_host(self):
+        # TODO: If-thens all over the place: needs refactoring.
         host_input_dir = self._mkdtemp()
-        # Host filename is arbitrary.
+        # The host filename "input.json" is arbitrary.
         host_input_path = os.path.join(host_input_dir, 'input.json')
-        with open(host_input_path, 'w') as file:
-            file.write(json.dumps(self.input))
+        content = json.dumps(self.input)
+
+        remote_host_match = re.match(r'^http://([^:]+):\d+$', self.manager._base_url)
+        if remote_host_match:
+            host = remote_host_match.group(1)
+            (os_handle, temp_path) = tempfile.mkstemp()
+            with open(temp_path, 'w') as f:
+                f.write(content)
+            subprocess.check_call([
+                'scp',
+                '-o', 'StrictHostKeyChecking=no',
+                '-i', self.manager.pem,
+                temp_path,
+                'ec2-user@{}:{}'.format(host, host_input_path)
+            ])
+            subprocess.check_call([
+                'ssh',
+                '-o', 'StrictHostKeyChecking=no',
+                '-i', self.manager.pem,
+                'ec2-user@{}'.format(host),
+                'chmod 644 {}'.format(host_input_path)
+            ])
+            os.unlink(temp_path)
+        elif self.manager._base_url == 'http+docker://localunixsocket':
+            with open(host_input_path, 'w') as file:
+                file.write(content)
+        else:
+            raise RuntimeError('Unexpected client base_url: %s', self._base_url)
+        return host_input_path
+
+    def run(self):
+        host_input_path = self._write_input_to_host()
         volume_spec = {
             host_input_path: {
                 # Path inside container might need to be configurable?

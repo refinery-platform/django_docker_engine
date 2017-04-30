@@ -4,10 +4,13 @@ import datetime
 import re
 import requests
 import django
+import errno
+import subprocess
+import tempfile
 from shutil import rmtree
 from time import sleep
 from django_docker_engine.docker_utils import DockerClientWrapper, DockerContainerSpec
-from django_docker_engine.container_managers import local as local_manager
+from django_docker_engine.container_managers import docker_engine
 
 
 class DockerTests(unittest.TestCase):
@@ -15,26 +18,11 @@ class DockerTests(unittest.TestCase):
         # mkdtemp is the obvious way to do this, but
         # the resulting directory is not visible to Docker.
         base = '/tmp/django-docker-tests'
-        try:
-            os.mkdir(base)
-        except BaseException:
-            pass  # May already exist
         self.tmp = os.path.join(
             base,
             re.sub(r'\W', '_', str(datetime.datetime.now())))
-        os.mkdir(self.tmp)
-        if os.environ.get('AWS_INSTANCE_ID'):
-            raise NotImplementedError('TODO: CloudFormation')
-            # TODO: This is not working yet; Going to try CloudFormation.
-            # self.manager = ecs_manager.EcsManager(
-            #     key_pair_name=os.environ.get('AWS_KEY_PAIR_NAME'),
-            #     cluster_name=os.environ.get('AWS_CLUSTER_NAME'),
-            #     security_group_id=os.environ.get('AWS_SECURITY_GROUP_ID'),
-            #     instance_id=os.environ.get('AWS_INSTANCE_ID'),
-            #     log_group_name=os.environ.get('AWS_LOG_GROUP_NAME')
-            # )
-        else:
-            self.manager = local_manager.LocalManager()
+        self.mkdir_on_host(self.tmp)
+        self.manager = docker_engine.DockerEngineManager()
         self.client = DockerClientWrapper(manager=self.manager)
         self.test_label = self.client.root_label + '.test'
         self.initial_containers = self.client.list()
@@ -43,10 +31,87 @@ class DockerTests(unittest.TestCase):
         self.assertEqual(0, self.count_my_containers())
 
     def tearDown(self):
-        rmtree(self.tmp)
+        self.rmdir_on_host(self.tmp)
         self.client.purge_by_label(self.test_label)
         final_containers = self.client.list()
         self.assertEqual(self.initial_containers, final_containers)
+
+    def docker_host_ip(self):
+        return re.search(
+            r'^tcp://(\d+\.\d+\.\d+\.\d+):\d+$',
+            os.environ['DOCKER_HOST']
+        ).group(1)
+
+    PEM = 'django_docker_cloudformation.pem'
+
+    def rmdir_on_host(self, path):
+        if os.environ.get('DOCKER_HOST'):
+            ip = self.docker_host_ip()
+            subprocess.check_call([
+                'ssh',
+                '-o', 'StrictHostKeyChecking=no',
+                '-i', DockerTests.PEM,
+                'ec2-user@{}'.format(ip),
+                'rm -rf {}'.format(path)
+            ])
+        else:
+            rmtree(self.tmp)
+
+    def mkdir_on_host(self, path):
+        """
+        mkdir, wherever Docker is running.
+        If Docker is remote (ie, DOCKER_HOST is set) we will
+        try to ssh to that machine to put the file in place;
+        port 22 must be open, and we must have the necessary key.
+        """
+        if os.environ.get('DOCKER_HOST'):
+            ip = self.docker_host_ip()
+            subprocess.check_call([
+                'ssh',
+                '-o', 'StrictHostKeyChecking=no',
+                '-i', DockerTests.PEM,
+                'ec2-user@{}'.format(ip),
+                'mkdir -p {}'.format(path)
+            ])
+        else:
+            try:
+                os.makedirs(path)
+            except OSError as exc:
+                if exc.errno == errno.EEXIST and os.path.isdir(path):
+                    pass
+                else:
+                    raise
+
+    def write_to_host(self, content, path):
+        """
+        Writes content to path, wherever Docker is running.
+        If Docker is remote (ie, DOCKER_HOST is set) we will
+        try to ssh to that machine to put the file in place;
+        port 22 must be open, and we must have the necessary key.
+        """
+        if os.environ.get('DOCKER_HOST'):
+            ip = self.docker_host_ip()
+            (os_handle, temp_path) = tempfile.mkstemp()
+            with open(temp_path, 'w') as f:
+                f.write(content)
+            subprocess.check_call([
+                'scp',
+                '-o', 'StrictHostKeyChecking=no',
+                '-i', DockerTests.PEM,
+                temp_path,
+                'ec2-user@{}:{}'.format(ip, path)
+            ])
+            subprocess.check_call([
+                'ssh',
+                '-o', 'StrictHostKeyChecking=no',
+                '-i', DockerTests.PEM,
+                'ec2-user@{}'.format(ip),
+                'chmod 644 {}'.format(path)
+            ])
+            os.unlink(temp_path)
+        else:
+            with open(path, 'w') as file:
+                file.write(content)
 
     def timestamp(self):
         return re.sub(r'\W', '_', str(datetime.datetime.now()))
@@ -57,8 +122,7 @@ class DockerTests(unittest.TestCase):
         ))
 
     def one_file_server(self, container_name, html):
-        with open(os.path.join(self.tmp, 'index.html'), 'w') as file:
-            file.write(html)
+        self.write_to_host(html, os.path.join(self.tmp, 'index.html'))
         volume_spec = {
             self.tmp: {
                 'bind': '/usr/share/nginx/html',
@@ -96,8 +160,7 @@ class DockerTests(unittest.TestCase):
 
     def test_volumes(self):
         input = 'hello world\n'
-        with open(os.path.join(self.tmp, 'world.txt'), 'w') as file:
-            file.write(input)
+        self.write_to_host(input, os.path.join(self.tmp, 'world.txt'))
         volume_spec = {self.tmp: {'bind': '/hello', 'mode': 'ro'}}
         output = self.client.run(
             'alpine:3.4',
@@ -144,6 +207,12 @@ class DockerTests(unittest.TestCase):
         self.assert_url_content(url, '{"foo": "bar"}')
 
     def test_container_active(self):
+        """
+        WARNING: I think this is prone to race conditions.
+        If you get an error, try just giving it more time.
+        """
+        self.assertEqual(0, self.count_my_containers())
+
         container_name = self.timestamp()
         DockerContainerSpec(
             manager=self.manager,
@@ -159,9 +228,13 @@ class DockerTests(unittest.TestCase):
         sleep(2)
 
         url = '/docker/{}/'.format(container_name)
-        django.test.Client().get(url)
+        self.assert_url_content(url, 'Welcome to nginx!')
 
-        self.client.purge_inactive(1)
+        # Be careful of race conditions if developing locally:
+        # I had to give a bit more time for the same test to pass with remote Docker.
+        self.client.purge_inactive(4)
+        sleep(2)
+
         self.assertEqual(1, self.count_my_containers())
         # With a tighter time limit, recent activity should keep it alive.
 

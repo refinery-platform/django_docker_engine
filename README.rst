@@ -121,14 +121,27 @@ Development
 TODO: The tests need to be better at cleaning up the resources they create.
 Until then, keep an eye on the web console:
 
+- `CloudFormation Stacks <https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks?filter=active>`_
+
+When you delete a CloudFormation stack, it should also take care of the lower level resources:
+
 - `Security Groups <https://console.aws.amazon.com/ec2/v2/home?region=us-east-1#SecurityGroups:search=django_docker_;sort=groupId>`_
 - `EC2 Instances <https://console.aws.amazon.com/ec2/v2/home?region=us-east-1#Instances:search=django_docker_;sort=keyName>`_
 - `Task Definitions <https://console.aws.amazon.com/ecs/home?region=us-east-1#/taskDefinitions>`_
 - `Clusters <https://console.aws.amazon.com/ecs/home?region=us-east-1#/clusters>`_
 - `Logs <https://console.aws.amazon.com/cloudwatch/home?region=us-east-1#logs:>`_
-- `CloudFormation Stacks <https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks?filter=active>`_
 
 or use AWS-CLI (TODO: Better filtering so we delete only test ones, not the production ones.)::
+
+    aws cloudformation list-stacks \
+        --query 'StackSummaries[].[StackName,StackStatus]' \
+        --output text | \
+    grep -v DELETE_COMPLETE | \
+    grep django-docker | \
+    cut -f 1 | \
+    xargs -n 1 aws cloudformation delete-stack --stack-name
+
+... and, again, you can consider the lower level resources, though that shouldn't be necessary::
 
     aws ec2 describe-instances \
         --filters Name=tag:project,Values=django_docker_engine \
@@ -152,13 +165,14 @@ or use AWS-CLI (TODO: Better filtering so we delete only test ones, not the prod
         --output text | \
     xargs -n 1 aws logs delete-log-group --log-group-name
 
-    aws cloudformation list-stacks \
-        --query 'StackSummaries[].[StackName]' \
-        --output text | \
-    grep django-docker | \
-    xargs -n 1 aws cloudformation delete-stack --stack-name
-
 (It seems that tasks can not be deleted, they can only be "deregistered".)
+
+---------
+Debugging
+---------
+
+
+ssh -i ~/.ssh/django_docker_cloudformation.pem ec2-user@INSTANCE_IP
 
 ------------
 Dependencies

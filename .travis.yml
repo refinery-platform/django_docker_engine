@@ -7,24 +7,35 @@ services:
 install:
 - pip install -r requirements.txt
 - pip install -r requirements-dev.txt
+- |-
+  openssl aes-256-cbc \
+          -K $encrypted_80c19366536f_key \
+          -iv $encrypted_80c19366536f_iv \
+          -in django_docker_cloudformation.pem.enc \
+          -out django_docker_cloudformation.pem -d
+- chmod 600 django_docker_cloudformation.pem
 script:
 - set -o errexit
 - export AWS_DEFAULT_REGION=us-east-1
 - start() { echo travis_fold':'start:$1; }
 - end() { echo travis_fold':'end:$1; }
 
-# Test everything with defaults
-- start defaults
-- python manage.py test tests --verbosity=2
-- end defaults
-
-# Test a range of django versions, but skip the much slower ECS tests:
 - |-
-  for VERSION in '1.7.1' '1.8.17' '1.9.12' '1.10.6'; do
-    start django-$VERSION
-    pip install django==$VERSION
-    python manage.py test --verbosity=2 tests.test_docker_utils.DockerTests
-    end django-$VERSION
+  for WHERE_IS_DOCKER in 'local' 'remote'; do
+
+    if [ "$WHERE_IS_DOCKER" == 'remote' ]; then
+      start build-stack
+      $(python django_docker_engine/cloudformation_utils.py --create)
+      end build-stack
+    fi
+
+    for VERSION in '1.7.1' '1.8.17' '1.9.12' '1.10.6'; do
+      start docker-$WHERE_IS_DOCKER-django-$VERSION
+      pip install django==$VERSION
+      python manage.py test tests --verbosity=2
+      end docker-$WHERE_IS_DOCKER-django-$VERSION
+    done
+
   done
 
 # Check packaging and formatting:
@@ -35,6 +46,9 @@ script:
 - start egg
 - python setup.py bdist_egg
 - start egg
+
+after_script:
+- python django_docker_engine/cloudformation_utils.py --delete $DOCKER_STACK_ID
 
 env:
   global:
