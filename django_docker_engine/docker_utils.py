@@ -1,8 +1,10 @@
 import json
 import os
 import re
+import logging
 import subprocess
 import tempfile
+import paramiko
 from abc import ABCMeta, abstractmethod
 from datetime import datetime
 from time import time
@@ -161,6 +163,16 @@ class RemoteHostFiles(HostFiles):
         self.host = host
         self.pem = pem
 
+    def _exec(self, command):
+        key = paramiko.RSAKey.from_private_key_file(self.pem)
+        client = paramiko.SSHClient()
+        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        client.connect(hostname=self.host, username='ec2-user', pkey=key)
+        stdin, stdout, stderr = client.exec_command(command)
+        logging.info('command: %s', command)
+        logging.info('STDOUT: %s', stdout.read())
+        logging.info('STDERR: %s', stderr.read())
+
     def write(self, path, content):
         (os_handle, temp_path) = tempfile.mkstemp()
         with open(temp_path, 'w') as f:
@@ -172,20 +184,9 @@ class RemoteHostFiles(HostFiles):
             temp_path,
             'ec2-user@{}:{}'.format(self.host, path)
         ])
-        subprocess.check_call([
-            'ssh',
-            '-o', 'StrictHostKeyChecking=no',
-            '-i', self.pem,
-            'ec2-user@{}'.format(self.host),
-            'chmod 644 {}'.format(path)
-        ])
+        # TODO: If we chmod locally, are permissions preserved?
+        self._exec('chmod 644 {}'.format(path))
         os.unlink(temp_path)
 
     def mkdir_p(self, path):
-        subprocess.check_call([
-            'ssh',
-            '-o', 'StrictHostKeyChecking=no',
-            '-i', self.pem,
-            'ec2-user@{}'.format(self.host),
-            'mkdir -p {}'.format(path)
-        ])
+        self._exec('mkdir -p {}'.format(path))

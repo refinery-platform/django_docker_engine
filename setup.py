@@ -15,7 +15,9 @@ setup(
         'docker==2.1.0',
         'django-http-proxy',
         'boto3',
-        'troposphere'
+        'troposphere',
+        'paramiko',
+        'scp'
     ],
     packages=find_packages(exclude=['*_demo']),
     include_package_data=True,
