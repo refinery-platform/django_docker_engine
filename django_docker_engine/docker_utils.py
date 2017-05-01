@@ -1,14 +1,18 @@
 import json
 import os
 import re
-import subprocess
-import tempfile
+import logging
+import paramiko
+from abc import ABCMeta, abstractmethod
 from datetime import datetime
 from time import time
 from container_managers import docker_engine
+from scp import SCPClient
+from distutils import dir_util
 
 
 class DockerClientWrapper():
+
     def __init__(self,
                  manager=docker_engine.DockerEngineManager(),
                  root_label='io.github.refinery-project.django_docker_engine'):
@@ -71,13 +75,10 @@ class DockerClientWrapper():
 
 class DockerContainerSpec():
 
-    def __init__(self, image_name, container_name,
+    def __init__(self, image_name, container_name, manager,
                  input={},
                  container_input_path='/tmp/input.json',
-                 labels={},
-                 manager=None):
-        if not manager:
-            raise RuntimeError('"manager" is required')
+                 labels={}):
         self.manager = manager
         self.image_name = image_name
         self.container_name = container_name
@@ -85,68 +86,30 @@ class DockerContainerSpec():
         self.input = input
         self.labels = labels
 
+        # TODO: perhaps instead of embedding a HostFiles object here,
+        # it would make more sense for the manager to offer those operations?
+        # Then we wouldn't need to access the _base_url here.
+        remote_host_match = re.match(r'^http://([^:]+):\d+$', manager._base_url)
+        if remote_host_match:
+            self.host_files = RemoteHostFiles(remote_host_match.group(1), manager.pem)
+        elif manager._base_url == 'http+docker://localunixsocket':
+            self.host_files = LocalHostFiles()
+        else:
+            raise RuntimeError('Unexpected client base_url: %s', self._base_url)
+
     def _mkdtemp(self):
-        # TODO: If-thens all over the place: needs refactoring.
         base = '/tmp/django-docker'
         timestamp = re.sub(r'\W', '_', str(datetime.now()))
         dir = os.path.join(base, timestamp)
-
-        remote_host_match = re.match(r'^http://([^:]+):\d+$', self.manager._base_url)
-        if remote_host_match:
-            host = remote_host_match.group(1)
-            subprocess.check_call([
-                'ssh',
-                '-o', 'StrictHostKeyChecking=no',
-                '-i', self.manager.pem,
-                'ec2-user@{}'.format(host),
-                'mkdir -p {}'.format(dir)
-            ])
-        elif self.manager._base_url == 'http+docker://localunixsocket':
-            # mkdtemp is the obvious way to do this, but
-            # the resulting directory is not visible to Docker.
-            # Tried chmod, but that didn't help.
-            try:
-                os.mkdir(base)
-            except BaseException:
-                pass  # May already exist
-            os.mkdir(dir)
-        else:
-            raise RuntimeError('Unexpected client base_url: %s', self._base_url)
+        self.host_files.mkdir_p(dir)
         return dir
 
     def _write_input_to_host(self):
-        # TODO: If-thens all over the place: needs refactoring.
         host_input_dir = self._mkdtemp()
         # The host filename "input.json" is arbitrary.
         host_input_path = os.path.join(host_input_dir, 'input.json')
         content = json.dumps(self.input)
-
-        remote_host_match = re.match(r'^http://([^:]+):\d+$', self.manager._base_url)
-        if remote_host_match:
-            host = remote_host_match.group(1)
-            (os_handle, temp_path) = tempfile.mkstemp()
-            with open(temp_path, 'w') as f:
-                f.write(content)
-            subprocess.check_call([
-                'scp',
-                '-o', 'StrictHostKeyChecking=no',
-                '-i', self.manager.pem,
-                temp_path,
-                'ec2-user@{}:{}'.format(host, host_input_path)
-            ])
-            subprocess.check_call([
-                'ssh',
-                '-o', 'StrictHostKeyChecking=no',
-                '-i', self.manager.pem,
-                'ec2-user@{}'.format(host),
-                'chmod 644 {}'.format(host_input_path)
-            ])
-            os.unlink(temp_path)
-        elif self.manager._base_url == 'http+docker://localunixsocket':
-            with open(host_input_path, 'w') as file:
-                file.write(content)
-        else:
-            raise RuntimeError('Unexpected client base_url: %s', self._base_url)
+        self.host_files.write(host_input_path, content)
         return host_input_path
 
     def run(self):
@@ -167,3 +130,51 @@ class DockerContainerSpec():
         # Metadata on the returned container object (like the assigned port)
         # is not complete, so we do a redundant lookup.
         return client.lookup_container_url(self.container_name)
+
+
+class HostFiles:
+    __metaclass__ = ABCMeta
+
+    @abstractmethod
+    def write(self, path, content):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def mkdir_p(self, path):
+        raise NotImplementedError()
+
+
+class LocalHostFiles(HostFiles):
+    def __init__(self):
+        pass
+
+    def write(self, path, content):
+        with open(path, 'w') as file:
+            file.write(content)
+
+    def mkdir_p(self, path):
+        dir_util.mkpath(path)
+
+
+class RemoteHostFiles(HostFiles):
+    def __init__(self, host, pem):
+        key = paramiko.RSAKey.from_private_key_file(pem)
+        self.client = paramiko.SSHClient()
+        self.client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        self.client.connect(hostname=host, username='ec2-user', pkey=key)
+
+    def _exec(self, command):
+        stdin, stdout, stderr = self.client.exec_command(command)
+        logging.info('command: %s', command)
+        logging.info('STDOUT: %s', stdout.read())
+        logging.info('STDERR: %s', stderr.read())
+
+    def _scp(self, orig, dest):
+        with SCPClient(self.client.get_transport()) as scp:
+            scp.put(orig, dest)
+
+    def write(self, path, content):
+        self._exec("cat > {} <<'END_CONTENT'\n{}\nEND_CONTENT".format(path, content))
+
+    def mkdir_p(self, path):
+        self._exec('mkdir -p {}'.format(path))
