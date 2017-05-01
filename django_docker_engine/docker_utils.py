@@ -172,14 +172,7 @@ class RemoteHostFiles(HostFiles):
             scp.put(orig, dest)
 
     def write(self, path, content):
-        (os_handle, temp_path) = tempfile.mkstemp()
-        with open(temp_path, 'w') as f:
-            f.write(content)
-        # TODO: Would it be cleaner to embed the file content and echo it into place?
-        self._scp(temp_path, path)
-        # TODO: If we chmod locally, are permissions preserved?
-        self._exec('chmod 644 {}'.format(path))
-        os.unlink(temp_path)
+        self._exec("cat > {} <<'END_OF_CONTENT'\n{}\nEND_OF_CONTENT".format(path, content))
 
     def mkdir_p(self, path):
         self._exec('mkdir -p {}'.format(path))
