@@ -69,18 +69,20 @@ and has proxied your request.
 Docker Engine on AWS-EC2
 .....
 
-TODO: It should be possible to do it almost exactly the same way,
-except that the Docker instance is running on an EC2 instance.
+The Docker Engine can also be run on a remote machine. ``cloudformation_util.py`` can either be run
+on the command-line, or it can be imported and called within Python to set up a new EC2 with appropriate
+security. Once the EC2 is available, it can be provided when constructing ``DockerEngineManager``,
+either implicitly as an envvar, or explicitly via an instance of the SDK client.
+
+If this will be done automatically, you can ensure that the user has the appropriate privs by running
+``set_user_policy.py``.
 
 .....
-Docker Engine via AWS-ECS
+AWS-ECS
 .....
 
-TODO: Instead of interacting directly with the Docker Engine,
-use the AWS-ECS API.
-
-For the AWS-ECS tests to work, a rather extensive set of permissions is necessary.
-These can be assigned with the ``set_user_policy.py`` script.
+TODO: AWS provides its own wrapper around Docker through ECS. We will need to abstract away what the
+Docker SDK provides so that we can use either interface, as needed.
 
 -------
 Usage: Launching Containers
@@ -120,13 +122,13 @@ You'll need a django_docker_cloudformation.pem and sufficient AWS privs.
     pip install -r requirements-dev.txt
     python manage.py test --verbosity=2
 
-The tests shouldn't leak AWS resources, but if the do:
+The tests shouldn't leak AWS resources, but if they do:
 
 - `CloudFormation Stacks <https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks?filter=active>`_
 - `Security Groups <https://console.aws.amazon.com/ec2/v2/home?region=us-east-1#SecurityGroups:search=django_docker_;sort=groupId>`_
 - `EC2 Instances <https://console.aws.amazon.com/ec2/v2/home?region=us-east-1#Instances:search=django_docker_;sort=keyName>`_
 
-Clean up is easy on the command line.
+Clean up of stacks is easy on the command line::
 
     aws cloudformation list-stacks \
         --query 'StackSummaries[].[StackName,StackStatus]' \
@@ -136,7 +138,7 @@ Clean up is easy on the command line.
     cut -f 1 | \
     xargs -n 1 aws cloudformation delete-stack --stack-name
 
-... and to manager lower level resources:
+If lower level resources have leaked, they can be handled independently::
 
     aws ec2 describe-instances \
         --filters Name=tag:project,Values=django_docker_engine \
@@ -151,9 +153,9 @@ Clean up is easy on the command line.
     xargs -n 1 aws ec2 delete-security-group --group-id
 
 
-------------
-Dependencies
-------------
+----------------
+Key Dependencies
+----------------
 
 - `docker-py <https://github.com/docker/docker-py>`_: The official
   Python SDK for Docker. It uses much the same vocabulary as the CLI,
