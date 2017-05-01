@@ -7,7 +7,6 @@ from abc import ABCMeta, abstractmethod
 from datetime import datetime
 from time import time
 from container_managers import docker_engine
-from scp import SCPClient
 from distutils import dir_util
 
 
@@ -168,10 +167,6 @@ class RemoteHostFiles(HostFiles):
         logging.info('command: %s', command)
         logging.info('STDOUT: %s', stdout.read())
         logging.info('STDERR: %s', stderr.read())
-
-    def _scp(self, orig, dest):
-        with SCPClient(self.client.get_transport()) as scp:
-            scp.put(orig, dest)
 
     def write(self, path, content):
         self._exec("cat > {} <<'END_CONTENT'\n{}\nEND_CONTENT".format(path, content))
