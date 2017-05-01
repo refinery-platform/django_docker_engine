@@ -16,8 +16,7 @@ setup(
         'django-http-proxy',
         'boto3',
         'troposphere',
-        'paramiko',
-        'scp'
+        'paramiko'
     ],
     packages=find_packages(exclude=['*_demo']),
     include_package_data=True,

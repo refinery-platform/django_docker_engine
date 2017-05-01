@@ -7,7 +7,6 @@ from abc import ABCMeta, abstractmethod
 from datetime import datetime
 from time import time
 from container_managers import docker_engine
-from scp import SCPClient
 from distutils import dir_util
 
 
@@ -91,9 +90,9 @@ class DockerContainerSpec():
         # Then we wouldn't need to access the _base_url here.
         remote_host_match = re.match(r'^http://([^:]+):\d+$', manager._base_url)
         if remote_host_match:
-            self.host_files = RemoteHostFiles(remote_host_match.group(1), manager.pem)
+            self.host_files = _RemoteHostFiles(remote_host_match.group(1), manager.pem)
         elif manager._base_url == 'http+docker://localunixsocket':
-            self.host_files = LocalHostFiles()
+            self.host_files = _LocalHostFiles()
         else:
             raise RuntimeError('Unexpected client base_url: %s', self._base_url)
 
@@ -132,7 +131,7 @@ class DockerContainerSpec():
         return client.lookup_container_url(self.container_name)
 
 
-class HostFiles:
+class _HostFiles:
     __metaclass__ = ABCMeta
 
     @abstractmethod
@@ -144,19 +143,22 @@ class HostFiles:
         raise NotImplementedError()
 
 
-class LocalHostFiles(HostFiles):
+class _LocalHostFiles(_HostFiles):
     def __init__(self):
         pass
 
     def write(self, path, content):
         with open(path, 'w') as file:
             file.write(content)
+            file.write('\n')
+            # TODO: For consistency with heredoc in _RemoteHostFiles, add a newline...
+            # I don't think this hurts with JSON, but not ideal.
 
     def mkdir_p(self, path):
         dir_util.mkpath(path)
 
 
-class RemoteHostFiles(HostFiles):
+class _RemoteHostFiles(_HostFiles):
     def __init__(self, host, pem):
         key = paramiko.RSAKey.from_private_key_file(pem)
         self.client = paramiko.SSHClient()
@@ -168,10 +170,6 @@ class RemoteHostFiles(HostFiles):
         logging.info('command: %s', command)
         logging.info('STDOUT: %s', stdout.read())
         logging.info('STDERR: %s', stderr.read())
-
-    def _scp(self, orig, dest):
-        with SCPClient(self.client.get_transport()) as scp:
-            scp.put(orig, dest)
 
     def write(self, path, content):
         self._exec("cat > {} <<'END_CONTENT'\n{}\nEND_CONTENT".format(path, content))

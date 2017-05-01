@@ -4,9 +4,8 @@ import datetime
 import re
 import requests
 import django
-import errno
-import subprocess
-import tempfile
+import paramiko
+from distutils import dir_util
 from shutil import rmtree
 from time import sleep
 from django_docker_engine.docker_utils import DockerClientWrapper, DockerContainerSpec
@@ -36,82 +35,53 @@ class DockerTests(unittest.TestCase):
         final_containers = self.client.list()
         self.assertEqual(self.initial_containers, final_containers)
 
+    # Utils for accessing remote docker engine:
+
     def docker_host_ip(self):
         return re.search(
             r'^tcp://(\d+\.\d+\.\d+\.\d+):\d+$',
             os.environ['DOCKER_HOST']
         ).group(1)
 
+    def remote_exec(self, command):
+        host = re.search(
+            r'^tcp://(\d+\.\d+\.\d+\.\d+):\d+$',
+            os.environ['DOCKER_HOST']
+        ).group(1)
+
+        key = paramiko.RSAKey.from_private_key_file(DockerTests.PEM)
+        client = paramiko.SSHClient()
+        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        client.connect(hostname=host, username='ec2-user', pkey=key)
+        client.exec_command(command)
+
     PEM = 'django_docker_cloudformation.pem'
+
+    # These *_on_host methods are in a sense duplicates of the helper methods
+    # in docker_utils.py, but I think here it makes sense to have explicit
+    # if-thens, rather than hiding it with polymorphism.
 
     def rmdir_on_host(self, path):
         if os.environ.get('DOCKER_HOST'):
-            ip = self.docker_host_ip()
-            subprocess.check_call([
-                'ssh',
-                '-o', 'StrictHostKeyChecking=no',
-                '-i', DockerTests.PEM,
-                'ec2-user@{}'.format(ip),
-                'rm -rf {}'.format(path)
-            ])
+            self.remote_exec('rm -rf {}'.format(path))
         else:
             rmtree(self.tmp)
 
     def mkdir_on_host(self, path):
-        """
-        mkdir, wherever Docker is running.
-        If Docker is remote (ie, DOCKER_HOST is set) we will
-        try to ssh to that machine to put the file in place;
-        port 22 must be open, and we must have the necessary key.
-        """
         if os.environ.get('DOCKER_HOST'):
-            ip = self.docker_host_ip()
-            subprocess.check_call([
-                'ssh',
-                '-o', 'StrictHostKeyChecking=no',
-                '-i', DockerTests.PEM,
-                'ec2-user@{}'.format(ip),
-                'mkdir -p {}'.format(path)
-            ])
+            self.remote_exec('mkdir -p {}'.format(path))
         else:
-            try:
-                os.makedirs(path)
-            except OSError as exc:
-                if exc.errno == errno.EEXIST and os.path.isdir(path):
-                    pass
-                else:
-                    raise
+            dir_util.mkpath(path)
 
     def write_to_host(self, content, path):
-        """
-        Writes content to path, wherever Docker is running.
-        If Docker is remote (ie, DOCKER_HOST is set) we will
-        try to ssh to that machine to put the file in place;
-        port 22 must be open, and we must have the necessary key.
-        """
         if os.environ.get('DOCKER_HOST'):
-            ip = self.docker_host_ip()
-            (os_handle, temp_path) = tempfile.mkstemp()
-            with open(temp_path, 'w') as f:
-                f.write(content)
-            subprocess.check_call([
-                'scp',
-                '-o', 'StrictHostKeyChecking=no',
-                '-i', DockerTests.PEM,
-                temp_path,
-                'ec2-user@{}:{}'.format(ip, path)
-            ])
-            subprocess.check_call([
-                'ssh',
-                '-o', 'StrictHostKeyChecking=no',
-                '-i', DockerTests.PEM,
-                'ec2-user@{}'.format(ip),
-                'chmod 644 {}'.format(path)
-            ])
-            os.unlink(temp_path)
+            self.remote_exec("cat > {} <<'END'\n{}\nEND".format(path, content))
         else:
             with open(path, 'w') as file:
                 file.write(content)
+                file.write('\n')  # For consistency with heredoc
+
+    # Other supporting methods for tests:
 
     def timestamp(self):
         return re.sub(r'\W', '_', str(datetime.datetime.now()))
@@ -168,7 +138,7 @@ class DockerTests(unittest.TestCase):
             labels={self.test_label: 'true'},
             volumes=volume_spec
         )
-        self.assertEqual(output, input)
+        self.assertEqual(output, input + '\n')
 
     def test_httpd(self):
         container_name = self.timestamp()
