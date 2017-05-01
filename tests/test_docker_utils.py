@@ -4,9 +4,6 @@ import datetime
 import re
 import requests
 import django
-import errno
-import subprocess
-import tempfile
 import paramiko
 from distutils import dir_util
 from shutil import rmtree
@@ -78,10 +75,11 @@ class DockerTests(unittest.TestCase):
 
     def write_to_host(self, content, path):
         if os.environ.get('DOCKER_HOST'):
-            self.remote_exec("cat > {} <<'END_CONTENT'\n{}\nEND_CONTENT".format(path, content))
+            self.remote_exec("cat > {} <<'END'\n{}\nEND".format(path, content))
         else:
             with open(path, 'w') as file:
                 file.write(content)
+                file.write('\n')  # For consistency with heredoc
 
     # Other supporting methods for tests:
 
@@ -140,7 +138,7 @@ class DockerTests(unittest.TestCase):
             labels={self.test_label: 'true'},
             volumes=volume_spec
         )
-        self.assertEqual(output, input + '\n\n')
+        self.assertEqual(output, input + '\n')
 
     def test_httpd(self):
         container_name = self.timestamp()

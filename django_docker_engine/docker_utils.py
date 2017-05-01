@@ -150,6 +150,9 @@ class _LocalHostFiles(_HostFiles):
     def write(self, path, content):
         with open(path, 'w') as file:
             file.write(content)
+            file.write('\n')
+            # TODO: For consistency with heredoc in _RemoteHostFiles, add a newline...
+            # I don't think this hurts with JSON, but not ideal.
 
     def mkdir_p(self, path):
         dir_util.mkpath(path)
