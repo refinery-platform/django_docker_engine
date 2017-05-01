@@ -2,14 +2,13 @@ import json
 import os
 import re
 import logging
-import subprocess
 import tempfile
 import paramiko
 from abc import ABCMeta, abstractmethod
 from datetime import datetime
 from time import time
 from container_managers import docker_engine
-
+from scp import SCPClient
 
 class DockerClientWrapper():
     def __init__(self,
@@ -160,30 +159,27 @@ class LocalHostFiles(HostFiles):
 
 class RemoteHostFiles(HostFiles):
     def __init__(self, host, pem):
-        self.host = host
-        self.pem = pem
+        key = paramiko.RSAKey.from_private_key_file(pem)
+        self.client = paramiko.SSHClient()
+        self.client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        self.client.connect(hostname=host, username='ec2-user', pkey=key)
 
     def _exec(self, command):
-        key = paramiko.RSAKey.from_private_key_file(self.pem)
-        client = paramiko.SSHClient()
-        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        client.connect(hostname=self.host, username='ec2-user', pkey=key)
-        stdin, stdout, stderr = client.exec_command(command)
+        stdin, stdout, stderr = self.client.exec_command(command)
         logging.info('command: %s', command)
         logging.info('STDOUT: %s', stdout.read())
         logging.info('STDERR: %s', stderr.read())
+
+    def _scp(self, orig, dest):
+        with SCPClient(self.client.get_transport()) as scp:
+            scp.put(orig, dest)
 
     def write(self, path, content):
         (os_handle, temp_path) = tempfile.mkstemp()
         with open(temp_path, 'w') as f:
             f.write(content)
-        subprocess.check_call([
-            'scp',
-            '-o', 'StrictHostKeyChecking=no',
-            '-i', self.pem,
-            temp_path,
-            'ec2-user@{}:{}'.format(self.host, path)
-        ])
+        # TODO: Would it be cleaner to embed the file content and echo it into place?
+        self._scp(temp_path, path)
         # TODO: If we chmod locally, are permissions preserved?
         self._exec('chmod 644 {}'.format(path))
         os.unlink(temp_path)
