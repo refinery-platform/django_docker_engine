@@ -2,7 +2,6 @@ import json
 import os
 import re
 import logging
-import tempfile
 import paramiko
 from abc import ABCMeta, abstractmethod
 from datetime import datetime
@@ -11,7 +10,9 @@ from container_managers import docker_engine
 from scp import SCPClient
 from distutils import dir_util
 
+
 class DockerClientWrapper():
+
     def __init__(self,
                  manager=docker_engine.DockerEngineManager(),
                  root_label='io.github.refinery-project.django_docker_engine'):
@@ -96,7 +97,6 @@ class DockerContainerSpec():
         else:
             raise RuntimeError('Unexpected client base_url: %s', self._base_url)
 
-
     def _mkdtemp(self):
         base = '/tmp/django-docker'
         timestamp = re.sub(r'\W', '_', str(datetime.now()))
@@ -143,6 +143,7 @@ class HostFiles:
     def mkdir_p(self, path):
         raise NotImplementedError()
 
+
 class LocalHostFiles(HostFiles):
     def __init__(self):
         pass
@@ -153,6 +154,7 @@ class LocalHostFiles(HostFiles):
 
     def mkdir_p(self, path):
         dir_util.mkpath(path)
+
 
 class RemoteHostFiles(HostFiles):
     def __init__(self, host, pem):
@@ -172,7 +174,7 @@ class RemoteHostFiles(HostFiles):
             scp.put(orig, dest)
 
     def write(self, path, content):
-        self._exec("cat > {} <<'END_OF_CONTENT'\n{}\nEND_OF_CONTENT".format(path, content))
+        self._exec("cat > {} <<'END_CONTENT'\n{}\nEND_CONTENT".format(path, content))
 
     def mkdir_p(self, path):
         self._exec('mkdir -p {}'.format(path))

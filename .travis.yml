@@ -17,7 +17,7 @@ install:
 script:
 - set -o errexit
 - export AWS_DEFAULT_REGION=us-east-1
-- start() { echo travis_fold':'start:$1; }
+- start() { echo travis_fold':'start:$1; echo 'start:' $1; }
 - end() { echo travis_fold':'end:$1; }
 
 - |-
