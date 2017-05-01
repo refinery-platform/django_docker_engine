@@ -9,6 +9,7 @@ from datetime import datetime
 from time import time
 from container_managers import docker_engine
 from scp import SCPClient
+from distutils import dir_util
 
 class DockerClientWrapper():
     def __init__(self,
@@ -151,11 +152,7 @@ class LocalHostFiles(HostFiles):
             file.write(content)
 
     def mkdir_p(self, path):
-        try:
-            os.mkdir(os.path.basename(path))
-        except BaseException:
-            pass  # May already exist
-        os.mkdir(path)
+        dir_util.mkpath(path)
 
 class RemoteHostFiles(HostFiles):
     def __init__(self, host, pem):
