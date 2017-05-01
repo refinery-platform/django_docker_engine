@@ -90,9 +90,9 @@ class DockerContainerSpec():
         # Then we wouldn't need to access the _base_url here.
         remote_host_match = re.match(r'^http://([^:]+):\d+$', manager._base_url)
         if remote_host_match:
-            self.host_files = RemoteHostFiles(remote_host_match.group(1), manager.pem)
+            self.host_files = _RemoteHostFiles(remote_host_match.group(1), manager.pem)
         elif manager._base_url == 'http+docker://localunixsocket':
-            self.host_files = LocalHostFiles()
+            self.host_files = _LocalHostFiles()
         else:
             raise RuntimeError('Unexpected client base_url: %s', self._base_url)
 
@@ -131,7 +131,7 @@ class DockerContainerSpec():
         return client.lookup_container_url(self.container_name)
 
 
-class HostFiles:
+class _HostFiles:
     __metaclass__ = ABCMeta
 
     @abstractmethod
@@ -143,7 +143,7 @@ class HostFiles:
         raise NotImplementedError()
 
 
-class LocalHostFiles(HostFiles):
+class _LocalHostFiles(_HostFiles):
     def __init__(self):
         pass
 
@@ -155,7 +155,7 @@ class LocalHostFiles(HostFiles):
         dir_util.mkpath(path)
 
 
-class RemoteHostFiles(HostFiles):
+class _RemoteHostFiles(_HostFiles):
     def __init__(self, host, pem):
         key = paramiko.RSAKey.from_private_key_file(pem)
         self.client = paramiko.SSHClient()
