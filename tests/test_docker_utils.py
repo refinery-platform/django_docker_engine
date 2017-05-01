@@ -140,7 +140,7 @@ class DockerTests(unittest.TestCase):
             labels={self.test_label: 'true'},
             volumes=volume_spec
         )
-        self.assertEqual(output, input + '\n')
+        self.assertEqual(output, input + '\n\n')
 
     def test_httpd(self):
         container_name = self.timestamp()
