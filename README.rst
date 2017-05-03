@@ -16,6 +16,10 @@ The following Docker projects have been designed to work with ``django_docker_en
 
 - `docker_igv_js <https://github.com/refinery-platform/docker_igv_js>`_
 
+Write-ups on the background motivations and future directions:
+
+- `Provenance <https://github.com/refinery-platform/django_docker_engine/blob/master/README-PROVENANCE.md>`_
+
 -----
 Usage: Configuring Django
 -----
