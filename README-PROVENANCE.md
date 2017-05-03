@@ -1,4 +1,4 @@
-# What does "provenance" mean here?
+# Provenance in pluggable visualizations
 
 Background:
 - [Characterizing Provenance in Visualization and Data Analysis: An
