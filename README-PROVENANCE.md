@@ -46,6 +46,9 @@ of particular features.
 - Researcher has multiple data sets. After visualizing them, notices that there are distinct partitions.
     - Researcher would like to see if the data provenance or other data set metadata helps to explain the partition.
     - Researcher would like to identify and add new data sets with characteristics similar to one of the partitions.
+- Researcher has multiple data sets. In visualizing them, they are much more homogenenous than expected.
+    - Researcher would like to examine the metadata for the current set and see if that explains the homogeneity.
+    - Researcher would like to identify new data sets which are likely to be markedly different from the current ones.
 - Researcher uses visualization tool to integrate diverse data sets.
     - And researcher would like to export in a reproducible way (back to Refinery) the combined data so that further analysis can be done.
     - At a latter point researcher realizes that a tweak to the parameters would be useful.
@@ -61,5 +64,37 @@ of particular features.
     - Or, new reference data becomes available:
         - Researcher would like to replay the same steps, but with the latest software and data.
         
-## Affordances and implementation possibilities
+## Affordances and implementation thoughts
 
+- If we can avoid dependencies from the image back to *Refinery*, awesome.
+    - But if we do need to depend on it, we should isolate that in a thin compatibility layer in the image stack.
+    - For APIs or widgets we want to utilize, they should be documented, and we should make a mock-refinery available, so they can be tested without a full *Refinery* build.
+    - Levels: I would suggest that we favor high level tools for the dependencies and keep the barrier to entry low.
+        - API server-side: The docker images could conceivably communicate with the host at run time, but I see little in favor of that approach.
+        - API client-side: Better.
+        - Framework specific widgets. Maybe, though we'll have duplicate effort for different frameworks.
+        - JS-include/document-write. Snippets which document-write UI elements. Event registration needs to be thought out.
+    - Use cases? If it's just one thing, makes more sense to polish it rather than going to the API.
+        - File browsing is the example which always comes up, but is there anything else?
+        - Characteristics of current data set?
+        - Perhaps also history of visualization use? (Middleware which intercepts and logs to a database the proxy requests.)
+- Visualizations loaded with distinct data should have distinct URLs; What comes up at a given URL should be stable over time for different users and on different browsers.
+- URLs reflect "meaningful" visualization states, but this is subjective:
+    - You might get particular information from a particular mouse-over from a particular brushing, but that is not what would be captured.
+    - Rate of change / UI traditions matter:
+        - Changes in response to form controls should probably be new URLs.
+        - Changes from other mouse events, or changes that happen faster than you could narrate should not get new URLs...
+            - ... in which case there needs to be some mechanism for the user to say "This point matters!".
+- Where HTTP/HTML have mechanisms with appropriate semantics, use them instead of inventing our own.
+    - Visualization state is composed of (nearly) orthogonal components: Can these be expressed in the URL?
+        - Path: docker image to start; sub-path: volume to mount
+        - Query: Other state used by container, server-side
+        - Fragment: State used only on the client-side
+    - Ideally, these URL parts can be recombined to reflect changes to these orthogonal components. For example:
+        - If a new version of an visualization is released, but we'd like to run it with old data.
+        - If we'd like switch to a different data set, but keep an old view.
+    - For this to work, components should try to record their state in a way that can be reused. (These recommendations might go against what would otherwise be preferred.)
+        - Deprecate HTML5 history: We want the server to see state changes expressed as URL changes.
+        - In DB on container, use Refinery IDs rather than coining own if possible: We want to be able to swap database instances out.
+        - Ideally, different applications use the same names for the same thing in their URL params.
+- Boot-time data loader needs to be exposed so it can also be used at run time: In either case, we have refinery IDs, and we want it to be internalized: DRY.
