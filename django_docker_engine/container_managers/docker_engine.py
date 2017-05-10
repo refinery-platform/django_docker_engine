@@ -1,6 +1,6 @@
 import docker
 import re
-from base import BaseManager, BaseContainer
+from base import BaseManager
 
 
 class DockerEngineManager(BaseManager):

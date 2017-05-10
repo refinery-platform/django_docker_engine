@@ -93,10 +93,10 @@ class DockerTests(unittest.TestCase):
 
     def one_file_server(self, container_name, html):
         self.write_to_host(html, os.path.join(self.tmp, 'index.html'))
-        volume_spec = {
-            self.tmp: {
-                'bind': '/usr/share/nginx/html',
-                'mode': 'ro'}}
+        volume_spec = [{
+            'host': self.tmp,
+            'bind': '/usr/share/nginx/html',
+            'mode': 'ro'}]
         ports_spec = {'80/tcp': None}
         client = self.client
         client.run('nginx:1.10.3-alpine',
@@ -128,10 +128,10 @@ class DockerTests(unittest.TestCase):
         )
         self.assertEqual(output, input + '\n')
 
-    def test_volumes(self):
+    def test_mount_host_volumes(self):
         input = 'hello world\n'
         self.write_to_host(input, os.path.join(self.tmp, 'world.txt'))
-        volume_spec = {self.tmp: {'bind': '/hello', 'mode': 'ro'}}
+        volume_spec = [{'host': self.tmp, 'bind': '/hello', 'mode': 'ro'}]
         output = self.client.run(
             'alpine:3.4',
             'cat /hello/world.txt',
@@ -139,6 +139,16 @@ class DockerTests(unittest.TestCase):
             volumes=volume_spec
         )
         self.assertEqual(output, input + '\n')
+
+    # def test_mount_scratch_volumes(self):
+    #     volume_spec = [{'bind': '/hello', 'mode': 'ro'}]
+    #     output = self.client.run(
+    #         'alpine:3.4',
+    #         'cat /hello/world.txt',
+    #         labels={self.test_label: 'true'},
+    #         volumes=volume_spec
+    #     )
+    #     self.assertEqual(output, input + '\n')
 
     def test_httpd(self):
         container_name = self.timestamp()

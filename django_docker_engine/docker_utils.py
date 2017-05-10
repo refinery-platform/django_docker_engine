@@ -18,7 +18,7 @@ class DockerClientWrapper():
         self._containers_manager = manager
         self.root_label = root_label
 
-    def run(self, image_name, cmd=None, **kwargs):
+    def run(self, image_name, cmd=None, volumes=(), **kwargs):
         """
         Wraps the SDK's run() method.
         """
@@ -29,6 +29,12 @@ class DockerClientWrapper():
         labels = kwargs.get('labels') or {}
         labels.update({self.root_label: 'true'})
         kwargs['labels'] = labels
+
+        volumes_dict = {volume['host']:volume.copy() for volume in volumes}
+        for volume in volumes_dict.values():
+            volume.pop('host')
+        kwargs['volumes'] = volumes_dict
+
         return self._containers_manager.run(image_name, cmd, **kwargs)
 
     def lookup_container_url(self, container_name):
@@ -113,11 +119,10 @@ class DockerContainerSpec():
 
     def run(self):
         host_input_path = self._write_input_to_host()
-        volume_spec = {
-            host_input_path: {
-                # Path inside container might need to be configurable?
-                'bind': self.container_input_path,
-                'mode': 'ro'}}
+        volume_spec = [
+            {'host': host_input_path,
+            'bind': self.container_input_path,
+            'mode': 'ro'}]
         ports_spec = {'80/tcp': None}
         client = DockerClientWrapper(manager=self.manager)
         client.run(self.image_name,
