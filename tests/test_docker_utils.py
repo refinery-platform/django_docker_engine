@@ -142,6 +142,7 @@ class DockerTests(unittest.TestCase):
 
     # def test_mount_scratch_volumes(self):
     #     volume_spec = [{'bind': '/hello', 'mode': 'ro'}]
+    #     self.assertEqual(volume_spec[0].get('host'), None) # No explicit volume!
     #     output = self.client.run(
     #         'alpine:3.4',
     #         'cat /hello/world.txt',

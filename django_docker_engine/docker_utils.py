@@ -30,9 +30,15 @@ class DockerClientWrapper():
         labels.update({self.root_label: 'true'})
         kwargs['labels'] = labels
 
-        volumes_dict = {volume['host']: volume.copy() for volume in volumes}
-        for volume in volumes_dict.values():
-            volume.pop('host')
+        volumes_dict = {}
+        for volume in volumes:
+            host_directory = volume.get('host')
+            if not host_directory:
+                # TODO: make file operations available through Manager.
+                pass # TODO: mkdir
+            binding = volume.copy()
+            binding.pop('host')
+            volumes_dict[host_directory] = binding
         kwargs['volumes'] = volumes_dict
 
         return self._containers_manager.run(image_name, cmd, **kwargs)
