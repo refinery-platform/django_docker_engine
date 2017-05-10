@@ -125,4 +125,3 @@ class DockerContainerSpec():
         # Metadata on the returned container object (like the assigned port)
         # is not complete, so we do a redundant lookup.
         return client.lookup_container_url(self.container_name)
-

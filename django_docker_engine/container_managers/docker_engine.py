@@ -53,6 +53,7 @@ class _HostFiles:
     def mkdir_p(self, path):
         raise NotImplementedError()
 
+
 class _LocalHostFiles(_HostFiles):
     def __init__(self):
         pass
@@ -66,6 +67,7 @@ class _LocalHostFiles(_HostFiles):
 
     def mkdir_p(self, path):
         dir_util.mkpath(path)
+
 
 class _RemoteHostFiles(_HostFiles):
     def __init__(self, host, pem):
