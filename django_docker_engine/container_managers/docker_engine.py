@@ -30,7 +30,8 @@ class DockerEngineManager(BaseManager):
         return self._containers_client.list(filters=filters)
 
 
-# TODO: At some point we need to be more abstract, instead of using the SDK responses directly...
+# TODO: At some point we need to be more abstract,
+#       instead of using the SDK responses directly...
 # class DockerEngineContainer(BaseContainer):
 #
 #     def remove(self):

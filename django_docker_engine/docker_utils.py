@@ -30,7 +30,7 @@ class DockerClientWrapper():
         labels.update({self.root_label: 'true'})
         kwargs['labels'] = labels
 
-        volumes_dict = {volume['host']:volume.copy() for volume in volumes}
+        volumes_dict = {volume['host']: volume.copy() for volume in volumes}
         for volume in volumes_dict.values():
             volume.pop('host')
         kwargs['volumes'] = volumes_dict
@@ -119,8 +119,8 @@ class DockerContainerSpec():
 
     def run(self):
         host_input_path = self._write_input_to_host()
-        volume_spec = [
-            {'host': host_input_path,
+        volume_spec = [{
+            'host': host_input_path,
             'bind': self.container_input_path,
             'mode': 'ro'}]
         ports_spec = {'80/tcp': None}
