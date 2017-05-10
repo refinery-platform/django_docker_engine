@@ -35,7 +35,7 @@ class DockerClientWrapper():
             host_directory = volume.get('host')
             if not host_directory:
                 # TODO: make file operations available through Manager.
-                pass # TODO: mkdir
+                pass  # TODO: mkdir
             binding = volume.copy()
             binding.pop('host')
             volumes_dict[host_directory] = binding
