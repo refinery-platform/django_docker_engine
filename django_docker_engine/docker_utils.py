@@ -1,6 +1,5 @@
 import json
 import os
-import re
 from datetime import datetime
 from time import time
 from container_managers import docker_engine
@@ -28,12 +27,10 @@ class DockerClientWrapper():
 
         volumes_dict = {}
         for volume in volumes:
-            host_directory = volume.get('host')
-            if not host_directory:
-                # TODO: make file operations available through Manager.
-                pass  # TODO: mkdir
             binding = volume.copy()
-            binding.pop('host')
+            host_directory = binding.pop('host', None)
+            if not host_directory:
+                host_directory = self._containers_manager.mkdtemp()
             volumes_dict[host_directory] = binding
         kwargs['volumes'] = volumes_dict
 
@@ -93,15 +90,8 @@ class DockerContainerSpec():
         self.input = input
         self.labels = labels
 
-    def _mkdtemp(self):
-        base = '/tmp/django-docker'
-        timestamp = re.sub(r'\W', '_', str(datetime.now()))
-        dir = os.path.join(base, timestamp)
-        self.manager.host_files.mkdir_p(dir)
-        return dir
-
     def _write_input_to_host(self):
-        host_input_dir = self._mkdtemp()
+        host_input_dir = self.manager.mkdtemp()
         # The host filename "input.json" is arbitrary.
         host_input_path = os.path.join(host_input_dir, 'input.json')
         content = json.dumps(self.input)

@@ -3,6 +3,8 @@ import re
 from base import BaseManager
 import logging
 import paramiko
+import os
+from datetime import datetime
 from abc import ABCMeta, abstractmethod
 from distutils import dir_util
 
@@ -40,6 +42,13 @@ class DockerEngineManager(BaseManager):
 
     def list(self, filters={}):
         return self._containers_client.list(filters=filters)
+
+    def mkdtemp(self):
+        base = '/tmp/django-docker'
+        timestamp = re.sub(r'\W', '_', str(datetime.now()))
+        dir = os.path.join(base, timestamp)
+        self.host_files.mkdir_p(dir)
+        return dir
 
 
 class _HostFiles:
