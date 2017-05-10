@@ -30,10 +30,11 @@ class DockerEngineManager(BaseManager):
         return self._containers_client.list(filters=filters)
 
 
-class DockerEngineContainer(BaseContainer):
-
-    def remove(self):
-        raise NotImplementedError()
-
-    def logs(self):
-        raise NotImplementedError()
+# TODO: At some point we need to be more abstract, instead of using the SDK responses directly...
+# class DockerEngineContainer(BaseContainer):
+#
+#     def remove(self):
+#         raise NotImplementedError()
+#
+#     def logs(self):
+#         raise NotImplementedError()
