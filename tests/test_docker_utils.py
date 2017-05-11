@@ -5,6 +5,8 @@ import re
 import requests
 import django
 import paramiko
+from urllib2 import URLError
+from requests.exceptions import ConnectionError
 from distutils import dir_util
 from shutil import rmtree
 from time import sleep
@@ -108,10 +110,13 @@ class DockerTests(unittest.TestCase):
 
     def assert_url_content(self, url, content, client=django.test.Client()):
         for i in xrange(10):
-            response = client.get(url)
-            if response.status_code == 200:
-                self.assertIn(content, response.content)
+            try:
+                response = client.get(url)
+                if response.status_code == 200:
+                    self.assertIn(content, response.content)
                 return
+            except (ConnectionError, URLError):
+                pass
             sleep(1)
         self.fail('Never got 200')
 
