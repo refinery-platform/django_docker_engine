@@ -29,7 +29,10 @@ class DockerClientWrapper():
         for volume in volumes:
             binding = volume.copy()
             host_directory = binding.pop('host', None)
-            if not host_directory:
+            if host_directory:
+                binding['mode'] = 'ro'  # For now, this is true.
+            else:
+                binding['mode'] = 'rw'  # In contrast, this will *always* be true.
                 host_directory = self._containers_manager.mkdtemp()
             volumes_dict[host_directory] = binding
         kwargs['volumes'] = volumes_dict

@@ -133,7 +133,7 @@ class DockerTests(unittest.TestCase):
     def test_mount_host_volumes(self):
         input = 'hello world\n'
         self.write_to_host(input, os.path.join(self.tmp, 'world.txt'))
-        volume_spec = [{'host': self.tmp, 'bind': '/hello', 'mode': 'ro'}]
+        volume_spec = [{'host': self.tmp, 'bind': '/hello'}]
         output = self.client.run(
             'alpine:3.4',
             'cat /hello/world.txt',
@@ -143,7 +143,7 @@ class DockerTests(unittest.TestCase):
         self.assertEqual(output, input + '\n')
 
     def test_mount_scratch_volumes(self):
-        volume_spec = [{'bind': '/hello', 'mode': 'rw'}]
+        volume_spec = [{'bind': '/hello'}]
         self.assertEqual(volume_spec[0].get('host'), None)  # Note: No explicit volume.
         input = 'hello_world'  # TODO: Without underscore, only "hello" comes back?
         output = self.client.run(
