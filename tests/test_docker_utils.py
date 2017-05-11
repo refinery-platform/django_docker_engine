@@ -14,32 +14,30 @@ from django_docker_engine.docker_utils import DockerClientWrapper, DockerContain
 from django_docker_engine.container_managers import docker_engine
 
 
-print 'Do we get here?'
-
 class DockerTests(unittest.TestCase):
-    def setUp(self):
-        # mkdtemp is the obvious way to do this, but
-        # the resulting directory is not visible to Docker.
-        print 'base?'
-        base = '/tmp/django-docker-tests'
-        print 'tmp?'
-        self.tmp = os.path.join(
-            base,
-            re.sub(r'\W', '_', str(datetime.datetime.now())))
-        print 'mkdir_on_host?'
-        self.mkdir_on_host(self.tmp)
-        print 'manager?'
-        self.manager = docker_engine.DockerEngineManager()
-        print 'client?'
-        self.client = DockerClientWrapper(manager=self.manager)
-        print 'test_label?'
-        self.test_label = self.client.root_label + '.test'
-        print 'initial_containers?'
-        self.initial_containers = self.client.list()
-
-        print 'assert count?'
-        # There may be containers running which are not "my containers".
-        self.assertEqual(0, self.count_my_containers())
+    # def setUp(self):
+    #     # mkdtemp is the obvious way to do this, but
+    #     # the resulting directory is not visible to Docker.
+    #     print 'base?'
+    #     base = '/tmp/django-docker-tests'
+    #     print 'tmp?'
+    #     self.tmp = os.path.join(
+    #         base,
+    #         re.sub(r'\W', '_', str(datetime.datetime.now())))
+    #     print 'mkdir_on_host?'
+    #     self.mkdir_on_host(self.tmp)
+    #     print 'manager?'
+    #     self.manager = docker_engine.DockerEngineManager()
+    #     print 'client?'
+    #     self.client = DockerClientWrapper(manager=self.manager)
+    #     print 'test_label?'
+    #     self.test_label = self.client.root_label + '.test'
+    #     print 'initial_containers?'
+    #     self.initial_containers = self.client.list()
+    #
+    #     print 'assert count?'
+    #     # There may be containers running which are not "my containers".
+    #     self.assertEqual(0, self.count_my_containers())
 
     def tearDown(self):
         self.rmdir_on_host(self.tmp)
@@ -133,9 +131,9 @@ class DockerTests(unittest.TestCase):
     # Tests at the top are low level;
     # Tests at the bottom are at higher levels of abstraction.
 
-    def test_at_the_beginning(self):
-        # A no-op, but when the tests stall, it will be helpful to see if they even start.
-        self.assertEqual(True, True)
+    def test_at_a_minimum(self):
+        # A no-op, but if the tests stall, it may be helpful to see if they are even starting.
+        self.assertTrue(True)
 
     def test_hello_world(self):
         input = 'hello world'
