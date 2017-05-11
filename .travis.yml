@@ -20,8 +20,9 @@ script:
 - start() { echo travis_fold':'start:$1; echo 'start:' $1; }
 - end() { echo travis_fold':'end:$1; }
 
+# TODO: Below, add back 'local'.
 - |-
-  for WHERE_IS_DOCKER in 'local' 'remote'; do
+  for WHERE_IS_DOCKER in 'remote'; do
 
     if [ "$WHERE_IS_DOCKER" == 'remote' ]; then
       start build-stack
