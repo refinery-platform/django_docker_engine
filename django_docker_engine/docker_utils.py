@@ -28,6 +28,8 @@ class DockerClientWrapper():
         volumes_dict = {}
         for volume in volumes:
             binding = volume.copy()
+            if binding.get('mode'):
+                raise RuntimeError('"mode" should not be provided')
             host_directory = binding.pop('host', None)
             if host_directory:
                 binding['mode'] = 'ro'  # For now, this is true.

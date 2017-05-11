@@ -128,8 +128,6 @@ class DockerTests(unittest.TestCase):
         )
         self.assertEqual(output, input + '\n')
 
-
-
     def test_mount_host_volumes(self):
         input = 'hello world\n'
         self.write_to_host(input, os.path.join(self.tmp, 'world.txt'))
