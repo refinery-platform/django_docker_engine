@@ -299,9 +299,8 @@ if __name__ == "__main__":
 
     if args == ['--create']:
         host_ip = requests.get('http://ipinfo.io/ip').text.strip()
-        # If you want to access the EC2 Travis creates, you'll need less security:
-        # host_cidr = '0.0.0.0/0' if environ.get('TRAVIS') else host_ip + '/32'
-        host_cidr = host_ip + '/32'
+        host_cidr = '0.0.0.0/0' if environ.get('TRAVIS') else host_ip + '/32'
+        # TODO: I want it to be tighter: host_cidr = host_ip + '/32'
         tags = {
             'department': 'dbmi',
             'environment': 'test',
