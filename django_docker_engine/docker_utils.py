@@ -106,8 +106,7 @@ class DockerContainerSpec():
         host_input_path = self._write_input_to_host()
         volume_spec = [{
             'host': host_input_path,
-            'bind': self.container_input_path,
-            'mode': 'ro'}]
+            'bind': self.container_input_path}]
         ports_spec = {'80/tcp': None}
         client = DockerClientWrapper(manager=self.manager)
         client.run(self.image_name,

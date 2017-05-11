@@ -95,8 +95,7 @@ class DockerTests(unittest.TestCase):
         self.write_to_host(html, os.path.join(self.tmp, 'index.html'))
         volume_spec = [{
             'host': self.tmp,
-            'bind': '/usr/share/nginx/html',
-            'mode': 'ro'}]
+            'bind': '/usr/share/nginx/html'}]
         ports_spec = {'80/tcp': None}
         client = self.client
         client.run('nginx:1.10.3-alpine',
