@@ -29,7 +29,7 @@ script:
       end build-stack
     fi
 
-    echo "DOCKER_HOST=$DOCKER_HOST"
+    echo "For use outside Travis: export DOCKER_HOST=$DOCKER_HOST"
 
     for VERSION in '1.7.1' '1.10.6'; do
       start docker-$WHERE_IS_DOCKER-django-$VERSION
