@@ -128,6 +128,8 @@ class DockerTests(unittest.TestCase):
         )
         self.assertEqual(output, input + '\n')
 
+
+
     def test_mount_host_volumes(self):
         input = 'hello world\n'
         self.write_to_host(input, os.path.join(self.tmp, 'world.txt'))
@@ -141,15 +143,18 @@ class DockerTests(unittest.TestCase):
         self.assertEqual(output, input + '\n')
 
     def test_mount_scratch_volumes(self):
-        volume_spec = [{'bind': '/hello', 'mode': 'ro'}]
-        self.assertEqual(volume_spec[0].get('host'), None) # No explicit volume!
+        volume_spec = [{'bind': '/hello', 'mode': 'rw'}]
+        self.assertEqual(volume_spec[0].get('host'), None)  # Note: No explicit volume.
+        input = 'hello_world'  # TODO: Without underscore, only "hello" comes back?
         output = self.client.run(
             'alpine:3.4',
-            'cat /hello/world.txt',
+            'sh -c "echo \"{}\" > /hello/world.txt; cat /hello/world.txt"'.format(input),
             labels={self.test_label: 'true'},
             volumes=volume_spec
         )
         self.assertEqual(output, input + '\n')
+        # Note that this doesn't really confirm that an outside volume was created,
+        # but better than nothing.
 
     def test_httpd(self):
         container_name = self.timestamp()

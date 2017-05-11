@@ -33,7 +33,6 @@ class DockerClientWrapper():
                 host_directory = self._containers_manager.mkdtemp()
             volumes_dict[host_directory] = binding
         kwargs['volumes'] = volumes_dict
-
         return self._containers_manager.run(image_name, cmd, **kwargs)
 
     def lookup_container_url(self, container_name):
