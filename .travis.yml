@@ -35,6 +35,8 @@ script:
     for VERSION in '1.7.1' '1.10.6'; do
       start docker-$WHERE_IS_DOCKER-django-$VERSION
       pip install django==$VERSION
+      echo 'TODO: Do we get here?'
+      python manage.py help test
       python manage.py test tests --verbosity=2
       end docker-$WHERE_IS_DOCKER-django-$VERSION
     done

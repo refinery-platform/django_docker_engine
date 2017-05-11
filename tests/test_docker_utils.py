@@ -14,6 +14,8 @@ from django_docker_engine.docker_utils import DockerClientWrapper, DockerContain
 from django_docker_engine.container_managers import docker_engine
 
 
+print 'Do we get here?'
+
 class DockerTests(unittest.TestCase):
     def setUp(self):
         # mkdtemp is the obvious way to do this, but
