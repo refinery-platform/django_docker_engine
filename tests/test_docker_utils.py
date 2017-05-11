@@ -18,16 +18,24 @@ class DockerTests(unittest.TestCase):
     def setUp(self):
         # mkdtemp is the obvious way to do this, but
         # the resulting directory is not visible to Docker.
+        print 'base?'
         base = '/tmp/django-docker-tests'
+        print 'tmp?'
         self.tmp = os.path.join(
             base,
             re.sub(r'\W', '_', str(datetime.datetime.now())))
+        print 'mkdir_on_host?'
         self.mkdir_on_host(self.tmp)
+        print 'manager?'
         self.manager = docker_engine.DockerEngineManager()
+        print 'client?'
         self.client = DockerClientWrapper(manager=self.manager)
+        print 'test_label?'
         self.test_label = self.client.root_label + '.test'
+        print 'initial_containers?'
         self.initial_containers = self.client.list()
 
+        print 'assert count?'
         # There may be containers running which are not "my containers".
         self.assertEqual(0, self.count_my_containers())
 
