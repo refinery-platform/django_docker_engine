@@ -26,16 +26,3 @@ class BaseManager:
     @abstractmethod
     def list(self, filters={}):
         raise NotImplementedError()
-
-
-class BaseContainer:
-
-    __metaclass__ = ABCMeta
-
-    @abstractmethod
-    def remove(self):
-        raise NotImplementedError()
-
-    @abstractmethod
-    def logs(self):
-        raise NotImplementedError()

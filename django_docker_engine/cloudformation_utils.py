@@ -11,6 +11,7 @@ import sys
 import subprocess
 import troposphere
 
+from os import environ
 from pprint import pformat
 from troposphere import (
     ec2, Ref, Output, Base64,
@@ -298,7 +299,8 @@ if __name__ == "__main__":
 
     if args == ['--create']:
         host_ip = requests.get('http://ipinfo.io/ip').text.strip()
-        host_cidr = host_ip + '/32'
+        host_cidr = '0.0.0.0/0' if environ.get('TRAVIS') else host_ip + '/32'
+        # TODO: I want it to be tighter: host_cidr = host_ip + '/32'
         tags = {
             'department': 'dbmi',
             'environment': 'test',
