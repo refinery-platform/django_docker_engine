@@ -198,8 +198,7 @@ class DockerTests(unittest.TestCase):
         # Note that this doesn't really confirm that an outside volume was created,
         # but better than nothing.
 
-    @unittest.skip
-    def test_container_active(self):
+    def test_purge(self):
         """
         WARNING: I think this is prone to race conditions.
         If you get an error, try just giving it more time.

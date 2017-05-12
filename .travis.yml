@@ -15,10 +15,11 @@ install:
           -out django_docker_cloudformation.pem -d
 - chmod 600 django_docker_cloudformation.pem
 script:
-- set -o errexit
-- export AWS_DEFAULT_REGION=us-east-1
-- start() { echo travis_fold':'start:$1; echo 'start:' $1; }
-- end() { echo travis_fold':'end:$1; }
+- |-
+  set -o errexit
+  export AWS_DEFAULT_REGION=us-east-1
+  start() { echo travis_fold':'start:$1; echo 'start:' $1; }
+  end() { echo travis_fold':'end:$1; }
 
 - |-
   for WHERE_IS_DOCKER in 'local' 'remote'; do
