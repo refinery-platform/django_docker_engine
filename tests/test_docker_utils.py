@@ -38,22 +38,21 @@ class DockerTests(unittest.TestCase):
 
     # Utils for accessing remote docker engine:
 
+    def docker_host(self):
+        return os.environ.get('DOCKER_HOST')
+
     def docker_host_ip(self):
         return re.search(
             r'^tcp://(\d+\.\d+\.\d+\.\d+):\d+$',
-            os.environ['DOCKER_HOST']
+            self.docker_host()
         ).group(1)
 
     def remote_exec(self, command):
-        host = re.search(
-            r'^tcp://(\d+\.\d+\.\d+\.\d+):\d+$',
-            os.environ['DOCKER_HOST']
-        ).group(1)
-
+        host_ip = self.docker_host_ip()
         key = paramiko.RSAKey.from_private_key_file(DockerTests.PEM)
         client = paramiko.SSHClient()
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        client.connect(hostname=host, username='ec2-user', pkey=key)
+        client.connect(hostname=host_ip, username='ec2-user', pkey=key)
         client.exec_command(command)
 
     PEM = 'django_docker_cloudformation.pem'
@@ -63,19 +62,19 @@ class DockerTests(unittest.TestCase):
     # if-thens, rather than hiding it with polymorphism.
 
     def rmdir_on_host(self, path):
-        if os.environ.get('DOCKER_HOST'):
+        if self.docker_host():
             self.remote_exec('rm -rf {}'.format(path))
         else:
             rmtree(self.tmp)
 
     def mkdir_on_host(self, path):
-        if os.environ.get('DOCKER_HOST'):
+        if self.docker_host():
             self.remote_exec('mkdir -p {}'.format(path))
         else:
             dir_util.mkpath(path)
 
     def write_to_host(self, content, path):
-        if os.environ.get('DOCKER_HOST'):
+        if self.docker_host():
             self.remote_exec("cat > {} <<'END'\n{}\nEND".format(path, content))
         else:
             with open(path, 'w') as file:
