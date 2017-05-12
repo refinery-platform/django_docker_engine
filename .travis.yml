@@ -1,7 +1,7 @@
 language: python
 python:
 - 2.7
-sudo: required
+sudo: required # TODO: Remind me why?
 services:
 - docker
 install:
@@ -20,22 +20,19 @@ script:
 - start() { echo travis_fold':'start:$1; echo 'start:' $1; }
 - end() { echo travis_fold':'end:$1; }
 
-# TODO: Below, add back 'local'.
 - |-
-  for WHERE_IS_DOCKER in 'remote'; do
+  for WHERE_IS_DOCKER in 'local' 'remote'; do
 
     if [ "$WHERE_IS_DOCKER" == 'remote' ]; then
       start build-stack
       $(python django_docker_engine/cloudformation_utils.py --create)
       end build-stack
+      echo "For use outside Travis: export DOCKER_HOST=$DOCKER_HOST"
     fi
-
-    echo "For use outside Travis: export DOCKER_HOST=$DOCKER_HOST"
 
     for VERSION in '1.7.1' '1.10.6'; do
       start docker-$WHERE_IS_DOCKER-django-$VERSION
       pip install django==$VERSION
-      python manage.py test tests.test_docker_utils.DockerTests.test_at_a_minimum --verbosity=2
       python manage.py test tests --verbosity=2
       end docker-$WHERE_IS_DOCKER-django-$VERSION
     done

@@ -15,29 +15,20 @@ from django_docker_engine.container_managers import docker_engine
 
 
 class DockerTests(unittest.TestCase):
-    # def setUp(self):
-    #     # mkdtemp is the obvious way to do this, but
-    #     # the resulting directory is not visible to Docker.
-    #     print 'base?'
-    #     base = '/tmp/django-docker-tests'
-    #     print 'tmp?'
-    #     self.tmp = os.path.join(
-    #         base,
-    #         re.sub(r'\W', '_', str(datetime.datetime.now())))
-    #     print 'mkdir_on_host?'
-    #     self.mkdir_on_host(self.tmp)
-    #     print 'manager?'
-    #     self.manager = docker_engine.DockerEngineManager()
-    #     print 'client?'
-    #     self.client = DockerClientWrapper(manager=self.manager)
-    #     print 'test_label?'
-    #     self.test_label = self.client.root_label + '.test'
-    #     print 'initial_containers?'
-    #     self.initial_containers = self.client.list()
-    #
-    #     print 'assert count?'
-    #     # There may be containers running which are not "my containers".
-    #     self.assertEqual(0, self.count_my_containers())
+    def setUp(self):
+        # mkdtemp is the obvious way to do this, but
+        # the resulting directory is not visible to Docker.
+        base = '/tmp/django-docker-tests'
+        self.tmp = os.path.join(
+            base,
+            re.sub(r'\W', '_', str(datetime.datetime.now())))
+        self.mkdir_on_host(self.tmp)
+        self.manager = docker_engine.DockerEngineManager()
+        self.client = DockerClientWrapper(manager=self.manager)
+        self.test_label = self.client.root_label + '.test'
+        self.initial_containers = self.client.list()
+        # There may be containers running which are not "my containers".
+        self.assertEqual(0, self.count_my_containers())
 
     def tearDown(self):
         self.rmdir_on_host(self.tmp)
@@ -132,8 +123,39 @@ class DockerTests(unittest.TestCase):
     # Tests at the bottom are at higher levels of abstraction.
 
     def test_at_a_minimum(self):
-        # A no-op, but if the tests stall, it may be helpful to see if they are even starting.
+        # A no-op, but if the tests stall, it may be
+        # helpful to see if they are even starting.
         self.assertTrue(True)
+
+    def test_container_spec_no_input(self):
+        container_name = self.timestamp()
+        DockerContainerSpec(
+            manager=self.manager,
+            image_name='nginx:1.10.3-alpine',
+            container_name=container_name,
+            labels={self.test_label: 'true'}).run()
+        url = '/docker/{}/'.format(container_name)
+        self.assert_url_content(url, 'Welcome to nginx!')
+
+    def test_container_spec_with_input(self):
+        container_name = self.timestamp()
+        DockerContainerSpec(
+            manager=self.manager,
+            image_name='nginx:1.10.3-alpine',
+            container_name=container_name,
+            input={'foo': 'bar'},
+            container_input_path='/usr/share/nginx/html/index.html',
+            labels={self.test_label: 'true'}
+        ).run()
+        url = '/docker/{}/'.format(container_name)
+        self.assert_url_content(url, '{"foo": "bar"}')
+
+    def test_docker_proxy(self):
+        container_name = self.timestamp()
+        hello_html = '<html><body>hello proxy</body></html>'
+        self.one_file_server(container_name, hello_html)
+        url = '/docker/{}/'.format(container_name)
+        self.assert_url_content(url, hello_html)
 
     def test_hello_world(self):
         input = 'hello world'
@@ -143,6 +165,12 @@ class DockerTests(unittest.TestCase):
             labels={self.test_label: 'true'}
         )
         self.assertEqual(output, input + '\n')
+
+    def test_httpd(self):
+        container_name = self.timestamp()
+        hello_html = '<html><body>hello direct</body></html>'
+        url = self.one_file_server(container_name, hello_html)
+        self.assert_url_content(url, hello_html, client=requests)
 
     def test_mount_host_volumes(self):
         input = 'hello world\n'
@@ -169,42 +197,6 @@ class DockerTests(unittest.TestCase):
         self.assertEqual(output, input + '\n')
         # Note that this doesn't really confirm that an outside volume was created,
         # but better than nothing.
-
-    def test_httpd(self):
-        container_name = self.timestamp()
-        hello_html = '<html><body>hello direct</body></html>'
-        url = self.one_file_server(container_name, hello_html)
-        self.assert_url_content(url, hello_html, client=requests)
-
-    def test_docker_proxy(self):
-        container_name = self.timestamp()
-        hello_html = '<html><body>hello proxy</body></html>'
-        self.one_file_server(container_name, hello_html)
-        url = '/docker/{}/'.format(container_name)
-        self.assert_url_content(url, hello_html)
-
-    def test_container_spec_no_input(self):
-        container_name = self.timestamp()
-        DockerContainerSpec(
-            manager=self.manager,
-            image_name='nginx:1.10.3-alpine',
-            container_name=container_name,
-            labels={self.test_label: 'true'}).run()
-        url = '/docker/{}/'.format(container_name)
-        self.assert_url_content(url, 'Welcome to nginx!')
-
-    def test_container_spec_with_input(self):
-        container_name = self.timestamp()
-        DockerContainerSpec(
-            manager=self.manager,
-            image_name='nginx:1.10.3-alpine',
-            container_name=container_name,
-            input={'foo': 'bar'},
-            container_input_path='/usr/share/nginx/html/index.html',
-            labels={self.test_label: 'true'}
-        ).run()
-        url = '/docker/{}/'.format(container_name)
-        self.assert_url_content(url, '{"foo": "bar"}')
 
     @unittest.skip
     def test_container_active(self):
