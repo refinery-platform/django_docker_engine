@@ -90,7 +90,7 @@ class _RemoteHostFiles(_HostFiles):
                 connected = self._can_ssh(host, key)
                 break
             except TimeoutError:
-                logging.warn('Retry SSH to ', host)
+                logging.warn('Retry SSH to %s', host)
         if not connected:
             raise RuntimeError('Never established SSH connection to new instance')
 
