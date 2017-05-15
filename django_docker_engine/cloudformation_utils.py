@@ -195,6 +195,7 @@ def _create_ec2_template(
     )
     return template
 
+
 def _create_stack(create_template, tags={}, **args):
     json = create_template(**args).to_json()
     logging.info(json)

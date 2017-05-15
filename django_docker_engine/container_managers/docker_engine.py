@@ -86,7 +86,7 @@ class _RemoteHostFiles(_HostFiles):
         self.client = paramiko.SSHClient()
         self.client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         connected = False
-        for i in xrange(10):
+        for i in xrange(5):
             try:
                 connected = self._can_ssh(host, key)
                 break
@@ -106,8 +106,8 @@ class _RemoteHostFiles(_HostFiles):
     @timeout(5)
     def _can_ssh(self, host, key):
         self.client.connect(hostname=host,
-                       username='ec2-user',
-                       pkey=key)
+                            username='ec2-user',
+                            pkey=key)
         return True
 
     def _exec(self, command):
