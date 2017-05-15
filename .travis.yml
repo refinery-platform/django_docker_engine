@@ -1,7 +1,7 @@
 language: python
 python:
 - 2.7
-sudo: required
+sudo: required # TODO: Remind me why?
 services:
 - docker
 install:
@@ -15,10 +15,11 @@ install:
           -out django_docker_cloudformation.pem -d
 - chmod 600 django_docker_cloudformation.pem
 script:
-- set -o errexit
-- export AWS_DEFAULT_REGION=us-east-1
-- start() { echo travis_fold':'start:$1; echo 'start:' $1; }
-- end() { echo travis_fold':'end:$1; }
+- |-
+  set -o errexit
+  export AWS_DEFAULT_REGION=us-east-1
+  start() { echo travis_fold':'start:$1; echo 'start:' $1; }
+  end() { echo travis_fold':'end:$1; }
 
 - |-
   for WHERE_IS_DOCKER in 'local' 'remote'; do
@@ -27,11 +28,13 @@ script:
       start build-stack
       $(python django_docker_engine/cloudformation_utils.py --create)
       end build-stack
+      echo "For use outside Travis: export DOCKER_HOST=$DOCKER_HOST"
     fi
 
     for VERSION in '1.7.1' '1.10.6'; do
       start docker-$WHERE_IS_DOCKER-django-$VERSION
       pip install django==$VERSION
+      docker info | grep 'Operating System'  # Are we able to connect to Docker, and what OS is it?
       python manage.py test tests --verbosity=2
       end docker-$WHERE_IS_DOCKER-django-$VERSION
     done

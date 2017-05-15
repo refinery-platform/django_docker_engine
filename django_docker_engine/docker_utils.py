@@ -1,13 +1,8 @@
 import json
 import os
-import re
-import logging
-import paramiko
-from abc import ABCMeta, abstractmethod
 from datetime import datetime
 from time import time
 from container_managers import docker_engine
-from distutils import dir_util
 
 
 class DockerClientWrapper():
@@ -18,7 +13,7 @@ class DockerClientWrapper():
         self._containers_manager = manager
         self.root_label = root_label
 
-    def run(self, image_name, cmd=None, **kwargs):
+    def run(self, image_name, cmd=None, volumes=(), **kwargs):
         """
         Wraps the SDK's run() method.
         """
@@ -29,6 +24,20 @@ class DockerClientWrapper():
         labels = kwargs.get('labels') or {}
         labels.update({self.root_label: 'true'})
         kwargs['labels'] = labels
+
+        volumes_dict = {}
+        for volume in volumes:
+            binding = volume.copy()
+            if binding.get('mode'):
+                raise RuntimeError('"mode" should not be provided')
+            host_directory = binding.pop('host', None)
+            if host_directory:
+                binding['mode'] = 'ro'  # For now, this is true.
+            else:
+                binding['mode'] = 'rw'  # In contrast, this will *always* be true.
+                host_directory = self._containers_manager.mkdtemp()
+            volumes_dict[host_directory] = binding
+        kwargs['volumes'] = volumes_dict
         return self._containers_manager.run(image_name, cmd, **kwargs)
 
     def lookup_container_url(self, container_name):
@@ -85,39 +94,19 @@ class DockerContainerSpec():
         self.input = input
         self.labels = labels
 
-        # TODO: perhaps instead of embedding a HostFiles object here,
-        # it would make more sense for the manager to offer those operations?
-        # Then we wouldn't need to access the _base_url here.
-        remote_host_match = re.match(r'^http://([^:]+):\d+$', manager._base_url)
-        if remote_host_match:
-            self.host_files = _RemoteHostFiles(remote_host_match.group(1), manager.pem)
-        elif manager._base_url == 'http+docker://localunixsocket':
-            self.host_files = _LocalHostFiles()
-        else:
-            raise RuntimeError('Unexpected client base_url: %s', self._base_url)
-
-    def _mkdtemp(self):
-        base = '/tmp/django-docker'
-        timestamp = re.sub(r'\W', '_', str(datetime.now()))
-        dir = os.path.join(base, timestamp)
-        self.host_files.mkdir_p(dir)
-        return dir
-
     def _write_input_to_host(self):
-        host_input_dir = self._mkdtemp()
+        host_input_dir = self.manager.mkdtemp()
         # The host filename "input.json" is arbitrary.
         host_input_path = os.path.join(host_input_dir, 'input.json')
         content = json.dumps(self.input)
-        self.host_files.write(host_input_path, content)
+        self.manager.host_files.write(host_input_path, content)
         return host_input_path
 
     def run(self):
         host_input_path = self._write_input_to_host()
-        volume_spec = {
-            host_input_path: {
-                # Path inside container might need to be configurable?
-                'bind': self.container_input_path,
-                'mode': 'ro'}}
+        volume_spec = [{
+            'host': host_input_path,
+            'bind': self.container_input_path}]
         ports_spec = {'80/tcp': None}
         client = DockerClientWrapper(manager=self.manager)
         client.run(self.image_name,
@@ -129,50 +118,3 @@ class DockerContainerSpec():
         # Metadata on the returned container object (like the assigned port)
         # is not complete, so we do a redundant lookup.
         return client.lookup_container_url(self.container_name)
-
-
-class _HostFiles:
-    __metaclass__ = ABCMeta
-
-    @abstractmethod
-    def write(self, path, content):
-        raise NotImplementedError()
-
-    @abstractmethod
-    def mkdir_p(self, path):
-        raise NotImplementedError()
-
-
-class _LocalHostFiles(_HostFiles):
-    def __init__(self):
-        pass
-
-    def write(self, path, content):
-        with open(path, 'w') as file:
-            file.write(content)
-            file.write('\n')
-            # TODO: For consistency with heredoc in _RemoteHostFiles, add a newline...
-            # I don't think this hurts with JSON, but not ideal.
-
-    def mkdir_p(self, path):
-        dir_util.mkpath(path)
-
-
-class _RemoteHostFiles(_HostFiles):
-    def __init__(self, host, pem):
-        key = paramiko.RSAKey.from_private_key_file(pem)
-        self.client = paramiko.SSHClient()
-        self.client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        self.client.connect(hostname=host, username='ec2-user', pkey=key)
-
-    def _exec(self, command):
-        stdin, stdout, stderr = self.client.exec_command(command)
-        logging.info('command: %s', command)
-        logging.info('STDOUT: %s', stdout.read())
-        logging.info('STDERR: %s', stderr.read())
-
-    def write(self, path, content):
-        self._exec("cat > {} <<'END_CONTENT'\n{}\nEND_CONTENT".format(path, content))
-
-    def mkdir_p(self, path):
-        self._exec('mkdir -p {}'.format(path))
