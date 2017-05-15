@@ -16,7 +16,8 @@ setup(
         'django-http-proxy',
         'boto3',
         'troposphere',
-        'paramiko'
+        'paramiko',
+        'timeout-decorator'
     ],
     packages=find_packages(exclude=['*_demo']),
     include_package_data=True,
