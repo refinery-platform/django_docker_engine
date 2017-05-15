@@ -2,11 +2,12 @@ import docker
 import re
 from base import BaseManager
 import logging
-import paramiko
 import os
 from datetime import datetime
 from abc import ABCMeta, abstractmethod
 from distutils import dir_util
+import paramiko
+from timeout_decorator import timeout, TimeoutError
 
 
 class DockerEngineManager(BaseManager):
@@ -83,7 +84,22 @@ class _RemoteHostFiles(_HostFiles):
         key = paramiko.RSAKey.from_private_key_file(pem)
         self.client = paramiko.SSHClient()
         self.client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        self.client.connect(hostname=host, username='ec2-user', pkey=key)
+        connected = False
+        for i in xrange(10):
+            try:
+                connected = self._can_ssh(host, key)
+                break
+            except TimeoutError:
+                logging.warn('Retry SSH to ', host)
+        if not connected:
+            raise RuntimeError('Never established SSH connection to new instance')
+
+    @timeout(2)
+    def _can_ssh(self, host, key):
+        self.client.connect(hostname=host,
+                       username='ec2-user',
+                       pkey=key)
+        return True
 
     def _exec(self, command):
         stdin, stdout, stderr = self.client.exec_command(command)

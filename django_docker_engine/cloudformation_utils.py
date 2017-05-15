@@ -10,9 +10,6 @@ import requests
 import sys
 import subprocess
 import troposphere
-import paramiko
-
-from timeout_decorator import timeout, TimeoutError
 from os import environ
 from pprint import pformat
 from troposphere import (
@@ -198,20 +195,6 @@ def _create_ec2_template(
     )
     return template
 
-class _TimeoutError(StandardError):
-    pass
-
-@timeout(2)
-def _try_to_connect(stack_id):
-    # TODO: parameterize user and pem
-    key = paramiko.RSAKey.from_private_key_file('django_docker_cloudformation.pem')
-    client = paramiko.SSHClient()
-    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    client.connect(hostname=_get_ip_for_stack(stack_id),
-                   username='ec2-user',
-                   pkey=key)
-    return True
-
 def _create_stack(create_template, tags={}, **args):
     json = create_template(**args).to_json()
     logging.info(json)
@@ -229,15 +212,6 @@ def _create_stack(create_template, tags={}, **args):
     _tail_logs(stack_id=stack_id,
                in_progress='CREATE_IN_PROGRESS',
                complete='CREATE_COMPLETE')
-    connected = False
-    for i in xrange(10):
-        try:
-            connected = _try_to_connect(stack_id)
-            break
-        except TimeoutError:
-            logging.warn('Retry SSH to ', stack_id)
-    if not connected:
-        raise RuntimeError('Never established SSH connection to new instance')
     return stack_id
 
 
