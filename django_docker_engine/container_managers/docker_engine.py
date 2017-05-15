@@ -7,6 +7,7 @@ from datetime import datetime
 from abc import ABCMeta, abstractmethod
 from distutils import dir_util
 import paramiko
+import subprocess
 from timeout_decorator import timeout, TimeoutError
 
 
@@ -92,9 +93,17 @@ class _RemoteHostFiles(_HostFiles):
             except TimeoutError:
                 logging.warn('Retry SSH to %s', host)
         if not connected:
-            raise RuntimeError('Never established SSH connection to new instance')
+            try:
+                subprocess.check_call([
+                    'ssh',
+                    '-oStrictHostKeyChecking=no',
+                    '-i', 'django_docker_cloudformation.pem',
+                    'ec2-user@54.208.14.43', 'hostname'])
+            except OSError:
+                raise RuntimeError('Never established SSH connection to new instance')
+            raise RuntimeError('Paramiko did not work, but subprocess ssh did')
 
-    @timeout(2)
+    @timeout(5)
     def _can_ssh(self, host, key):
         self.client.connect(hostname=host,
                        username='ec2-user',
