@@ -1,14 +1,11 @@
 import docker
 import re
 from base import BaseManager
-import logging
 import os
 from datetime import datetime
 from abc import ABCMeta, abstractmethod
 from distutils import dir_util
-import paramiko
 import subprocess
-from timeout_decorator import timeout, TimeoutError
 
 
 class DockerEngineManager(BaseManager):
@@ -81,40 +78,17 @@ class _LocalHostFiles(_HostFiles):
 
 
 class _RemoteHostFiles(_HostFiles):
+    # TODO: Try again with paramiko: https://github.com/paramiko/paramiko/issues/959
     def __init__(self, host, pem):
-        key = paramiko.RSAKey.from_private_key_file(pem)
-        self.client = paramiko.SSHClient()
-        self.client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        connected = False
-        for i in xrange(5):
-            try:
-                connected = self._can_ssh(host, key)
-                break
-            except TimeoutError:
-                logging.warn('Retry SSH to %s', host)
-        if not connected:
-            try:
-                subprocess.check_call([
-                    'ssh',
-                    '-oStrictHostKeyChecking=no',
-                    '-i', 'django_docker_cloudformation.pem',
-                    'ec2-user@54.208.14.43', 'hostname'])
-            except OSError:
-                raise RuntimeError('Never established SSH connection to new instance')
-            raise RuntimeError('Paramiko did not work, but subprocess ssh did')
-
-    @timeout(5)
-    def _can_ssh(self, host, key):
-        self.client.connect(hostname=host,
-                            username='ec2-user',
-                            pkey=key)
-        return True
+        self.host = host
+        self.pem = pem
 
     def _exec(self, command):
-        stdin, stdout, stderr = self.client.exec_command(command)
-        logging.info('command: %s', command)
-        logging.info('STDOUT: %s', stdout.read())
-        logging.info('STDERR: %s', stderr.read())
+        subprocess.check_call([
+            'ssh',
+            '-oStrictHostKeyChecking=no',
+            '-i', 'django_docker_cloudformation.pem',
+            'ec2-user@{}'.format(self.host), command])
 
     def write(self, path, content):
         self._exec("cat > {} <<'END_CONTENT'\n{}\nEND_CONTENT".format(path, content))
