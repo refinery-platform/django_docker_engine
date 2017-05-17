@@ -8,24 +8,30 @@ from collections import namedtuple
 
 UrlPatterns = namedtuple('UrlPatterns', ['urlpatterns'])
 
+
 class NullLogger():
     def __init__(self):
         pass
+
     def log(self, *args):
         pass
+
 
 class FileLogger():
     # This is not the best for the long term, but it will help us understand our needs.
     def __init__(self, path):
         self.path = path
+
     def log(self, *args):
         with open(self.path, 'a') as f:
             timestamp = datetime.now().isoformat()
             args_list = list(args)
             args_list.insert(0, timestamp)
             print('\t'.join(args_list), file=f)
+
     def list(self):
         return open(self.path).readlines()
+
 
 class Proxy():
     def __init__(self, logger=NullLogger()):
