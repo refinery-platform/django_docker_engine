@@ -12,6 +12,7 @@ from shutil import rmtree
 from time import sleep
 from django_docker_engine.docker_utils import DockerClientWrapper, DockerContainerSpec
 from django_docker_engine.container_managers import docker_engine
+from django_docker_engine_demo import settings
 
 
 class DockerTests(unittest.TestCase):
@@ -91,8 +92,8 @@ class DockerTests(unittest.TestCase):
             filters={'label': self.test_label}
         ))
 
-    def one_file_server(self, container_name, html):
-        self.write_to_host(html, os.path.join(self.tmp, 'index.html'))
+    def one_file_server(self, container_name, html, filename='index.html'):
+        self.write_to_host(html, os.path.join(self.tmp, filename))
         volume_spec = [{
             'host': self.tmp,
             'bind': '/usr/share/nginx/html'}]
@@ -152,9 +153,13 @@ class DockerTests(unittest.TestCase):
     def test_docker_proxy(self):
         container_name = self.timestamp()
         hello_html = '<html><body>hello proxy</body></html>'
-        self.one_file_server(container_name, hello_html)
-        url = '/docker/{}/'.format(container_name)
+        filename = 'hello.html'
+        self.one_file_server(container_name, hello_html, filename)
+        url = '/docker/{}/{}'.format(container_name, filename)
         self.assert_url_content(url, hello_html)
+        with open(settings.PROXY_LOG, 'r') as f:
+            lines = f.readlines()
+            self.assertIn(filename, lines[-1])
 
     def test_hello_world(self):
         input = 'hello world'
