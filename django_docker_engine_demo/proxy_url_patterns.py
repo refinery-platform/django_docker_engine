@@ -1,3 +1,3 @@
-from proxy import Proxy, FileLogger
+from django_docker_engine.proxy import Proxy, FileLogger
 
 urlpatterns = Proxy(FileLogger('/tmp/django_docker_engine.log')).url_patterns()
