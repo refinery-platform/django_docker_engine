@@ -13,9 +13,33 @@ class DockerClientWrapper():
         self._containers_manager = manager
         self.root_label = root_label
 
-    def run(self, image_name, cmd=None, volumes=(), **kwargs):
+    def _write_input_to_host(self, input):
+        host_input_dir = self._containers_manager.mkdtemp()
+        # The host filename "input.json" is arbitrary.
+        host_input_path = os.path.join(host_input_dir, 'input.json')
+        content = json.dumps(input)
+        self._containers_manager.host_files.write(host_input_path, content)
+        return host_input_path
+
+    def run(self, container_spec):
+        host_input_path = self._write_input_to_host(container_spec.input)
+        volume_spec = [{
+            'host': host_input_path,
+            'bind': container_spec.container_input_path}]
+        ports_spec = {'80/tcp': None}
+        self._sdk_run(container_spec.image_name,
+                      name=container_spec.container_name, # TODO: check
+                      detach=True,
+                      volumes=volume_spec,
+                      ports=ports_spec,
+                      labels=container_spec.labels)
+        return self.lookup_container_url(container_spec.container_name)
+
+    def _sdk_run(self, image_name, cmd=None, volumes=(), **kwargs):
         """
-        Wraps the SDK's run() method.
+        Lower level wrapper for the SDK's run() method.
+        Significantly, "volumes" has a different structure here
+        than when using the SDK directly.
         """
         if (':' not in image_name):
             image_name += ':latest'
@@ -83,38 +107,12 @@ class DockerClientWrapper():
 
 class DockerContainerSpec():
 
-    def __init__(self, image_name, container_name, manager,
+    def __init__(self, image_name, container_name,
                  input={},
                  container_input_path='/tmp/input.json',
                  labels={}):
-        self.manager = manager
         self.image_name = image_name
         self.container_name = container_name
         self.container_input_path = container_input_path
         self.input = input
         self.labels = labels
-
-    def _write_input_to_host(self):
-        host_input_dir = self.manager.mkdtemp()
-        # The host filename "input.json" is arbitrary.
-        host_input_path = os.path.join(host_input_dir, 'input.json')
-        content = json.dumps(self.input)
-        self.manager.host_files.write(host_input_path, content)
-        return host_input_path
-
-    def run(self):
-        host_input_path = self._write_input_to_host()
-        volume_spec = [{
-            'host': host_input_path,
-            'bind': self.container_input_path}]
-        ports_spec = {'80/tcp': None}
-        client = DockerClientWrapper(manager=self.manager)
-        client.run(self.image_name,
-                   name=self.container_name,
-                   detach=True,
-                   volumes=volume_spec,
-                   ports=ports_spec,
-                   labels=self.labels)
-        # Metadata on the returned container object (like the assigned port)
-        # is not complete, so we do a redundant lookup.
-        return client.lookup_container_url(self.container_name)
