@@ -2,7 +2,6 @@ import unittest
 import os
 import datetime
 import re
-import requests
 import django
 import paramiko
 from urllib2 import URLError
