@@ -39,35 +39,19 @@ class DockerClientWrapper():
         Run a given ContainerSpec. Returns the url for the container,
         in contrast to the underlying method, which returns the logs.
         """
-        host_input_path = self._write_input_to_host(container_spec.input)
-        volume_spec = [{
-            'host': host_input_path,
-            'bind': container_spec.container_input_path}]
-        ports_spec = {'80/tcp': None}
-        self._manager_run(container_spec.image_name,
-                          name=container_spec.container_name,
-                          detach=True,
-                          volumes=volume_spec,
-                          ports=ports_spec,
-                          labels=container_spec.labels)
-        return self.lookup_container_url(container_spec.container_name)
-
-    def _manager_run(self, image_name, cmd=None, volumes=(), **kwargs):
-        """
-        Note that "volumes" has a different structure here
-        than when using the SDK directly.
-        """
+        image_name = container_spec.image_name
         if (':' not in image_name):
             image_name += ':latest'
             # Without tag the SDK pulls every version; not what I expected.
             # https://github.com/docker/docker-py/issues/1510
 
-        labels = kwargs.get('labels') or {}
-        labels.update({self.root_label: 'true'})
-        kwargs['labels'] = labels
+        kwargs = {}
 
-        volumes_dict = {}
-        for volume in volumes:
+        volume_spec = [{
+            'host': self._write_input_to_host(container_spec.input),
+            'bind': container_spec.container_input_path}]
+        kwargs['volumes'] = {}
+        for volume in volume_spec:
             binding = volume.copy()
             if binding.get('mode'):
                 raise RuntimeError('"mode" should not be provided on {}'.format(volume))
@@ -77,10 +61,19 @@ class DockerClientWrapper():
             else:
                 binding['mode'] = 'rw'  # In contrast, this will *always* be true.
                 host_directory = self._containers_manager.mkdtemp()
-            volumes_dict[host_directory] = binding
-        kwargs['volumes'] = volumes_dict
-        # Underlying method returns Docker logs
-        return self._containers_manager.run(image_name, cmd, **kwargs)
+                kwargs['volumes'][host_directory] = binding
+
+        kwargs['labels'] = container_spec.labels
+        kwargs['labels'].update({self.root_label: 'true'})
+
+        kwargs['ports'] = {'80/tcp': None}
+
+        kwargs['name'] = container_spec.container_name
+
+        kwargs['detach'] = True
+
+        self._containers_manager.run(image_name, cmd=None, **kwargs)
+        return self.lookup_container_url(container_spec.container_name)
 
     def lookup_container_url(self, container_name):
         """

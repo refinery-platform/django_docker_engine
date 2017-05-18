@@ -89,21 +89,6 @@ class DockerTests(unittest.TestCase):
             filters={'label': self.test_label}
         ))
 
-    def one_file_server(self, container_name, html):
-        self.write_to_host(html, os.path.join(self.tmp, 'index.html'))
-        volume_spec = [{
-            'host': self.tmp,
-            'bind': '/usr/share/nginx/html'}]
-        ports_spec = {'80/tcp': None}
-        self.client_wrapper._manager_run(
-            'nginx:1.10.3-alpine',
-            name=container_name,
-            detach=True,
-            volumes=volume_spec,
-            ports=ports_spec,
-            labels={self.test_label: 'true'})
-        return self.client_wrapper.lookup_container_url(container_name)
-
     def assert_url_content(self, url, content, client=django.test.Client()):
         for i in xrange(10):
             try:
@@ -141,54 +126,6 @@ class DockerTests(unittest.TestCase):
             container_input_path='/usr/share/nginx/html/index.html'
         ))
         self.assert_url_content(url, '{"foo": "bar"}')
-
-    def test_docker_proxy(self):
-        container_name = self.timestamp()
-        hello_html = '<html><body>hello proxy</body></html>'
-        self.one_file_server(container_name, hello_html)
-        url = '/docker/{}/'.format(container_name)
-        self.assert_url_content(url, hello_html)
-
-    def test_hello_world(self):
-        input = 'hello world'
-        output = self.client_wrapper._manager_run(
-            'alpine:3.4',
-            'echo ' + input,
-            labels={self.test_label: 'true'}
-        )
-        self.assertEqual(output, input + '\n')
-
-    def test_httpd(self):
-        container_name = self.timestamp()
-        hello_html = '<html><body>hello direct</body></html>'
-        url = self.one_file_server(container_name, hello_html)
-        self.assert_url_content(url, hello_html, client=requests)
-
-    def test_mount_host_volumes(self):
-        input = 'hello world\n'
-        self.write_to_host(input, os.path.join(self.tmp, 'world.txt'))
-        volume_spec = [{'host': self.tmp, 'bind': '/hello'}]
-        output = self.client_wrapper._manager_run(
-            'alpine:3.4',
-            'cat /hello/world.txt',
-            labels={self.test_label: 'true'},
-            volumes=volume_spec
-        )
-        self.assertEqual(output, input + '\n')
-
-    def test_mount_scratch_volumes(self):
-        volume_spec = [{'bind': '/hello'}]
-        self.assertEqual(volume_spec[0].get('host'), None)  # Note: No explicit volume.
-        input = 'hello_world'  # TODO: Without underscore, only "hello" comes back?
-        output = self.client_wrapper._manager_run(
-            'alpine:3.4',
-            'sh -c "echo \"{}\" > /hello/world.txt; cat /hello/world.txt"'.format(input),
-            labels={self.test_label: 'true'},
-            volumes=volume_spec
-        )
-        self.assertEqual(output, input + '\n')
-        # Note that this doesn't really confirm that an outside volume was created,
-        # but better than nothing.
 
     def test_purge(self):
         """
