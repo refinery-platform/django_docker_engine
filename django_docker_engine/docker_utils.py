@@ -45,12 +45,12 @@ class DockerClientWrapper():
             # Without tag the SDK pulls every version; not what I expected.
             # https://github.com/docker/docker-py/issues/1510
 
-        kwargs = {}
-
+        # TODO: With the tmp volumes in the other branch, this will change.
+        # It's untidy right now, but let it be until that merge.
         volume_spec = [{
             'host': self._write_input_to_host(container_spec.input),
             'bind': container_spec.container_input_path}]
-        kwargs['volumes'] = {}
+        volumes = {}
         for volume in volume_spec:
             binding = volume.copy()
             if binding.get('mode'):
@@ -61,18 +61,20 @@ class DockerClientWrapper():
             else:
                 binding['mode'] = 'rw'  # In contrast, this will *always* be true.
                 host_directory = self._containers_manager.mkdtemp()
-                kwargs['volumes'][host_directory] = binding
+                volumes[host_directory] = binding
 
-        kwargs['labels'] = container_spec.labels
-        kwargs['labels'].update({self.root_label: 'true'})
+        labels = container_spec.labels
+        labels.update({self.root_label: 'true'})
 
-        kwargs['ports'] = {'80/tcp': None}
-
-        kwargs['name'] = container_spec.container_name
-
-        kwargs['detach'] = True
-
-        self._containers_manager.run(image_name, cmd=None, **kwargs)
+        self._containers_manager.run(
+            image_name,
+            name=container_spec.container_name,
+            ports={'80/tcp': None},
+            cmd=None,
+            detach=True,
+            labels=labels,
+            volumes=volumes
+        )
         return self.lookup_container_url(container_spec.container_name)
 
     def lookup_container_url(self, container_name):
