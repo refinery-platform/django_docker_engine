@@ -188,41 +188,39 @@ class DockerTests(unittest.TestCase):
     #     self.assertEqual(output, input + '\n')
     #     # Note that this doesn't really confirm that an outside volume was created,
     #     # but better than nothing.
-    #
-    # def test_purge(self):
-    #     """
-    #     WARNING: I think this is prone to race conditions.
-    #     If you get an error, try just giving it more time.
-    #     """
-    #     self.assertEqual(0, self.count_my_containers())
-    #
-    #     container_name = self.timestamp()
-    #     DockerContainerSpec(
-    #         manager=self.manager,
-    #         image_name='nginx:1.10.3-alpine',
-    #         container_name=container_name,
-    #         labels={self.test_label: 'true'}).run()
-    #     self.assertEqual(1, self.count_my_containers())
-    #
-    #     self.client_wrapper.purge_inactive(5)
-    #     self.assertEqual(1, self.count_my_containers())
-    #     # Even without activity, it should not be purged if younger than the limit.
-    #
-    #     sleep(2)
-    #
-    #     url = '/docker/{}/'.format(container_name)
-    #     self.assert_url_content(url, 'Welcome to nginx!')
-    #
-    #     # Be careful of race conditions if developing locally:
-    #     # I had to give a bit more time for the same test to pass with remote Docker.
-    #     self.client_wrapper.purge_inactive(4)
-    #     sleep(2)
-    #
-    #     self.assertEqual(1, self.count_my_containers())
-    #     # With a tighter time limit, recent activity should keep it alive.
-    #
-    #     sleep(2)
-    #
-    #     self.client_wrapper.purge_inactive(0)
-    #     self.assertEqual(0, self.count_my_containers())
-    #     # But with an even tighter limit, it should be purged.
+
+    def test_purge(self):
+        """
+        WARNING: I think this is prone to race conditions.
+        If you get an error, try just giving it more time.
+        """
+        self.assertEqual(0, self.count_my_containers())
+
+        url = self.client_wrapper.run(DockerContainerSpec(
+            image_name='nginx:1.10.3-alpine',
+            container_name=self.timestamp(),
+            labels={self.test_label: 'true'}
+        ))
+        self.assertEqual(1, self.count_my_containers())
+
+        self.client_wrapper.purge_inactive(5)
+        self.assertEqual(1, self.count_my_containers())
+        # Even without activity, it should not be purged if younger than the limit.
+
+        sleep(2)
+
+        self.assert_url_content(url, 'Welcome to nginx!')
+
+        # Be careful of race conditions if developing locally:
+        # I had to give a bit more time for the same test to pass with remote Docker.
+        self.client_wrapper.purge_inactive(4)
+        sleep(2)
+
+        self.assertEqual(1, self.count_my_containers())
+        # With a tighter time limit, recent activity should keep it alive.
+
+        sleep(2)
+
+        self.client_wrapper.purge_inactive(0)
+        self.assertEqual(0, self.count_my_containers())
+        # But with an even tighter limit, it should be purged.
