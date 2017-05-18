@@ -95,12 +95,13 @@ class DockerTests(unittest.TestCase):
             'host': self.tmp,
             'bind': '/usr/share/nginx/html'}]
         ports_spec = {'80/tcp': None}
-        self.client_wrapper._manager_run('nginx:1.10.3-alpine',
-                   name=container_name,
-                   detach=True,
-                   volumes=volume_spec,
-                   ports=ports_spec,
-                   labels={self.test_label: 'true'})
+        self.client_wrapper._manager_run(
+            'nginx:1.10.3-alpine',
+            name=container_name,
+            detach=True,
+            volumes=volume_spec,
+            ports=ports_spec,
+            labels={self.test_label: 'true'})
         return self.client_wrapper.lookup_container_url(container_name)
 
     def assert_url_content(self, url, content, client=django.test.Client()):

@@ -5,7 +5,6 @@ from time import time
 from container_managers import docker_engine
 
 
-
 class DockerContainerSpec():
 
     def __init__(self, image_name, container_name,
@@ -46,11 +45,11 @@ class DockerClientWrapper():
             'bind': container_spec.container_input_path}]
         ports_spec = {'80/tcp': None}
         self._manager_run(container_spec.image_name,
-                      name=container_spec.container_name, # TODO: check
-                      detach=True,
-                      volumes=volume_spec,
-                      ports=ports_spec,
-                      labels=container_spec.labels)
+                          name=container_spec.container_name,
+                          detach=True,
+                          volumes=volume_spec,
+                          ports=ports_spec,
+                          labels=container_spec.labels)
         return self.lookup_container_url(container_spec.container_name)
 
     def _manager_run(self, image_name, cmd=None, volumes=(), **kwargs):
