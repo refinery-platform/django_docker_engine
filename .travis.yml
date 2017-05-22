@@ -14,24 +14,22 @@ install:
           -in django_docker_cloudformation.pem.enc \
           -out django_docker_cloudformation.pem -d
 - chmod 600 django_docker_cloudformation.pem
+- start() { echo travis_fold':'start:$1; echo 'start:' $1; }
+- end() { echo travis_fold':'end:$1; }
 script:
 # If I understand correctly, without the subshell,
 # errexit exits the entire run, and we never run the after_script.
+# ... but we need to set the AWS envvars outside so they can still be seen.
 - |-
+  start build-stack
+  $(python django_docker_engine/cloudformation_utils.py --create)
+  export AWS_DEFAULT_REGION=us-east-1
+  end build-stack
+
   (
     set -o errexit
-    export AWS_DEFAULT_REGION=us-east-1
-    start() { echo travis_fold':'start:$1; echo 'start:' $1; }
-    end() { echo travis_fold':'end:$1; }
 
-    for WHERE_IS_DOCKER in 'local' 'remote'; do
-
-      if [ "$WHERE_IS_DOCKER" == 'remote' ]; then
-        start build-stack
-        $(python django_docker_engine/cloudformation_utils.py --create)
-        end build-stack
-        echo "For use outside Travis: export DOCKER_HOST=$DOCKER_HOST"
-      fi
+    for WHERE_IS_DOCKER in 'remote' 'local'; do
 
       for VERSION in '1.7.1' '1.10.6'; do
         start docker-$WHERE_IS_DOCKER-django-$VERSION
@@ -40,6 +38,8 @@ script:
         python manage.py test tests --verbosity=2
         end docker-$WHERE_IS_DOCKER-django-$VERSION
       done
+
+      unset DOCKER_HOST  # So the next run will be local.
 
     done
 
