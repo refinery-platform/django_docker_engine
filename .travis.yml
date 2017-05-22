@@ -7,58 +7,24 @@ services:
 install:
 - pip install -r requirements.txt
 - pip install -r requirements-dev.txt
-- |-
-  openssl aes-256-cbc \
-          -K $encrypted_80c19366536f_key \
-          -iv $encrypted_80c19366536f_iv \
-          -in django_docker_cloudformation.pem.enc \
-          -out django_docker_cloudformation.pem -d
-- chmod 600 django_docker_cloudformation.pem
 - start() { echo travis_fold':'start:$1; echo 'start:' $1; }
 - end() { echo travis_fold':'end:$1; }
 script:
-# If I understand correctly, without the subshell,
-# errexit exits the entire run, and we never run the after_script.
-# ... but we need to set the AWS envvars outside so they can still be seen.
 - |-
-  start build-stack
-  $(python django_docker_engine/cloudformation_utils.py --create)
-  export AWS_DEFAULT_REGION=us-east-1
-  end build-stack
+  set -o errexit
 
-  echo $DOCKER_STACK_ID
+  for VERSION in '1.7.1' '1.10.6'; do
+    start docker-$WHERE_IS_DOCKER-django-$VERSION
+    pip install django==$VERSION
+    docker info | grep 'Operating System'  # Are we able to connect to Docker, and what OS is it?
+    python manage.py test tests --verbosity=2
+    end docker-$WHERE_IS_DOCKER-django-$VERSION
+  done
 
-  (
-    set -o errexit
+  start format
+  flake8
+  start format
 
-    for WHERE_IS_DOCKER in 'remote' 'local'; do
-
-      for VERSION in '1.7.1' '1.10.6'; do
-        start docker-$WHERE_IS_DOCKER-django-$VERSION
-        pip install django==$VERSION
-        docker info | grep 'Operating System'  # Are we able to connect to Docker, and what OS is it?
-        python manage.py test tests --verbosity=2
-        end docker-$WHERE_IS_DOCKER-django-$VERSION
-      done
-
-      unset DOCKER_HOST  # So the next run will be local.
-
-    done
-
-    start format
-    flake8
-    start format
-
-    start egg
-    python setup.py bdist_egg
-    start egg
-  )
-
-after_script:
-- echo $DOCKER_STACK_ID
-- python django_docker_engine/cloudformation_utils.py --delete $DOCKER_STACK_ID
-
-env:
-  global:
-  - secure: JeVAUR7tJhYyaMqdLbEwpJJ5B7/+zrI/mtqNFI10yNYwT2YKmXFOsMv0MClJEjM0GjUg6bRVSl/iJv0A2+ao2a0h7PqGXoGCg5K6+v240We9cedgj9noA2YefaaXQh2sbnK8yLu4EsRw0XGJlJBNXHEWiLCfeB+EcDBH8Giy6MvRIHZMUZpCQMCpUIGs+5fJf7e9AolHqy3TNoAn6z5Oo7zGewLFETkVja6XzS4UQqXOYmyb97RI4+AhnEicfO74f0FGcCPUOLK4trR1u12/zMglGOIasprVE5SFwoDI7jn3CIgeqm1b++Xncq6P/DXhkFKKZJ0oiumxIaJSgXXLt4NCpEPktp8PitZv6C6N+FL6D7pEJl8PEHSLjrZOllZys30NemP9a82Nfm4H2ao436UmdQ3wF+N+aJvMYXf1Ck4gXtBoNY+VSbKz99rqRnUPxvfXYehBKikgBrDPv+rsRZa+fCSEnnj22ulPxmbK1YV/rv+9+3TRFL7Q+4KFhggcU1jPn1Nj3rJuZr4Gq0qqWF/rfZTCSkG+tjY5M8+7grg8U3WvdJQ2yolN29b0ImyHqm0JFKtYVj734vz8/SRv0Rf7Ygt5b4zzTuZQA+lE9tn/K5p/3dWuhnpQyUXtLyXQnqdBH6ErwMK9jBYmnC+gph6rWFf6H/IeYShTj+922Lw=
-  - secure: jnVenDvIUyBrXKSRsbHk7QYtUCRf0PRr7Dj0jmjIueQ57SqC0uJTqPHScTexPgNAi3cMZ6R9FLlBpJE6Q74u5HVy62zvkaPMYxwkBRQGHWbSotRWSLu0ofri2k7nKLTNt+shPhzrUMpXksNs1yb+RxRcW+M7G7880Kwq6Y6d2DFVDCzsVcgJDcVjqXctmnyWV0JDd2sXBSYdL3wi+ZQbH05XcI6hky6JqTJtnk4xaR1mX6Y+p2zYzcEVcNen+12njbXUVn9ylgZvv4u9MmKjLQkWrYRQ7r5QIZquEJTbz5GjsPkmpQtBW7jv7ErFYngls4ThBEctPRFONjQWU9boS8/5rl57wzc1vbkDEUFMfsejd8IKnSA/CZWTXSGLo5jUg5WfYLA5DHpL73Bt/vxG/J8FtE3XBS7p60FUyeTLZtdJ01sF33rXwi/9s5Bb0TxbDKHn69p1/Iz4SwUJedzXXM/UUhOlNyPORYBxij3GtjEQ/tTmsbaps9QkXPXSYXAZX6vk9anyjYE4JCuTPCQARLKZQnTVIpg0xbsA98KUD3FRyfKhvv/fhlL06mJ/G3GKotD4CNJ5MBwvB5siuUKmXYInKXDbzdAlPYH3S6KDN2inihECODNpfAKmGynlsbVcdW//T/cFEgrHR3QvGh2thJK+Ji26TR9nwJW/b0bhULU=
+  start egg
+  python setup.py bdist_egg
+  start egg
