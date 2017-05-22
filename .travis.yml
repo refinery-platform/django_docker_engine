@@ -26,6 +26,8 @@ script:
   export AWS_DEFAULT_REGION=us-east-1
   end build-stack
 
+  echo $DOCKER_STACK_ID
+
   (
     set -o errexit
 
@@ -53,6 +55,7 @@ script:
   )
 
 after_script:
+- echo $DOCKER_STACK_ID
 - python django_docker_engine/cloudformation_utils.py --delete $DOCKER_STACK_ID
 
 env:
