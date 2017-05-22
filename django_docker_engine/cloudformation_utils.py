@@ -10,7 +10,6 @@ import requests
 import sys
 import subprocess
 import troposphere
-from os import environ
 from pprint import pformat
 from troposphere import (
     ec2, Ref, Output, Base64,
