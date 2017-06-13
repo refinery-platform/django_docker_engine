@@ -10,10 +10,12 @@ class DockerContainerSpec():
     def __init__(self, image_name, container_name,
                  input={},
                  container_input_path='/tmp/input.json',
+                 extra_directories=[],
                  labels={}):
         self.image_name = image_name
         self.container_name = container_name
         self.container_input_path = container_input_path
+        self.extra_directories = extra_directories
         self.input = input
         self.labels = labels
 
@@ -26,8 +28,11 @@ class DockerClientWrapper():
         self._containers_manager = manager
         self.root_label = root_label
 
+    def _make_directory_on_host(self):
+        return self._containers_manager.mkdtemp()
+
     def _write_input_to_host(self, input):
-        host_input_dir = self._containers_manager.mkdtemp()
+        host_input_dir = self._make_directory_on_host()
         # The host filename "input.json" is arbitrary.
         host_input_path = os.path.join(host_input_dir, 'input.json')
         content = json.dumps(input)
@@ -50,6 +55,18 @@ class DockerClientWrapper():
         volume_spec = [{
             'host': self._write_input_to_host(container_spec.input),
             'bind': container_spec.container_input_path}]
+
+        for directory in container_spec.extra_directories:
+            assert os.path.isabs(
+                directory), "Specified path: `{}` is not absolute".format(
+                directory
+            )
+            volume_spec.append(
+                {
+                    'host': self._make_directory_on_host(),
+                    'bind': directory
+                }
+            )
         volumes = {}
         for volume in volume_spec:
             binding = volume.copy()
