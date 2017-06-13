@@ -1,7 +1,9 @@
 ====================
-django_docker_engine
+django_docker_engine 
 ====================
-
+.. image:: https://travis-ci.org/refinery-platform/django_docker_engine.svg?branch=master
+    :target: https://travis-ci.org/refinery-platform/django_docker_engine
+    
 This is a Django app which manages and proxies requests to Docker containers.
 The primary goal has been to provide a visualization framework for the
 `Refinery Project <https://github.com/refinery-platform/refinery-platform>`_,
