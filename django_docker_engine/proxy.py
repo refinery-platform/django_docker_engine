@@ -30,7 +30,9 @@ class FileLogger():
             print('\t'.join(args_list), file=f)
 
     def list(self):
-        return open(self.path).readlines()
+        with open(self.path) as f:
+            lines = f.readlines()
+        return lines
 
 
 class Proxy():
