@@ -126,6 +126,41 @@ class DockerTests(unittest.TestCase):
         ))
         self.assert_url_content(url, '{"foo": "bar"}')
 
+    def test_container_spec_with_extra_directories_bad(self):
+        container_name = self.timestamp()
+
+        test_dirs = ["/test", "coffee"]
+        with self.assertRaises(AssertionError) as context:
+            self.client_wrapper.run(
+                DockerContainerSpec(
+                    image_name='nginx:1.10.3-alpine',
+                    container_name=container_name,
+                    input={'foo': 'bar'},
+                    container_input_path='/usr/share/nginx/html/index.html',
+                    extra_directories=test_dirs,
+                    labels={self.test_label: 'true'}
+                )
+            )
+        self.assertEqual(
+            context.exception.message,
+            "Specified path: `coffee` is not absolute"
+        )
+
+    def test_container_spec_with_extra_directories_good(self):
+        container_name = self.timestamp()
+
+        test_dirs = ["/test", "/coffee"]
+        self.client_wrapper.run(
+            DockerContainerSpec(
+                image_name='nginx:1.10.3-alpine',
+                container_name=container_name,
+                input={'foo': 'bar'},
+                container_input_path='/usr/share/nginx/html/index.html',
+                extra_directories=test_dirs,
+                labels={self.test_label: 'true'}
+            )
+        )
+
     def test_purge(self):
         """
         WARNING: I think this is prone to race conditions.
