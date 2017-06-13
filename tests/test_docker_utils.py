@@ -5,6 +5,7 @@ import re
 import requests
 import django
 import paramiko
+import docker
 from urllib2 import URLError
 from requests.exceptions import ConnectionError
 from distutils import dir_util
@@ -15,6 +16,7 @@ from django_docker_engine.container_managers import docker_engine
 
 
 class DockerTests(unittest.TestCase):
+
     def setUp(self):
         # mkdtemp is the obvious way to do this, but
         # the resulting directory is not visible to Docker.
@@ -24,6 +26,7 @@ class DockerTests(unittest.TestCase):
             re.sub(r'\W', '_', str(datetime.datetime.now())))
         self.mkdir_on_host(self.tmp)
         self.manager = docker_engine.DockerEngineManager()
+        self.docker_client = docker.from_env()
         self.client = DockerClientWrapper(manager=self.manager)
         self.test_label = self.client.root_label + '.test'
         self.initial_containers = self.client.list()
@@ -148,6 +151,44 @@ class DockerTests(unittest.TestCase):
         ).run()
         url = '/docker/{}/'.format(container_name)
         self.assert_url_content(url, '{"foo": "bar"}')
+
+    def test_container_spec_with_extra_directories_bad(self):
+        container_name = self.timestamp()
+
+        test_dirs = ["/test", "coffee"]
+        with self.assertRaises(RuntimeError) as context:
+            DockerContainerSpec(
+                manager=self.manager,
+                image_name='nginx:1.10.3-alpine',
+                container_name=container_name,
+                input={'foo': 'bar'},
+                container_input_path='/usr/share/nginx/html/index.html',
+                extra_directories=test_dirs,
+                labels={self.test_label: 'true'}
+            ).run()
+        self.assertEqual(
+            context.exception.message,
+            "Specified path: `coffee` is not absolute"
+        )
+
+    def test_container_spec_with_extra_directories_good(self):
+        container_name = self.timestamp()
+
+        test_dirs = ["/test", "/coffee"]
+        DockerContainerSpec(
+            manager=self.manager,
+            image_name='nginx:1.10.3-alpine',
+            container_name=container_name,
+            input={'foo': 'bar'},
+            container_input_path='/usr/share/nginx/html/index.html',
+            extra_directories=test_dirs,
+            labels={self.test_label: 'true'}
+        ).run()
+
+        container_obj = self.docker_client.containers.get(container_name)
+        ls_output = container_obj.exec_run("ls /")
+        for directory_name in test_dirs:
+            self.assertIn(directory_name.replace("/", ""), ls_output)
 
     def test_docker_proxy(self):
         container_name = self.timestamp()
