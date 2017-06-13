@@ -57,10 +57,9 @@ class DockerClientWrapper():
             'bind': container_spec.container_input_path}]
 
         for directory in container_spec.extra_directories:
-            assert os.path.isabs(
-                directory), "Specified path: `{}` is not absolute".format(
-                directory
-            )
+            assert os.path.isabs(directory), \
+                "Specified path: `{}` is not absolute".format(directory)
+
             volume_spec.append(
                 {
                     'host': self._make_directory_on_host(),
