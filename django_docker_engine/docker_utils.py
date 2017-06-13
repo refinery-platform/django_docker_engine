@@ -71,12 +71,14 @@ class DockerClientWrapper():
         for volume in volume_spec:
             binding = volume.copy()
             if binding.get('mode'):
-                raise RuntimeError('"mode" should not be provided on {}'.format(volume))
+                raise RuntimeError(
+                    '"mode" should not be provided on {}'.format(volume))
             host_directory = binding.pop('host', None)
             if host_directory:
                 binding['mode'] = 'ro'  # For now, this is true.
             else:
-                binding['mode'] = 'rw'  # In contrast, this will *always* be true.
+                # In contrast, this will *always* be true.
+                binding['mode'] = 'rw'
                 host_directory = self._containers_manager.mkdtemp()
                 volumes[host_directory] = binding
 
