@@ -129,7 +129,6 @@ class DockerTests(unittest.TestCase):
 
     def test_container_spec_with_extra_directories_bad(self):
         container_name = self.timestamp()
-
         test_dirs = ["/test", "coffee"]
         with self.assertRaises(AssertionError) as context:
             self.client_wrapper.run(
