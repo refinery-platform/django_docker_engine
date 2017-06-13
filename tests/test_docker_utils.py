@@ -13,6 +13,7 @@ from django_docker_engine.docker_utils import DockerClientWrapper, DockerContain
 
 
 class DockerTests(unittest.TestCase):
+
     def setUp(self):
         # mkdtemp is the obvious way to do this, but
         # the resulting directory is not visible to Docker.
