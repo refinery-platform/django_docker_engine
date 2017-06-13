@@ -23,8 +23,8 @@ script:
 
   start format
   flake8
-  start format
+  end format
 
   start egg
   python setup.py bdist_egg
-  start egg
+  end egg
