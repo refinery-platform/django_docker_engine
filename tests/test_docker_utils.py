@@ -171,7 +171,6 @@ class DockerTests(unittest.TestCase):
             "Specified path: `coffee` is not absolute"
         )
 
-
     def test_container_spec_with_extra_directories_good(self):
         container_name = self.timestamp()
 
