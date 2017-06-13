@@ -79,7 +79,8 @@ class DockerClientWrapper():
                 # In contrast, this will *always* be true.
                 binding['mode'] = 'rw'
                 host_directory = self._containers_manager.mkdtemp()
-                volumes[host_directory] = binding
+
+            volumes[host_directory] = binding
 
         labels = container_spec.labels
         labels.update({self.root_label: 'true'})
