@@ -17,6 +17,7 @@ In order for a Docker container to work with this package it must:
 The following Docker projects have been designed to work with ``django_docker_engine``:
 
 - `docker_igv_js <https://github.com/refinery-platform/docker_igv_js>`_
+- `refinery-higlass-docker <https://github.com/scottx611x/refinery-higlass-docker>`_
 
 Write-ups on the background motivations and future directions:
 
