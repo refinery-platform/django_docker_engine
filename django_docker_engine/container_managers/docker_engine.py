@@ -13,6 +13,7 @@ class DockerEngineManager(BaseManager):
     def __init__(self, client=docker.from_env(), pem='django_docker_cloudformation.pem'):
         self._base_url = client.api.base_url
         self._containers_client = client.containers
+        self._images_client = client.images
         self.pem = pem
 
         remote_host_match = re.match(r'^http://([^:]+):\d+$', self._base_url)
@@ -25,6 +26,9 @@ class DockerEngineManager(BaseManager):
 
     def run(self, image_name, cmd, **kwargs):
         return self._containers_client.run(image_name, cmd, **kwargs)
+
+    def pull_image(self, image_name):
+        return self._images_client.pull(image_name)
 
     def get_url(self, container_name):
         remote_host_match = re.match(r'^http://([^:]+):\d+$', self._base_url)
