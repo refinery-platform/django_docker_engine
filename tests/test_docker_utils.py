@@ -3,6 +3,7 @@ import os
 import datetime
 import re
 import django
+import mock
 import paramiko
 from urllib2 import URLError
 from requests.exceptions import ConnectionError
@@ -196,3 +197,12 @@ class DockerTests(unittest.TestCase):
         self.client_wrapper.purge_inactive(0)
         self.assertEqual(0, self.count_my_containers())
         # But with an even tighter limit, it should be purged.
+
+    def test_pull_image(self):
+        with mock.patch.object(
+            DockerClientWrapper()._containers_manager._images_client, "pull"
+        ) as pull_mock:
+            DockerClientWrapper().pull_image("cool_image")
+            self.assertTrue(pull_mock.called)
+
+
