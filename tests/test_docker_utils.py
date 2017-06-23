@@ -48,7 +48,7 @@ class LiveDockerTests(unittest.TestCase):
 
     def remote_exec(self, command):
         host_ip = self.docker_host_ip()
-        key = paramiko.RSAKey.from_private_key_file(DockerTests.PEM)
+        key = paramiko.RSAKey.from_private_key_file(LiveDockerTests.PEM)
         client = paramiko.SSHClient()
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         client.connect(hostname=host_ip, username='ec2-user', pkey=key)
