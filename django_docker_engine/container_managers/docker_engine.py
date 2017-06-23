@@ -27,8 +27,8 @@ class DockerEngineManager(BaseManager):
     def run(self, image_name, cmd, **kwargs):
         return self._containers_client.run(image_name, cmd, **kwargs)
 
-    def pull(self, image_name):
-        return self._images_client.pull(image_name)
+    def pull(self, image_name, version="latest"):
+        return self._images_client.pull("{}:{}".format(image_name, version))
 
     def get_url(self, container_name):
         remote_host_match = re.match(r'^http://([^:]+):\d+$', self._base_url)
