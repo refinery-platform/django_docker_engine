@@ -204,5 +204,3 @@ class DockerTests(unittest.TestCase):
         ) as pull_mock:
             DockerClientWrapper().pull_image("cool_image")
             self.assertTrue(pull_mock.called)
-
-
