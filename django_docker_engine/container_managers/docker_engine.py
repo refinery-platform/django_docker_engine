@@ -27,7 +27,7 @@ class DockerEngineManager(BaseManager):
     def run(self, image_name, cmd, **kwargs):
         return self._containers_client.run(image_name, cmd, **kwargs)
 
-    def pull_image(self, image_name):
+    def pull(self, image_name):
         return self._images_client.pull(image_name)
 
     def get_url(self, container_name):

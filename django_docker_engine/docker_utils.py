@@ -105,8 +105,8 @@ class DockerClientWrapper():
     def list(self, filters={}):
         return self._containers_manager.list(filters)
 
-    def pull_image(self, image_name):
-        self._containers_manager.pull_image(image_name)
+    def pull(self, image_name):
+        self._containers_manager.pull(image_name)
 
     def purge_by_label(self, label):
         """
