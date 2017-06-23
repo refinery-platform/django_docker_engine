@@ -3,6 +3,7 @@ import os
 import datetime
 import re
 import django
+import mock
 import paramiko
 from urllib2 import URLError
 from requests.exceptions import ConnectionError
@@ -12,7 +13,7 @@ from time import sleep
 from django_docker_engine.docker_utils import DockerClientWrapper, DockerContainerSpec
 
 
-class DockerTests(unittest.TestCase):
+class LiveDockerTests(unittest.TestCase):
 
     def setUp(self):
         # mkdtemp is the obvious way to do this, but
@@ -47,7 +48,7 @@ class DockerTests(unittest.TestCase):
 
     def remote_exec(self, command):
         host_ip = self.docker_host_ip()
-        key = paramiko.RSAKey.from_private_key_file(DockerTests.PEM)
+        key = paramiko.RSAKey.from_private_key_file(LiveDockerTests.PEM)
         client = paramiko.SSHClient()
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         client.connect(hostname=host_ip, username='ec2-user', pkey=key)
@@ -196,3 +197,12 @@ class DockerTests(unittest.TestCase):
         self.client_wrapper.purge_inactive(0)
         self.assertEqual(0, self.count_my_containers())
         # But with an even tighter limit, it should be purged.
+
+
+class MockDockerTests(unittest.TestCase):
+    def test_pull(self):
+        with mock.patch.object(
+            DockerClientWrapper()._containers_manager._images_client, "pull"
+        ) as pull_mock:
+            DockerClientWrapper().pull("cool_image")
+            self.assertTrue(pull_mock.called)

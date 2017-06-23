@@ -105,6 +105,9 @@ class DockerClientWrapper():
     def list(self, filters={}):
         return self._containers_manager.list(filters)
 
+    def pull(self, image_name, version="latest"):
+        self._containers_manager.pull(image_name, version=version)
+
     def purge_by_label(self, label):
         """
         Removes all containers matching the label.
