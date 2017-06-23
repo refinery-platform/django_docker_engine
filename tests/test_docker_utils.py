@@ -13,7 +13,7 @@ from time import sleep
 from django_docker_engine.docker_utils import DockerClientWrapper, DockerContainerSpec
 
 
-class DockerTests(unittest.TestCase):
+class LiveDockerTests(unittest.TestCase):
 
     def setUp(self):
         # mkdtemp is the obvious way to do this, but
@@ -198,9 +198,11 @@ class DockerTests(unittest.TestCase):
         self.assertEqual(0, self.count_my_containers())
         # But with an even tighter limit, it should be purged.
 
-    def test_pull_image(self):
+
+class MockDockerTests(unittest.TestCase):
+    def test_pull(self):
         with mock.patch.object(
             DockerClientWrapper()._containers_manager._images_client, "pull"
         ) as pull_mock:
-            DockerClientWrapper().pull_image("cool_image")
+            DockerClientWrapper().pull("cool_image")
             self.assertTrue(pull_mock.called)
