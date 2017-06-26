@@ -59,13 +59,8 @@ class DockerClientWrapper():
         for directory in container_spec.extra_directories:
             assert os.path.isabs(directory), \
                 "Specified path: `{}` is not absolute".format(directory)
+            volume_spec.append({'bind': directory})
 
-            volume_spec.append(
-                {
-                    'host': self._make_directory_on_host(),
-                    'bind': directory
-                }
-            )
         volumes = {}
         for volume in volume_spec:
             binding = volume.copy()
@@ -78,7 +73,7 @@ class DockerClientWrapper():
             else:
                 # In contrast, this will *always* be true.
                 binding['mode'] = 'rw'
-                host_directory = self._containers_manager.mkdtemp()
+                host_directory = self._make_directory_on_host()
 
             volumes[host_directory] = binding
 
