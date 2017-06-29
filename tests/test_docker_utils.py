@@ -162,6 +162,20 @@ class LiveDockerTests(unittest.TestCase):
             )
         )
 
+    def test_container_spec_with_internal_port_mapping(self):
+        container_name = self.timestamp()
+
+        self.client_wrapper.run(
+            DockerContainerSpec(
+                image_name='nginx:1.10.3-alpine',
+                container_name=container_name,
+                input={'foo': 'bar'},
+                internal_port=8888,
+                container_input_path='/usr/share/nginx/html/index.html',
+                labels={self.test_label: 'true'}
+            )
+        )
+
     def test_purge(self):
         """
         WARNING: I think this is prone to race conditions.
