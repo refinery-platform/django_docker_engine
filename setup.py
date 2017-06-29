@@ -9,7 +9,7 @@ os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 setup(
     name='django_docker_engine',
-    version='0.0.14',
+    version='0.0.15',
     install_requires=[
         'django',
         'docker==2.1.0',
