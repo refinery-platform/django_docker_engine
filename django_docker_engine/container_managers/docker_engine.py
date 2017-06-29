@@ -30,7 +30,7 @@ class DockerEngineManager(BaseManager):
     def pull(self, image_name, version="latest"):
         return self._images_client.pull("{}:{}".format(image_name, version))
 
-    def get_url(self, container_name):
+    def get_url(self, container_name, container_port):
         remote_host_match = re.match(r'^http://([^:]+):\d+$', self._base_url)
         if remote_host_match:
             host = remote_host_match.group(1)
@@ -39,8 +39,7 @@ class DockerEngineManager(BaseManager):
         else:
             raise RuntimeError('Unexpected client base_url: %s', self._base_url)
         container = self._containers_client.get(container_name)
-        port = container. \
-            attrs['NetworkSettings']['Ports']['80/tcp'][0]['HostPort']
+        port = container. attrs['NetworkSettings']['Ports']['{}/tcp'.format(container_port)][0]['HostPort']
         return 'http://{}:{}'.format(host, port)
 
     def list(self, filters={}):

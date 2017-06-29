@@ -4,7 +4,7 @@ import datetime
 import re
 import django
 import mock
-import paramiko
+# import paramiko
 from urllib2 import URLError
 from requests.exceptions import ConnectionError
 from distutils import dir_util
@@ -165,9 +165,9 @@ class LiveDockerTests(unittest.TestCase):
     def test_container_spec_with_internal_port_mapping(self):
         container_name = self.timestamp()
 
-        self.client_wrapper.run(
+        url = self.client_wrapper.run(
             DockerContainerSpec(
-                image_name='nginx:1.10.3-alpine',
+                image_name='jupyter/base-notebook:8e15d329f1e9',
                 container_name=container_name,
                 input={'foo': 'bar'},
                 internal_port=8888,
@@ -175,6 +175,7 @@ class LiveDockerTests(unittest.TestCase):
                 labels={self.test_label: 'true'}
             )
         )
+        self.assert_url_content(url, 'jupyter')
 
     def test_purge(self):
         """

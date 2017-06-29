@@ -9,7 +9,7 @@ class DockerContainerSpec():
 
     def __init__(self, image_name, container_name,
                  input={},
-                 internal_port=None,
+                 internal_port=80,
                  container_input_path='/tmp/input.json',
                  extra_directories=[],
                  labels={}):
@@ -82,28 +82,29 @@ class DockerClientWrapper():
         labels = container_spec.labels
         labels.update({self.root_label: 'true'})
 
-        internal_port_mapping = (
-            "{}/tcp".format(container_spec.internal_port)
-            if container_spec.internal_port else None
-        )
 
+        port_mapping = {'{}/tcp'.format(container_spec.internal_port): None}
 
         self._containers_manager.run(
             image_name,
             name=container_spec.container_name,
-            ports={'80/tcp': internal_port_mapping},
+            ports=port_mapping,
             cmd=None,
             detach=True,
             labels=labels,
             volumes=volumes
         )
-        return self.lookup_container_url(container_spec.container_name)
+        return self.lookup_container_url(
+            container_spec.container_name,
+            container_port=container_spec.internal_port
+        )
 
-    def lookup_container_url(self, container_name):
+    def lookup_container_url(self, container_name, container_port):
         """
-        Given the name of a container, returns the url mapped to port 80.
+        Given the name of a container,
+        returns the url mapped to `container_port`.
         """
-        return self._containers_manager.get_url(container_name)
+        return self._containers_manager.get_url(container_name, container_port)
 
     def list(self, filters={}):
         return self._containers_manager.list(filters)
