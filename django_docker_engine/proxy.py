@@ -40,13 +40,20 @@ class Proxy():
         self.logger = logger
 
     def url_patterns(self):
-        return [url(
-            r'^(?P<container_name>[^/]*)/(?P<url>.*)$',
-            self._proxy_view
-        )]
+        return [
+            url(r'^(?P<container_name>[^/]*)/(?P<url>.*)$', self._proxy_view),
+            url(r'^(?P<container_name>[^/]*)/(?P<container_port>[^/]*)/(?P<url>.*)$', self._proxy_view)
+        ]
 
-    def _proxy_view(self, request, container_name, url):
-        self.logger.log(container_name, url)
-        container_url = DockerClientWrapper().lookup_container_url(container_name)
+    def _proxy_view(self, request, container_name, container_port, url):
+        self.logger.log(container_name, container_port, url)
+        if container_port:
+            container_url = DockerClientWrapper().lookup_container_url(
+                container_name, container_port
+            )
+        else:
+            container_url = DockerClientWrapper().lookup_container_url(
+                container_name, 80
+            )
         view = HttpProxy.as_view(base_url=container_url)
         return view(request, url=url)
