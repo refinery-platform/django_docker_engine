@@ -82,7 +82,6 @@ class DockerClientWrapper():
         labels = container_spec.labels
         labels.update({self.root_label: 'true'})
 
-
         port_mapping = {'{}/tcp'.format(container_spec.internal_port): None}
 
         self._containers_manager.run(
