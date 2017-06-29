@@ -51,7 +51,7 @@ class Proxy():
                     container_name=None,
                     container_port=80,
                     url=None):
-        self.logger.log(container_name, container_port, url)
+        self.logger.log(container_name, str(container_port), url)
         container_url = DockerClientWrapper().lookup_container_url(
             container_name, container_port
         )
