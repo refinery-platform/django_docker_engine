@@ -4,7 +4,7 @@ import datetime
 import re
 import django
 import mock
-# import paramiko
+import paramiko
 from urllib2 import URLError
 from requests.exceptions import ConnectionError
 from distutils import dir_util
