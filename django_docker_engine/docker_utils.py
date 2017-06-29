@@ -96,7 +96,7 @@ class DockerClientWrapper():
         )
         return self.lookup_container_url(
             container_spec.container_name,
-            container_port=container_spec.internal_port
+            container_spec.internal_port
         )
 
     def lookup_container_url(self, container_name, container_port):
