@@ -122,7 +122,7 @@ Note that this is only a Docker utility: You could persist this information in a
 For more detail, consult the `generated documentation <docs.md>`_.
 
 -----------
-Development
+Development: Quick Start
 -----------
 
 Checking out the code and running tests is a good way to begin:
