@@ -167,7 +167,7 @@ class LiveDockerTests(unittest.TestCase):
 
         url = self.client_wrapper.run(
             DockerContainerSpec(
-                image_name='jupyter/base-notebook:8e15d329f1e9',
+                image_name='jupyter/base-notebook:8f56e3c47fec',
                 container_name=container_name,
                 input={'foo': 'bar'},
                 internal_port=8888,
