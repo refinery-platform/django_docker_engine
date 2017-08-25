@@ -119,7 +119,7 @@ For more detail, consult the `generated documentation <docs.md>`_.
 Development
 -----------
 
-You'll need a django_docker_cloudformation.pem and sufficient AWS privs.
+Checking out the code and running tests is a good way to begin:
 
 ::
 
@@ -129,13 +129,18 @@ You'll need a django_docker_cloudformation.pem and sufficient AWS privs.
     pip install -r requirements-dev.txt
     python manage.py test --verbosity=2
 
-The tests shouldn't leak AWS resources, but if they do:
+---------
+AWS Hints
+---------
+
+If you'll be targeting AWS, ``cloudformation_utils.py`` can make it much easier to get a basic stack up and running.
+The AWS resources involved include:
 
 - `CloudFormation Stacks <https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks?filter=active>`_
 - `Security Groups <https://console.aws.amazon.com/ec2/v2/home?region=us-east-1#SecurityGroups:search=django_docker_;sort=groupId>`_
 - `EC2 Instances <https://console.aws.amazon.com/ec2/v2/home?region=us-east-1#Instances:search=django_docker_;sort=keyName>`_
 
-Clean up of stacks is easy on the command line::
+To clean up stacks from the commandline::
 
     aws cloudformation list-stacks \
         --query 'StackSummaries[].[StackName,StackStatus]' \
