@@ -14,11 +14,11 @@ script:
   set -o errexit
 
   for VERSION in '1.7.1' '1.10.6'; do
-    start docker-$WHERE_IS_DOCKER-django-$VERSION
+    start django-$VERSION
     pip install django==$VERSION
     docker info | grep 'Operating System'  # Are we able to connect to Docker, and what OS is it?
     python manage.py test tests --verbosity=2
-    end docker-$WHERE_IS_DOCKER-django-$VERSION
+    end django-$VERSION
   done
 
   start format
