@@ -39,7 +39,8 @@ class DockerEngineManager(BaseManager):
         else:
             raise RuntimeError('Unexpected client base_url: %s', self._base_url)
         container = self._containers_client.get(container_name)
-        port = container. attrs['NetworkSettings']['Ports']['{}/tcp'.format(container_port)][0]['HostPort']
+        ports = container.attrs['NetworkSettings']['Ports']
+        port = ports['{}/tcp'.format(container_port)][0]['HostPort']
         return 'http://{}:{}'.format(host, port)
 
     def list(self, filters={}):

@@ -59,4 +59,3 @@ class Proxy():
         )
         view = HttpProxy.as_view(base_url=container_url)
         return view(request, url=url)
-
