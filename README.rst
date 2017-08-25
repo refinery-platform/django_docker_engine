@@ -1,6 +1,12 @@
 ====================
 django_docker_engine 
 ====================
+
+.. contents::
+    :backlinks: none
+
+.. sectnum::
+
 .. image:: https://travis-ci.org/refinery-platform/django_docker_engine.svg?branch=master
     :target: https://travis-ci.org/refinery-platform/django_docker_engine
     
