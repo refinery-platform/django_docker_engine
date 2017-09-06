@@ -3,6 +3,7 @@ import os
 import datetime
 import re
 import django
+import logging
 import mock
 import paramiko
 from urllib2 import URLError
@@ -12,6 +13,9 @@ from shutil import rmtree
 from time import sleep
 from django_docker_engine.docker_utils import DockerClientWrapper, DockerContainerSpec
 
+
+logging.basicConfig()
+logger = logging.getLogger(__name__)
 
 class LiveDockerTests(unittest.TestCase):
 
@@ -176,6 +180,10 @@ class LiveDockerTests(unittest.TestCase):
         ))
         self.assertEqual(1, self.count_my_containers())
 
+        # TODO: This consistently fails for me locally,
+        # but seems to pass on travis?
+        # Logs are empty locally, but must contain something on travis?
+        logger.warn('logs: [%s]', self.client_wrapper.list()[0].logs())
         self.client_wrapper.purge_inactive(5)
         self.assertEqual(1, self.count_my_containers())
         # Even without activity, it should not be purged if younger than the limit.
