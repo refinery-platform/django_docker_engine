@@ -84,6 +84,8 @@ either implicitly as an envvar, or explicitly via an instance of the SDK client.
 If this will be done automatically, you can ensure that the user has the appropriate privs by running
 ``set_user_policy.py``.
 
+`Notes on working with AWS <README-AWS.rst>` are available.
+
 .....
 AWS-ECS
 .....
@@ -119,8 +121,6 @@ For more detail, consult the `generated documentation <docs.md>`_.
 Development
 -----------
 
-You'll need a django_docker_cloudformation.pem and sufficient AWS privs.
-
 ::
 
     git clone https://github.com/mccalluc/django_docker_engine.git
@@ -128,36 +128,6 @@ You'll need a django_docker_cloudformation.pem and sufficient AWS privs.
     pip install -r requirements.txt
     pip install -r requirements-dev.txt
     python manage.py test --verbosity=2
-
-The tests shouldn't leak AWS resources, but if they do:
-
-- `CloudFormation Stacks <https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks?filter=active>`_
-- `Security Groups <https://console.aws.amazon.com/ec2/v2/home?region=us-east-1#SecurityGroups:search=django_docker_;sort=groupId>`_
-- `EC2 Instances <https://console.aws.amazon.com/ec2/v2/home?region=us-east-1#Instances:search=django_docker_;sort=keyName>`_
-
-Clean up of stacks is easy on the command line::
-
-    aws cloudformation list-stacks \
-        --query 'StackSummaries[].[StackName,StackStatus]' \
-        --output text | \
-    grep -v DELETE_COMPLETE | \
-    grep django-docker | \
-    cut -f 1 | \
-    xargs -n 1 aws cloudformation delete-stack --stack-name
-
-If lower level resources have leaked, they can be handled independently::
-
-    aws ec2 describe-instances \
-        --filters Name=tag:project,Values=django_docker_engine \
-        --query 'Reservations[].Instances[].[InstanceId]' \
-        --output text | \
-    xargs aws ec2 terminate-instances --instance-ids
-
-    aws ec2 describe-security-groups \
-        --filters Name=description,Values='Security group for django_docker_engine' \
-        --query 'SecurityGroups[].[GroupId]' \
-        --output text | \
-    xargs -n 1 aws ec2 delete-security-group --group-id
 
 
 ----------------
