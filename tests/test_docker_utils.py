@@ -94,7 +94,7 @@ class LiveDockerTests(unittest.TestCase):
             filters={'label': self.test_label}
         ))
 
-    def assert_url_content(self, url, content, client=django.test.Client()):
+    def assert_url_content_eventually(self, url, content, client=django.test.Client()):
         for i in xrange(10):
             try:
                 response = client.get(url)
@@ -120,7 +120,7 @@ class LiveDockerTests(unittest.TestCase):
             container_name=self.timestamp(),
             labels={self.test_label: 'true'}
         ))
-        self.assert_url_content(url, 'Welcome to nginx!')
+        self.assert_url_content_eventually(url, 'Welcome to nginx!')
 
     def test_container_spec_with_input(self):
         url = self.client_wrapper.run(DockerContainerSpec(
@@ -130,7 +130,7 @@ class LiveDockerTests(unittest.TestCase):
             input={'foo': 'bar'},
             container_input_path='/usr/share/nginx/html/index.html'
         ))
-        self.assert_url_content(url, '{"foo": "bar"}')
+        self.assert_url_content_eventually(url, '{"foo": "bar"}')
 
     def test_container_spec_with_extra_directories_bad(self):
         container_name = self.timestamp()
@@ -179,6 +179,7 @@ class LiveDockerTests(unittest.TestCase):
             labels={self.test_label: 'true'}
         ))
         self.assertEqual(1, self.count_my_containers())
+        self.assert_url_content_eventually(url, 'Welcome to nginx!')
 
         # TODO: This consistently fails for me locally,
         # but seems to pass on travis?
@@ -190,7 +191,7 @@ class LiveDockerTests(unittest.TestCase):
 
         sleep(2)
 
-        self.assert_url_content(url, 'Welcome to nginx!')
+        self.assert_url_content_eventually(url, 'Welcome to nginx!')
 
         # Be careful of race conditions if developing locally:
         # I had to give a bit more time for the same test to pass with remote Docker.
