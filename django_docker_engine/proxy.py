@@ -44,8 +44,9 @@ class FileLogger():
 
 
 class Proxy():
-    def __init__(self, logger=NullLogger()):
+    def __init__(self, logger=NullLogger(), please_wait_content='Please wait.'):
         self.logger = logger
+        self.content = please_wait_content
 
     def url_patterns(self):
         return [url(
@@ -60,13 +61,14 @@ class Proxy():
             view = HttpProxy.as_view(base_url=container_url)
             return view(request, url=url)
         except NotFound:
-            view = PleaseWaitView.as_view()
+            view = self._view_factory(self.content).as_view()
             return view(request)
 
+    def _view_factory(self, content):
+        # TODO: Is there a less weird way to do this?
+        class PleaseWaitView(View):
+            def get(self, request, *args, **kwargs):
+                return HttpResponse(content)
+            http_method_named = ['get']
+        return PleaseWaitView
 
-class PleaseWaitView(View):
-
-    def get(self, request, *args, **kwargs):
-        return HttpResponse('Please wait.')
-
-    http_method_named = ['get']
