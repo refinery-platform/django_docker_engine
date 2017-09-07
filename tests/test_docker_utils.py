@@ -39,7 +39,7 @@ class LiveDockerTests(unittest.TestCase):
         self.test_label = self.client_wrapper.root_label + '.test'
         self.initial_containers = self.client_wrapper.list()
         # There may be containers running which are not "my containers".
-        self.assertEqual(0, self.count_my_containers())
+        self.assertEqual(0, self.count_containers())
 
     def tearDown(self):
         self.rmdir_on_host(self.tmp)
@@ -97,7 +97,7 @@ class LiveDockerTests(unittest.TestCase):
     def timestamp(self):
         return re.sub(r'\W', '_', str(datetime.datetime.now()))
 
-    def count_my_containers(self):
+    def count_containers(self):
         return len(self.client_wrapper.list(
             filters={'label': self.test_label}
         ))
@@ -179,18 +179,18 @@ class LiveDockerTests(unittest.TestCase):
         WARNING: I think this is prone to race conditions.
         If you get an error, try just giving it more time.
         """
-        self.assertEqual(0, self.count_my_containers())
+        self.assertEqual(0, self.count_containers())
 
         url = self.client_wrapper.run(DockerContainerSpec(
             image_name='nginx:1.10.3-alpine',
             container_name=self.timestamp(),
             labels={self.test_label: 'true'}
         ))
-        self.assertEqual(1, self.count_my_containers())
+        self.assertEqual(1, self.count_containers())
         self.assert_url_loads_eventually(url, 'Welcome to nginx!')
 
         self.client_wrapper.purge_inactive(5)
-        self.assertEqual(1, self.count_my_containers())
+        self.assertEqual(1, self.count_containers())
         # Even without activity, it should not be purged if younger than the limit.
 
         sleep(2)
@@ -202,13 +202,13 @@ class LiveDockerTests(unittest.TestCase):
         self.client_wrapper.purge_inactive(4)
         sleep(2)
 
-        self.assertEqual(1, self.count_my_containers())
+        self.assertEqual(1, self.count_containers())
         # With a tighter time limit, recent activity should keep it alive.
 
         sleep(2)
 
         self.client_wrapper.purge_inactive(0)
-        self.assertEqual(0, self.count_my_containers())
+        self.assertEqual(0, self.count_containers())
         # But with an even tighter limit, it should be purged.
 
 
