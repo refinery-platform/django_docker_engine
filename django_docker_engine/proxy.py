@@ -2,6 +2,9 @@ from __future__ import print_function
 
 import logging
 from django.conf.urls import url
+from django.http import HttpResponse
+from django.views import View
+from docker.errors import NotFound
 from httpproxy.views import HttpProxy
 from docker_utils import DockerClientWrapper
 from datetime import datetime
@@ -54,7 +57,16 @@ class Proxy():
         self.logger.log(container_name, url)
         try:
             container_url = DockerClientWrapper().lookup_container_url(container_name)
-        except:
-            logger.warn('TODO: Failed to find container url')
-        view = HttpProxy.as_view(base_url=container_url)
-        return view(request, url=url)
+            view = HttpProxy.as_view(base_url=container_url)
+            return view(request, url=url)
+        except NotFound:
+            view = PleaseWaitView.as_view()
+            return view(request)
+
+
+class PleaseWaitView(View):
+
+    def get(self, request, *args, **kwargs):
+        return HttpResponse('Please wait.')
+
+    http_method_named = ['get']
