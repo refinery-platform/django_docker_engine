@@ -1,7 +1,6 @@
 from __future__ import print_function
 
 import logging
-import django
 from django.conf.urls import url
 from django.http import HttpResponse
 from docker.errors import NotFound
@@ -10,6 +9,10 @@ from docker_utils import DockerClientWrapper
 from datetime import datetime
 from collections import namedtuple
 
+try:
+    from django.views import View
+except ImportError:  # Support older versions of django
+    from django.views.generic import View
 
 logging.basicConfig()
 logger = logging.getLogger(__name__)
@@ -66,7 +69,7 @@ class Proxy():
 
     def _view_factory(self, content):
         # TODO: Is there a less weird way to do this?
-        class PleaseWaitView(django.views.View):
+        class PleaseWaitView(View):
             def get(self, request, *args, **kwargs):
                 response = HttpResponse(content)
                 response.status_code = 503
