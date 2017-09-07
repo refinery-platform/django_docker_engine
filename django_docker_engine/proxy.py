@@ -73,6 +73,9 @@ class Proxy():
             def get(self, request, *args, **kwargs):
                 response = HttpResponse(content)
                 response.status_code = 503
+                response.reason_phrase = 'Container not yet available'
+                # Non-standard, but more clear than default;
+                # Also, before 1.9, this is not set just by changing status code.
                 return response
             http_method_named = ['get']
         return PleaseWaitView

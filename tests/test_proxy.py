@@ -1,4 +1,5 @@
 import unittest
+import django
 from django_docker_engine.proxy import NullLogger, Proxy
 from django.test import RequestFactory
 
@@ -21,5 +22,5 @@ class ProxyTests(unittest.TestCase):
         )
 
         self.assertEqual(response.status_code, 503)
-        self.assertEqual(response.reason_phrase, 'Service Unavailable')
+        self.assertEqual(response.reason_phrase, 'Container not yet available')
         self.assertEqual(response.content, content)
