@@ -1,8 +1,13 @@
 import json
+import logging
 import os
 from datetime import datetime
 from time import time
 from container_managers import docker_engine
+
+
+logging.basicConfig()
+logger = logging.getLogger(__name__)
 
 
 class DockerContainerSpec():
@@ -115,7 +120,9 @@ class DockerClientWrapper():
         """
         Removes containers which do not have recent log entries.
         """
+        logger.warn('purge_inactive')
         for container in self.list():
+            logger.warn('container: %s', container)
             # TODO: Confirm that it belongs to me
             if not self._is_active(container, seconds):
                 container.remove(force=True)
@@ -127,9 +134,12 @@ class DockerClientWrapper():
         utc_now = datetime.utcnow()
         seconds_since_start = (utc_now - utc_start).total_seconds()
         if seconds_since_start < seconds:
+            logger.warn('seconds_since_start < seconds')
             return True
         else:
             recent_log = container.logs(since=int(time() - seconds))
+            # Logs are empty locally, but must contain something on travis?
+            logger.warn('logs: [%s]', recent_log)
             # Doesn't work with non-integer values:
             # https://github.com/docker/docker-py/issues/1515
             return recent_log != ''

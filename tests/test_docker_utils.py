@@ -17,6 +17,7 @@ from django_docker_engine.docker_utils import DockerClientWrapper, DockerContain
 logging.basicConfig()
 logger = logging.getLogger(__name__)
 
+
 class LiveDockerTests(unittest.TestCase):
 
     def setUp(self):
@@ -94,7 +95,7 @@ class LiveDockerTests(unittest.TestCase):
             filters={'label': self.test_label}
         ))
 
-    def assert_url_content_eventually(self, url, content, client=django.test.Client()):
+    def assert_url_loads_eventually(self, url, content, client=django.test.Client()):
         for i in xrange(10):
             try:
                 response = client.get(url)
@@ -120,7 +121,7 @@ class LiveDockerTests(unittest.TestCase):
             container_name=self.timestamp(),
             labels={self.test_label: 'true'}
         ))
-        self.assert_url_content_eventually(url, 'Welcome to nginx!')
+        self.assert_url_loads_eventually(url, 'Welcome to nginx!')
 
     def test_container_spec_with_input(self):
         url = self.client_wrapper.run(DockerContainerSpec(
@@ -130,7 +131,7 @@ class LiveDockerTests(unittest.TestCase):
             input={'foo': 'bar'},
             container_input_path='/usr/share/nginx/html/index.html'
         ))
-        self.assert_url_content_eventually(url, '{"foo": "bar"}')
+        self.assert_url_loads_eventually(url, '{"foo": "bar"}')
 
     def test_container_spec_with_extra_directories_bad(self):
         container_name = self.timestamp()
@@ -179,19 +180,19 @@ class LiveDockerTests(unittest.TestCase):
             labels={self.test_label: 'true'}
         ))
         self.assertEqual(1, self.count_my_containers())
-        self.assert_url_content_eventually(url, 'Welcome to nginx!')
+        self.assert_url_loads_eventually(url, 'Welcome to nginx!')
 
         # TODO: This consistently fails for me locally,
         # but seems to pass on travis?
-        # Logs are empty locally, but must contain something on travis?
-        logger.warn('logs: [%s]', self.client_wrapper.list()[0].logs())
+        logger.warn('count before purge (1?): %s', self.count_my_containers())
         self.client_wrapper.purge_inactive(5)
+        logger.warn('count after purge (1?): %s', self.count_my_containers())
         self.assertEqual(1, self.count_my_containers())
         # Even without activity, it should not be purged if younger than the limit.
 
         sleep(2)
 
-        self.assert_url_content_eventually(url, 'Welcome to nginx!')
+        self.assert_url_loads_eventually(url, 'Welcome to nginx!')
 
         # Be careful of race conditions if developing locally:
         # I had to give a bit more time for the same test to pass with remote Docker.
