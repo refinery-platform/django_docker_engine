@@ -1,9 +1,9 @@
 from __future__ import print_function
 
 import logging
+import django
 from django.conf.urls import url
 from django.http import HttpResponse
-from django.views import View
 from docker.errors import NotFound
 from httpproxy.views import HttpProxy
 from docker_utils import DockerClientWrapper
@@ -66,7 +66,7 @@ class Proxy():
 
     def _view_factory(self, content):
         # TODO: Is there a less weird way to do this?
-        class PleaseWaitView(View):
+        class PleaseWaitView(django.views.View):
             def get(self, request, *args, **kwargs):
                 response = HttpResponse(content)
                 response.status_code = 503
