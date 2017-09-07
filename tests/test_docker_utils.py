@@ -6,6 +6,7 @@ import django
 import logging
 import mock
 import paramiko
+import subprocess
 from urllib2 import URLError
 from requests.exceptions import ConnectionError
 from distutils import dir_util
@@ -21,6 +22,12 @@ logger = logging.getLogger(__name__)
 class LiveDockerTests(unittest.TestCase):
 
     def setUp(self):
+        # Docker Engine's clock stops when the computer goes to sleep,
+        # and restarts where it left off when it wakes up.
+        # https://github.com/docker/for-mac/issues/17
+        # This gets it back in sync with reality.
+        subprocess.call('docker run --rm --privileged alpine hwclock -s'.split(' '))
+
         # mkdtemp is the obvious way to do this, but
         # the resulting directory is not visible to Docker.
         base = '/tmp/django-docker-tests'
@@ -182,11 +189,7 @@ class LiveDockerTests(unittest.TestCase):
         self.assertEqual(1, self.count_my_containers())
         self.assert_url_loads_eventually(url, 'Welcome to nginx!')
 
-        # TODO: This consistently fails for me locally,
-        # but seems to pass on travis?
-        logger.warn('count before purge (1?): %s', self.count_my_containers())
         self.client_wrapper.purge_inactive(5)
-        logger.warn('count after purge (1?): %s', self.count_my_containers())
         self.assertEqual(1, self.count_my_containers())
         # Even without activity, it should not be purged if younger than the limit.
 
