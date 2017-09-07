@@ -1,5 +1,4 @@
 import unittest
-import django
 from django_docker_engine.proxy import NullLogger, Proxy
 from django.test import RequestFactory
 

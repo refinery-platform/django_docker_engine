@@ -79,4 +79,3 @@ class Proxy():
                 return response
             http_method_named = ['get']
         return PleaseWaitView
-
