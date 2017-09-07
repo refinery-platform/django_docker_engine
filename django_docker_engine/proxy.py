@@ -53,9 +53,8 @@ class Proxy():
     def _proxy_view(self, request, container_name, url):
         self.logger.log(container_name, url)
         try:
-            logger.warn('lookup_container_url: %s', container_name)
             container_url = DockerClientWrapper().lookup_container_url(container_name)
         except:
-            logger.warn('Failed to find container url')
+            logger.warn('TODO: Failed to find container url')
         view = HttpProxy.as_view(base_url=container_url)
         return view(request, url=url)
