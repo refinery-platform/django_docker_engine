@@ -5,7 +5,7 @@ from django.test import RequestFactory
 
 class ProxyTests(unittest.TestCase):
 
-    def test_proxy(self):
+    def test_proxy_please_wait(self):
         content = 'please-wait-test-message'
         proxy = Proxy(
             logger=NullLogger(),
@@ -20,5 +20,6 @@ class ProxyTests(unittest.TestCase):
             url='fake-url'
         )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 503)
+        self.assertEqual(response.reason_phrase, 'Service Unavailable')
         self.assertEqual(response.content, content)

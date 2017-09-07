@@ -68,7 +68,9 @@ class Proxy():
         # TODO: Is there a less weird way to do this?
         class PleaseWaitView(View):
             def get(self, request, *args, **kwargs):
-                return HttpResponse(content)
+                response = HttpResponse(content)
+                response.status_code = 503
+                return response
             http_method_named = ['get']
         return PleaseWaitView
 
