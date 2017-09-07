@@ -102,7 +102,12 @@ class LiveDockerTests(unittest.TestCase):
             filters={'label': self.test_label}
         ))
 
-    def assert_url_loads_eventually(self, url, content, client=django.test.Client()):
+    def assert_loads_immediately(self, url, content, client=django.test.Client()):
+        response = client.get(url)
+        # TODO: check status: confirm response.status_code != 200:
+        self.assertIn(content, response.content)
+
+    def assert_loads_eventually(self, url, content, client=django.test.Client()):
         for i in xrange(10):
             try:
                 response = client.get(url)
@@ -128,7 +133,9 @@ class LiveDockerTests(unittest.TestCase):
             container_name=self.timestamp(),
             labels={self.test_label: 'true'}
         ))
-        self.assert_url_loads_eventually(url, 'Welcome to nginx!')
+        logger.warn('url: %s', url)
+        # TODO: self.assert_loads_immediately(url, 'Please wait')
+        self.assert_loads_eventually(url, 'Welcome to nginx!')
 
     def test_container_spec_with_input(self):
         url = self.client_wrapper.run(DockerContainerSpec(
@@ -138,7 +145,7 @@ class LiveDockerTests(unittest.TestCase):
             input={'foo': 'bar'},
             container_input_path='/usr/share/nginx/html/index.html'
         ))
-        self.assert_url_loads_eventually(url, '{"foo": "bar"}')
+        self.assert_loads_eventually(url, '{"foo": "bar"}')
 
     def test_container_spec_with_extra_directories_bad(self):
         container_name = self.timestamp()
@@ -187,7 +194,7 @@ class LiveDockerTests(unittest.TestCase):
             labels={self.test_label: 'true'}
         ))
         self.assertEqual(1, self.count_containers())
-        self.assert_url_loads_eventually(url, 'Welcome to nginx!')
+        self.assert_loads_eventually(url, 'Welcome to nginx!')
 
         self.client_wrapper.purge_inactive(5)
         self.assertEqual(1, self.count_containers())
@@ -195,7 +202,7 @@ class LiveDockerTests(unittest.TestCase):
 
         sleep(2)
 
-        self.assert_url_loads_eventually(url, 'Welcome to nginx!')
+        self.assert_loads_eventually(url, 'Welcome to nginx!')
 
         # Be careful of race conditions if developing locally:
         # I had to give a bit more time for the same test to pass with remote Docker.

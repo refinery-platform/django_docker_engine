@@ -1,10 +1,15 @@
 from __future__ import print_function
 
+import logging
 from django.conf.urls import url
 from httpproxy.views import HttpProxy
 from docker_utils import DockerClientWrapper
 from datetime import datetime
 from collections import namedtuple
+
+
+logging.basicConfig()
+logger = logging.getLogger(__name__)
 
 UrlPatterns = namedtuple('UrlPatterns', ['urlpatterns'])
 
@@ -47,6 +52,10 @@ class Proxy():
 
     def _proxy_view(self, request, container_name, url):
         self.logger.log(container_name, url)
-        container_url = DockerClientWrapper().lookup_container_url(container_name)
+        try:
+            logger.warn('lookup_container_url: %s', container_name)
+            container_url = DockerClientWrapper().lookup_container_url(container_name)
+        except:
+            logger.warn('Failed to find container url')
         view = HttpProxy.as_view(base_url=container_url)
         return view(request, url=url)
