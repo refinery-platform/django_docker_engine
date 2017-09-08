@@ -10,9 +10,8 @@ install:
 - start() { echo travis_fold':'start:$1; echo 'start:' $1; }
 - end() { echo travis_fold':'end:$1; }
 script:
+- set -o errexit
 - |-
-  set -o errexit
-
   for VERSION in '1.7.1' '1.10.6'; do
     start docker-$WHERE_IS_DOCKER-django-$VERSION
     pip install django==$VERSION
@@ -20,11 +19,17 @@ script:
     python manage.py test tests --verbosity=2
     end docker-$WHERE_IS_DOCKER-django-$VERSION
   done
-
+- |-
   start format
   flake8
   end format
-
+- |-
   start egg
   python setup.py bdist_egg
   end egg
+- |-
+  start version
+  if [ ! -z "$TRAVIS_TAG" ]; then
+    [ "$TRAVIS_TAG" == `python setup.py --version` ]
+  fi
+  end version
