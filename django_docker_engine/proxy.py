@@ -1,10 +1,21 @@
 from __future__ import print_function
 
+import logging
 from django.conf.urls import url
+from django.http import HttpResponse
+from docker.errors import NotFound
 from httpproxy.views import HttpProxy
 from docker_utils import DockerClientWrapper
 from datetime import datetime
 from collections import namedtuple
+
+try:
+    from django.views import View
+except ImportError:  # Support older versions of django
+    from django.views.generic import View
+
+logging.basicConfig()
+logger = logging.getLogger(__name__)
 
 UrlPatterns = namedtuple('UrlPatterns', ['urlpatterns'])
 
@@ -36,8 +47,9 @@ class FileLogger():
 
 
 class Proxy():
-    def __init__(self, logger=NullLogger()):
+    def __init__(self, logger=NullLogger(), please_wait_content='Please wait.'):
         self.logger = logger
+        self.content = please_wait_content
 
     def url_patterns(self):
         return [url(
@@ -47,6 +59,23 @@ class Proxy():
 
     def _proxy_view(self, request, container_name, url):
         self.logger.log(container_name, url)
-        container_url = DockerClientWrapper().lookup_container_url(container_name)
-        view = HttpProxy.as_view(base_url=container_url)
-        return view(request, url=url)
+        try:
+            container_url = DockerClientWrapper().lookup_container_url(container_name)
+            view = HttpProxy.as_view(base_url=container_url)
+            return view(request, url=url)
+        except NotFound:
+            view = self._view_factory(self.content).as_view()
+            return view(request)
+
+    def _view_factory(self, content):
+        # TODO: Is there a less weird way to do this?
+        class PleaseWaitView(View):
+            def get(self, request, *args, **kwargs):
+                response = HttpResponse(content)
+                response.status_code = 503
+                response.reason_phrase = 'Container not yet available'
+                # Non-standard, but more clear than default;
+                # Also, before 1.9, this is not set just by changing status code.
+                return response
+            http_method_named = ['get']
+        return PleaseWaitView

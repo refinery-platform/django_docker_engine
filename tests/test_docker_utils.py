@@ -3,8 +3,10 @@ import os
 import datetime
 import re
 import django
+import logging
 import mock
 import paramiko
+import subprocess
 from urllib2 import URLError
 from requests.exceptions import ConnectionError
 from distutils import dir_util
@@ -13,9 +15,19 @@ from time import sleep
 from django_docker_engine.docker_utils import DockerClientWrapper, DockerContainerSpec
 
 
+logging.basicConfig()
+logger = logging.getLogger(__name__)
+
+
 class LiveDockerTests(unittest.TestCase):
 
     def setUp(self):
+        # Docker Engine's clock stops when the computer goes to sleep,
+        # and restarts where it left off when it wakes up.
+        # https://github.com/docker/for-mac/issues/17
+        # This gets it back in sync with reality.
+        subprocess.call('docker run --rm --privileged alpine hwclock -s'.split(' '))
+
         # mkdtemp is the obvious way to do this, but
         # the resulting directory is not visible to Docker.
         base = '/tmp/django-docker-tests'
@@ -27,7 +39,7 @@ class LiveDockerTests(unittest.TestCase):
         self.test_label = self.client_wrapper.root_label + '.test'
         self.initial_containers = self.client_wrapper.list()
         # There may be containers running which are not "my containers".
-        self.assertEqual(0, self.count_my_containers())
+        self.assertEqual(0, self.count_containers())
 
     def tearDown(self):
         self.rmdir_on_host(self.tmp)
@@ -85,12 +97,17 @@ class LiveDockerTests(unittest.TestCase):
     def timestamp(self):
         return re.sub(r'\W', '_', str(datetime.datetime.now()))
 
-    def count_my_containers(self):
+    def count_containers(self):
         return len(self.client_wrapper.list(
             filters={'label': self.test_label}
         ))
 
-    def assert_url_content(self, url, content, client=django.test.Client()):
+    def assert_loads_immediately(self, url, content, client=django.test.Client()):
+        response = client.get(url)
+        # TODO: check status: confirm response.status_code != 200:
+        self.assertIn(content, response.content)
+
+    def assert_loads_eventually(self, url, content, client=django.test.Client()):
         for i in xrange(10):
             try:
                 response = client.get(url)
@@ -116,7 +133,9 @@ class LiveDockerTests(unittest.TestCase):
             container_name=self.timestamp(),
             labels={self.test_label: 'true'}
         ))
-        self.assert_url_content(url, 'Welcome to nginx!')
+        logger.warn('url: %s', url)
+        # TODO: self.assert_loads_immediately(url, 'Please wait')
+        self.assert_loads_eventually(url, 'Welcome to nginx!')
 
     def test_container_spec_with_input(self):
         url = self.client_wrapper.run(DockerContainerSpec(
@@ -126,7 +145,7 @@ class LiveDockerTests(unittest.TestCase):
             input={'foo': 'bar'},
             container_input_path='/usr/share/nginx/html/index.html'
         ))
-        self.assert_url_content(url, '{"foo": "bar"}')
+        self.assert_loads_eventually(url, '{"foo": "bar"}')
 
     def test_container_spec_with_extra_directories_bad(self):
         container_name = self.timestamp()
@@ -167,35 +186,36 @@ class LiveDockerTests(unittest.TestCase):
         WARNING: I think this is prone to race conditions.
         If you get an error, try just giving it more time.
         """
-        self.assertEqual(0, self.count_my_containers())
+        self.assertEqual(0, self.count_containers())
 
         url = self.client_wrapper.run(DockerContainerSpec(
             image_name='nginx:1.10.3-alpine',
             container_name=self.timestamp(),
             labels={self.test_label: 'true'}
         ))
-        self.assertEqual(1, self.count_my_containers())
+        self.assertEqual(1, self.count_containers())
+        self.assert_loads_eventually(url, 'Welcome to nginx!')
 
         self.client_wrapper.purge_inactive(5)
-        self.assertEqual(1, self.count_my_containers())
+        self.assertEqual(1, self.count_containers())
         # Even without activity, it should not be purged if younger than the limit.
 
         sleep(2)
 
-        self.assert_url_content(url, 'Welcome to nginx!')
+        self.assert_loads_eventually(url, 'Welcome to nginx!')
 
         # Be careful of race conditions if developing locally:
         # I had to give a bit more time for the same test to pass with remote Docker.
         self.client_wrapper.purge_inactive(4)
         sleep(2)
 
-        self.assertEqual(1, self.count_my_containers())
+        self.assertEqual(1, self.count_containers())
         # With a tighter time limit, recent activity should keep it alive.
 
         sleep(2)
 
         self.client_wrapper.purge_inactive(0)
-        self.assertEqual(0, self.count_my_containers())
+        self.assertEqual(0, self.count_containers())
         # But with an even tighter limit, it should be purged.
 
 

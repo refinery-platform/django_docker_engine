@@ -1,8 +1,13 @@
 import json
+import logging
 import os
 from datetime import datetime
 from time import time
 from container_managers import docker_engine
+
+
+logging.basicConfig()
+logger = logging.getLogger(__name__)
 
 
 class DockerContainerSpec():
@@ -130,6 +135,7 @@ class DockerClientWrapper():
             return True
         else:
             recent_log = container.logs(since=int(time() - seconds))
+            # Logs are empty locally, but must contain something on travis?
             # Doesn't work with non-integer values:
             # https://github.com/docker/docker-py/issues/1515
             return recent_log != ''
