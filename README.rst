@@ -84,7 +84,7 @@ either implicitly as an envvar, or explicitly via an instance of the SDK client.
 If this will be done automatically, you can ensure that the user has the appropriate privs by running
 ``set_user_policy.py``.
 
-`Notes on working with AWS <README-AWS.rst>` are available.
+`Notes on working with AWS <README-AWS.rst>`_ are available.
 
 .....
 AWS-ECS
