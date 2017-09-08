@@ -4,6 +4,7 @@ import logging
 from django.conf.urls import url
 from django.http import HttpResponse
 from docker.errors import NotFound
+from httplib import BadStatusLine
 from httpproxy.views import HttpProxy
 from docker_utils import DockerClientWrapper
 from datetime import datetime
@@ -63,12 +64,14 @@ class Proxy():
             container_url = DockerClientWrapper().lookup_container_url(container_name)
             view = HttpProxy.as_view(base_url=container_url)
             return view(request, url=url)
-        except NotFound:
-            view = self._view_factory(self.content).as_view()
+        except (NotFound, BadStatusLine) as e:
+            logger.info(
+                'Normal transient error. '
+                'Container: %s, Exception: %s', container_name, e)
+            view = self._please_wait_view_factory(self.content).as_view()
             return view(request)
 
-    def _view_factory(self, content):
-        # TODO: Is there a less weird way to do this?
+    def _please_wait_view_factory(self, content):
         class PleaseWaitView(View):
             def get(self, request, *args, **kwargs):
                 response = HttpResponse(content)
