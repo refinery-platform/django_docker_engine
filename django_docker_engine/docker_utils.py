@@ -108,24 +108,32 @@ class DockerClientWrapper():
     def pull(self, image_name, version="latest"):
         self._containers_manager.pull(image_name, version=version)
 
+    # TODO: Just make this the public method?
+    def _purge(self, label=None, seconds=None):
+        for container in self.list({'label': label} if label else {}):
+            # TODO: Confirm that the container belongs to me
+            if seconds and self._is_active(container, seconds):
+                continue
+            for mount in container.attrs['Mounts']:
+                rmtree(
+                    # Files for container probably share the same parent directory,
+                    # so this may be redundant.
+                    os.path.dirname(mount['Source']),
+                    ignore_errors=True
+                )
+            container.remove(force=True)
+
     def purge_by_label(self, label):
         """
         Removes all containers matching the label.
         """
-        for container in self.list({'label': label}):
-            # TODO: Confirm that it belongs to me
-            container.remove(force=True)
+        self._purge(label=label)
 
     def purge_inactive(self, seconds):
         """
         Removes containers which do not have recent log entries.
         """
-        for container in self.list():
-            # TODO: Confirm that it belongs to me
-            if not self._is_active(container, seconds):
-                for mount in container.attrs['Mounts']:
-                    rmtree(mount['Source'], ignore_errors=True)
-                container.remove(force=True)
+        self._purge(seconds=seconds)
 
     def _is_active(self, container, seconds):
         utc_start_string = container.attrs['State']['StartedAt']

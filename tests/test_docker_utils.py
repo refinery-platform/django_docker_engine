@@ -181,12 +181,16 @@ class LiveDockerTests(unittest.TestCase):
             )
         )
 
+    def tmp_len(self):
+        return len(os.listdir('/tmp/django-docker'))
+
     def test_purge(self):
         """
         WARNING: I think this is prone to race conditions.
         If you get an error, try just giving it more time.
         """
         self.assertEqual(0, self.count_containers())
+        tmp_len_orig = self.tmp_len()
 
         url = self.client_wrapper.run(DockerContainerSpec(
             image_name='nginx:1.10.3-alpine',
@@ -195,6 +199,7 @@ class LiveDockerTests(unittest.TestCase):
         ))
         self.assertEqual(1, self.count_containers())
         self.assert_loads_eventually(url, 'Welcome to nginx!')
+        self.assertGreater(self.tmp_len(), tmp_len_orig)
 
         self.client_wrapper.purge_inactive(5)
         self.assertEqual(1, self.count_containers())
@@ -216,6 +221,7 @@ class LiveDockerTests(unittest.TestCase):
 
         self.client_wrapper.purge_inactive(0)
         self.assertEqual(0, self.count_containers())
+        self.assertEqual(self.tmp_len(), tmp_len_orig)
         # But with an even tighter limit, it should be purged.
 
 
