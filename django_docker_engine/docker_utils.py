@@ -4,7 +4,7 @@ import os
 from datetime import datetime
 from time import time
 from container_managers import docker_engine
-
+from shutil import rmtree
 
 logging.basicConfig()
 logger = logging.getLogger(__name__)
@@ -123,6 +123,8 @@ class DockerClientWrapper():
         for container in self.list():
             # TODO: Confirm that it belongs to me
             if not self._is_active(container, seconds):
+                for mount in container.attrs['Mounts']:
+                    rmtree(mount['Source'], ignore_errors=True)
                 container.remove(force=True)
 
     def _is_active(self, container, seconds):
