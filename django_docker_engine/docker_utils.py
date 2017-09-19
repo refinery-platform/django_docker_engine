@@ -110,18 +110,23 @@ class DockerClientWrapper():
 
     # TODO: Just make this the public method?
     def _purge(self, label=None, seconds=None):
+        logger.warn('_purge')
         for container in self.list({'label': label} if label else {}):
+            logger.warn('looking at container %s', container)
             # TODO: Confirm that the container belongs to me
             if seconds and self._is_active(container, seconds):
+                logger.warn('skip')
                 continue
-            for mount in container.attrs['Mounts']:
+            mounts = container.attrs['Mounts']
+            container.remove(force=True)
+            for mount in mounts:
+                source = mount['Source']
+                logger.warn('rmtree %s', source)
+                target = source if os.path.isdir(source) else os.path.dirname(source)
                 rmtree(
-                    # Files for container probably share the same parent directory,
-                    # so this may be redundant.
-                    os.path.dirname(mount['Source']),
+                    target,
                     ignore_errors=True
                 )
-            container.remove(force=True)
 
     def purge_by_label(self, label):
         """

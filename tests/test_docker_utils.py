@@ -38,14 +38,17 @@ class LiveDockerTests(unittest.TestCase):
         self.client_wrapper = DockerClientWrapper()
         self.test_label = self.client_wrapper.root_label + '.test'
         self.initial_containers = self.client_wrapper.list()
+        self.initial_tmp = self.ls_tmp()
+
         # There may be containers running which are not "my containers".
         self.assertEqual(0, self.count_containers())
 
     def tearDown(self):
         self.rmdir_on_host(self.tmp)
         self.client_wrapper.purge_by_label(self.test_label)
-        final_containers = self.client_wrapper.list()
-        self.assertEqual(self.initial_containers, final_containers)
+
+        self.assertEqual(self.initial_containers, self.client_wrapper.list())
+        self.assertEqual(self.initial_tmp, self.ls_tmp())
 
     # Utils for accessing remote docker engine:
 
@@ -181,8 +184,8 @@ class LiveDockerTests(unittest.TestCase):
             )
         )
 
-    def tmp_len(self):
-        return len(os.listdir('/tmp/django-docker'))
+    def ls_tmp(self):
+        return sorted(os.listdir('/tmp/django-docker'))
 
     def test_purge(self):
         """
@@ -190,7 +193,7 @@ class LiveDockerTests(unittest.TestCase):
         If you get an error, try just giving it more time.
         """
         self.assertEqual(0, self.count_containers())
-        tmp_len_orig = self.tmp_len()
+        ls_tmp_orig = self.ls_tmp()
 
         url = self.client_wrapper.run(DockerContainerSpec(
             image_name='nginx:1.10.3-alpine',
@@ -199,7 +202,7 @@ class LiveDockerTests(unittest.TestCase):
         ))
         self.assertEqual(1, self.count_containers())
         self.assert_loads_eventually(url, 'Welcome to nginx!')
-        self.assertGreater(self.tmp_len(), tmp_len_orig)
+        self.assertGreater(self.ls_tmp(), ls_tmp_orig)
 
         self.client_wrapper.purge_inactive(5)
         self.assertEqual(1, self.count_containers())
@@ -221,7 +224,6 @@ class LiveDockerTests(unittest.TestCase):
 
         self.client_wrapper.purge_inactive(0)
         self.assertEqual(0, self.count_containers())
-        self.assertEqual(self.tmp_len(), tmp_len_orig)
         # But with an even tighter limit, it should be purged.
 
 
