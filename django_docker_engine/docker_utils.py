@@ -28,7 +28,7 @@ class DockerContainerSpec():
 class DockerClientWrapper():
 
     def __init__(self,
-                 manager=docker_engine.DockerEngineManager(),
+                 manager=docker_engine.DockerEngineManager(), # TODO: set data_dir
                  root_label='io.github.refinery-project.django_docker_engine'):
         self._containers_manager = manager
         self.root_label = root_label
@@ -150,3 +150,6 @@ class DockerClientWrapper():
             # Doesn't work with non-integer values:
             # https://github.com/docker/docker-py/issues/1515
             return recent_log != ''
+
+    def _get_data_dir(self):
+        return self._containers_manager._data_dir

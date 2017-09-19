@@ -100,7 +100,7 @@ class LiveDockerTests(unittest.TestCase):
 
     def ls_tmp(self):
         try:
-            return sorted(os.listdir('/tmp/django-docker'))
+            return sorted(os.listdir(self.client_wrapper._get_data_dir()))
         except OSError:
             return []
 
