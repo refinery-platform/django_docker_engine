@@ -30,11 +30,6 @@ class LiveDockerTests(unittest.TestCase):
 
         # mkdtemp is the obvious way to do this, but
         # the resulting directory is not visible to Docker.
-        base = '/tmp/django-docker-tests'
-        self.tmp = os.path.join(
-            base,
-            re.sub(r'\W', '_', str(datetime.datetime.now())))
-        self.mkdir_on_host(self.tmp)
         self.client_wrapper = DockerClientWrapper()
         self.test_label = self.client_wrapper.root_label + '.test'
         self.initial_containers = self.client_wrapper.list()
@@ -65,12 +60,6 @@ class LiveDockerTests(unittest.TestCase):
     # These *_on_host methods are in a sense duplicates of the helper methods
     # in docker_utils.py, but I think here it makes sense to have explicit
     # if-thens, rather than hiding it with polymorphism.
-
-    def rmdir_on_host(self, path):
-        if self.docker_host():
-            self.remote_exec('rm -rf {}'.format(path))
-        else:
-            rmtree(self.tmp)
 
     def mkdir_on_host(self, path):
         if self.docker_host():
@@ -146,7 +135,6 @@ class LiveDockerTestsDirty(LiveDockerTests):
 class LiveDockerTestsClean(LiveDockerTests):
 
     def tearDown(self):
-        self.rmdir_on_host(self.tmp)
         self.client_wrapper.purge_by_label(self.test_label)
 
         self.assertEqual(self.initial_containers, self.client_wrapper.list())
