@@ -43,23 +43,16 @@ class LiveDockerTests(unittest.TestCase):
         # There may be containers running which are not "my containers".
         self.assertEqual(0, self.count_containers())
 
-    def tearDown(self):
-        self.rmdir_on_host(self.tmp)
-        self.client_wrapper.purge_by_label(self.test_label)
-
-        self.assertEqual(self.initial_containers, self.client_wrapper.list())
-        self.assertEqual(self.initial_tmp, self.ls_tmp())
-
-    # Utils for accessing remote docker engine:
-
     def docker_host(self):
         return os.environ.get('DOCKER_HOST')
+
 
     def docker_host_ip(self):
         return re.search(
             r'^tcp://(\d+\.\d+\.\d+\.\d+):\d+$',
             self.docker_host()
         ).group(1)
+
 
     def remote_exec(self, command):
         host_ip = self.docker_host_ip()
@@ -69,7 +62,9 @@ class LiveDockerTests(unittest.TestCase):
         client.connect(hostname=host_ip, username='ec2-user', pkey=key)
         client.exec_command(command)
 
+
     PEM = 'django_docker_cloudformation.pem'
+
 
     # These *_on_host methods are in a sense duplicates of the helper methods
     # in docker_utils.py, but I think here it makes sense to have explicit
@@ -81,11 +76,13 @@ class LiveDockerTests(unittest.TestCase):
         else:
             rmtree(self.tmp)
 
+
     def mkdir_on_host(self, path):
         if self.docker_host():
             self.remote_exec('mkdir -p {}'.format(path))
         else:
             dir_util.mkpath(path)
+
 
     def write_to_host(self, content, path):
         if self.docker_host():
@@ -95,20 +92,24 @@ class LiveDockerTests(unittest.TestCase):
                 file.write(content)
                 file.write('\n')  # For consistency with heredoc
 
+
     # Other supporting methods for tests:
 
     def timestamp(self):
         return re.sub(r'\W', '_', str(datetime.datetime.now()))
+
 
     def count_containers(self):
         return len(self.client_wrapper.list(
             filters={'label': self.test_label}
         ))
 
+
     def assert_loads_immediately(self, url, content, client=django.test.Client()):
         response = client.get(url)
         # TODO: check status: confirm response.status_code != 200:
         self.assertIn(content, response.content)
+
 
     def assert_loads_eventually(self, url, content, client=django.test.Client()):
         for i in xrange(10):
@@ -121,6 +122,49 @@ class LiveDockerTests(unittest.TestCase):
                 pass
             sleep(1)
         self.fail('Never got 200')
+
+    def ls_tmp(self):
+        try:
+            return sorted(os.listdir('/tmp/django-docker'))
+        except OSError:
+            return []
+
+
+class LiveDockerTestsDirty(LiveDockerTests):
+
+    def test_container_spec_with_extra_directories_bad(self):
+        # This test leaves temp files around so we can't make
+        # the same tearDown assertions that we do for other tests.
+        container_name = self.timestamp()
+        test_dirs = ["/test", "coffee"]
+        with self.assertRaises(AssertionError) as context:
+            self.client_wrapper.run(
+                DockerContainerSpec(
+                    image_name='nginx:1.10.3-alpine',
+                    container_name=container_name,
+                    input={'foo': 'bar'},
+                    container_input_path='/usr/share/nginx/html/index.html',
+                    extra_directories=test_dirs,
+                    labels={self.test_label: 'true'}
+                )
+            )
+        self.assertEqual(
+            context.exception.message,
+            "Specified path: `coffee` is not absolute"
+        )
+
+
+class LiveDockerTestsClean(LiveDockerTests):
+
+    def tearDown(self):
+        self.rmdir_on_host(self.tmp)
+        self.client_wrapper.purge_by_label(self.test_label)
+
+        self.assertEqual(self.initial_containers, self.client_wrapper.list())
+        self.assertEqual(self.initial_tmp, self.ls_tmp())
+
+    # Utils for accessing remote docker engine:
+
 
     # Tests at the top are low level;
     # Tests at the bottom are at higher levels of abstraction.
@@ -150,25 +194,6 @@ class LiveDockerTests(unittest.TestCase):
         ))
         self.assert_loads_eventually(url, '{"foo": "bar"}')
 
-    def test_container_spec_with_extra_directories_bad(self):
-        container_name = self.timestamp()
-        test_dirs = ["/test", "coffee"]
-        with self.assertRaises(AssertionError) as context:
-            self.client_wrapper.run(
-                DockerContainerSpec(
-                    image_name='nginx:1.10.3-alpine',
-                    container_name=container_name,
-                    input={'foo': 'bar'},
-                    container_input_path='/usr/share/nginx/html/index.html',
-                    extra_directories=test_dirs,
-                    labels={self.test_label: 'true'}
-                )
-            )
-        self.assertEqual(
-            context.exception.message,
-            "Specified path: `coffee` is not absolute"
-        )
-
     def test_container_spec_with_extra_directories_good(self):
         container_name = self.timestamp()
 
@@ -183,9 +208,6 @@ class LiveDockerTests(unittest.TestCase):
                 labels={self.test_label: 'true'}
             )
         )
-
-    def ls_tmp(self):
-        return sorted(os.listdir('/tmp/django-docker'))
 
     def test_purge(self):
         """
