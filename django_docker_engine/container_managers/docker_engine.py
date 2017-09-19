@@ -12,9 +12,9 @@ class DockerEngineManager(BaseManager):
 
     def __init__(
             self,
+            data_dir,
             client=docker.from_env(),
-            pem='django_docker_cloudformation.pem',
-            data_dir='/tmp/django-docker'
+            pem='django_docker_cloudformation.pem'
     ):
         self._base_url = client.api.base_url
         self._containers_client = client.containers

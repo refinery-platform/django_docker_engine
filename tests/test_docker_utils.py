@@ -4,7 +4,6 @@ import datetime
 import re
 import django
 import logging
-import mock
 import paramiko
 import subprocess
 from urllib2 import URLError
@@ -27,7 +26,7 @@ class LiveDockerTests(unittest.TestCase):
         # This gets it back in sync with reality.
         subprocess.call('docker run --rm --privileged alpine hwclock -s'.split(' '))
 
-        self.client_wrapper = DockerClientWrapper()
+        self.client_wrapper = DockerClientWrapper('/tmp/django-docker-engine-test')
         self.test_label = self.client_wrapper.root_label + '.test'
         self.initial_containers = self.client_wrapper.list()
         self.initial_tmp = self.ls_tmp()
