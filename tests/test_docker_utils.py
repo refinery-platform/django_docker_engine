@@ -180,7 +180,6 @@ class LiveDockerTestsClean(LiveDockerTests):
             container_name=self.timestamp(),
             labels={self.test_label: 'true'}
         ))
-        logger.warn('url: %s', url)
         # TODO: self.assert_loads_immediately(url, 'Please wait')
         self.assert_loads_eventually(url, 'Welcome to nginx!')
 
