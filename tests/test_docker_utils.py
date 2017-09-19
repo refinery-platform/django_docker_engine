@@ -10,7 +10,6 @@ import subprocess
 from urllib2 import URLError
 from requests.exceptions import ConnectionError
 from distutils import dir_util
-from shutil import rmtree
 from time import sleep
 from django_docker_engine.docker_utils import DockerClientWrapper, DockerContainerSpec
 
@@ -28,8 +27,6 @@ class LiveDockerTests(unittest.TestCase):
         # This gets it back in sync with reality.
         subprocess.call('docker run --rm --privileged alpine hwclock -s'.split(' '))
 
-        # mkdtemp is the obvious way to do this, but
-        # the resulting directory is not visible to Docker.
         self.client_wrapper = DockerClientWrapper()
         self.test_label = self.client_wrapper.root_label + '.test'
         self.initial_containers = self.client_wrapper.list()
