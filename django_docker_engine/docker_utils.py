@@ -28,9 +28,13 @@ class DockerContainerSpec():
 class DockerClientWrapper():
 
     def __init__(self,
-                 manager=docker_engine.DockerEngineManager(), # TODO: set data_dir
+                 data_dir='/tmp/django-docker-data',
+                 # TODO: Engine class / constuctor?
+                 #manager=docker_engine.DockerEngineManager(),
                  root_label='io.github.refinery-project.django_docker_engine'):
-        self._containers_manager = manager
+        self._containers_manager = docker_engine.DockerEngineManager(
+            data_dir=data_dir
+        )
         self.root_label = root_label
 
     def _make_directory_on_host(self):

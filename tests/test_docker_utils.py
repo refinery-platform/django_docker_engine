@@ -217,12 +217,3 @@ class LiveDockerTestsClean(LiveDockerTests):
         self.client_wrapper.purge_inactive(0)
         self.assertEqual(0, self.count_containers())
         # But with an even tighter limit, it should be purged.
-
-
-class MockDockerTests(unittest.TestCase):
-    def test_pull(self):
-        with mock.patch.object(
-            DockerClientWrapper()._containers_manager._images_client, "pull"
-        ) as pull_mock:
-            DockerClientWrapper().pull("cool_image")
-            self.assertTrue(pull_mock.called)
