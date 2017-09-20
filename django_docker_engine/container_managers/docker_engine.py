@@ -10,11 +10,17 @@ import subprocess
 
 class DockerEngineManager(BaseManager):
 
-    def __init__(self, client=docker.from_env(), pem='django_docker_cloudformation.pem'):
+    def __init__(
+            self,
+            data_dir,
+            client=docker.from_env(),
+            pem='django_docker_cloudformation.pem'
+    ):
         self._base_url = client.api.base_url
         self._containers_client = client.containers
         self._images_client = client.images
         self.pem = pem
+        self._data_dir = data_dir
 
         remote_host_match = re.match(r'^http://([^:]+):\d+$', self._base_url)
         if remote_host_match:
@@ -47,11 +53,10 @@ class DockerEngineManager(BaseManager):
         return self._containers_client.list(filters=filters)
 
     def mkdtemp(self):
-        base = '/tmp/django-docker'
         timestamp = re.sub(r'\W', '_', str(datetime.now()))
-        dir = os.path.join(base, timestamp)
-        self.host_files.mkdir_p(dir)
-        return dir
+        tmp_dir = os.path.join(self._data_dir, timestamp)
+        self.host_files.mkdir_p(tmp_dir)
+        return tmp_dir
 
 
 class _HostFiles:

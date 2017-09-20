@@ -4,13 +4,11 @@ import datetime
 import re
 import django
 import logging
-import mock
 import paramiko
 import subprocess
 from urllib2 import URLError
 from requests.exceptions import ConnectionError
 from distutils import dir_util
-from shutil import rmtree
 from time import sleep
 from django_docker_engine.docker_utils import DockerClientWrapper, DockerContainerSpec
 
@@ -28,26 +26,13 @@ class LiveDockerTests(unittest.TestCase):
         # This gets it back in sync with reality.
         subprocess.call('docker run --rm --privileged alpine hwclock -s'.split(' '))
 
-        # mkdtemp is the obvious way to do this, but
-        # the resulting directory is not visible to Docker.
-        base = '/tmp/django-docker-tests'
-        self.tmp = os.path.join(
-            base,
-            re.sub(r'\W', '_', str(datetime.datetime.now())))
-        self.mkdir_on_host(self.tmp)
-        self.client_wrapper = DockerClientWrapper()
+        self.client_wrapper = DockerClientWrapper('/tmp/django-docker-engine-test')
         self.test_label = self.client_wrapper.root_label + '.test'
         self.initial_containers = self.client_wrapper.list()
+        self.initial_tmp = self.ls_tmp()
+
         # There may be containers running which are not "my containers".
         self.assertEqual(0, self.count_containers())
-
-    def tearDown(self):
-        self.rmdir_on_host(self.tmp)
-        self.client_wrapper.purge_by_label(self.test_label)
-        final_containers = self.client_wrapper.list()
-        self.assertEqual(self.initial_containers, final_containers)
-
-    # Utils for accessing remote docker engine:
 
     def docker_host(self):
         return os.environ.get('DOCKER_HOST')
@@ -72,12 +57,6 @@ class LiveDockerTests(unittest.TestCase):
     # in docker_utils.py, but I think here it makes sense to have explicit
     # if-thens, rather than hiding it with polymorphism.
 
-    def rmdir_on_host(self, path):
-        if self.docker_host():
-            self.remote_exec('rm -rf {}'.format(path))
-        else:
-            rmtree(self.tmp)
-
     def mkdir_on_host(self, path):
         if self.docker_host():
             self.remote_exec('mkdir -p {}'.format(path))
@@ -93,7 +72,6 @@ class LiveDockerTests(unittest.TestCase):
                 file.write('\n')  # For consistency with heredoc
 
     # Other supporting methods for tests:
-
     def timestamp(self):
         return re.sub(r'\W', '_', str(datetime.datetime.now()))
 
@@ -119,33 +97,16 @@ class LiveDockerTests(unittest.TestCase):
             sleep(1)
         self.fail('Never got 200')
 
-    # Tests at the top are low level;
-    # Tests at the bottom are at higher levels of abstraction.
+    def ls_tmp(self):
+        try:
+            return sorted(os.listdir(self.client_wrapper._get_data_dir()))
+        except OSError:
+            return []
 
-    def test_at_a_minimum(self):
-        # A no-op, but if the tests stall, it may be
-        # helpful to see if they are even starting.
-        self.assertTrue(True)
 
-    def test_container_spec_no_input(self):
-        url = self.client_wrapper.run(DockerContainerSpec(
-            image_name='nginx:1.10.3-alpine',
-            container_name=self.timestamp(),
-            labels={self.test_label: 'true'}
-        ))
-        logger.warn('url: %s', url)
-        # TODO: self.assert_loads_immediately(url, 'Please wait')
-        self.assert_loads_eventually(url, 'Welcome to nginx!')
-
-    def test_container_spec_with_input(self):
-        url = self.client_wrapper.run(DockerContainerSpec(
-            image_name='nginx:1.10.3-alpine',
-            container_name=self.timestamp(),
-            labels={self.test_label: 'true'},
-            input={'foo': 'bar'},
-            container_input_path='/usr/share/nginx/html/index.html'
-        ))
-        self.assert_loads_eventually(url, '{"foo": "bar"}')
+class LiveDockerTestsDirty(LiveDockerTests):
+    # This test leaves temp files around so we can't make
+    # the same tearDown assertions that we do for other tests.
 
     def test_container_spec_with_extra_directories_bad(self):
         container_name = self.timestamp()
@@ -165,6 +126,42 @@ class LiveDockerTests(unittest.TestCase):
             context.exception.message,
             "Specified path: `coffee` is not absolute"
         )
+
+
+class LiveDockerTestsClean(LiveDockerTests):
+
+    def tearDown(self):
+        self.client_wrapper.purge_by_label(self.test_label)
+
+        self.assertEqual(self.initial_containers, self.client_wrapper.list())
+        self.assertEqual(self.initial_tmp, self.ls_tmp())
+
+    # Tests at the top are low level;
+    # Tests at the bottom are at higher levels of abstraction.
+
+    def test_at_a_minimum(self):
+        # A no-op, but if the tests stall, it may be
+        # helpful to see if they are even starting.
+        self.assertTrue(True)
+
+    def test_container_spec_no_input(self):
+        url = self.client_wrapper.run(DockerContainerSpec(
+            image_name='nginx:1.10.3-alpine',
+            container_name=self.timestamp(),
+            labels={self.test_label: 'true'}
+        ))
+        # TODO: self.assert_loads_immediately(url, 'Please wait')
+        self.assert_loads_eventually(url, 'Welcome to nginx!')
+
+    def test_container_spec_with_input(self):
+        url = self.client_wrapper.run(DockerContainerSpec(
+            image_name='nginx:1.10.3-alpine',
+            container_name=self.timestamp(),
+            labels={self.test_label: 'true'},
+            input={'foo': 'bar'},
+            container_input_path='/usr/share/nginx/html/index.html'
+        ))
+        self.assert_loads_eventually(url, '{"foo": "bar"}')
 
     def test_container_spec_with_extra_directories_good(self):
         container_name = self.timestamp()
@@ -187,6 +184,7 @@ class LiveDockerTests(unittest.TestCase):
         If you get an error, try just giving it more time.
         """
         self.assertEqual(0, self.count_containers())
+        ls_tmp_orig = self.ls_tmp()
 
         url = self.client_wrapper.run(DockerContainerSpec(
             image_name='nginx:1.10.3-alpine',
@@ -195,6 +193,7 @@ class LiveDockerTests(unittest.TestCase):
         ))
         self.assertEqual(1, self.count_containers())
         self.assert_loads_eventually(url, 'Welcome to nginx!')
+        self.assertGreater(self.ls_tmp(), ls_tmp_orig)
 
         self.client_wrapper.purge_inactive(5)
         self.assertEqual(1, self.count_containers())
@@ -217,12 +216,3 @@ class LiveDockerTests(unittest.TestCase):
         self.client_wrapper.purge_inactive(0)
         self.assertEqual(0, self.count_containers())
         # But with an even tighter limit, it should be purged.
-
-
-class MockDockerTests(unittest.TestCase):
-    def test_pull(self):
-        with mock.patch.object(
-            DockerClientWrapper()._containers_manager._images_client, "pull"
-        ) as pull_mock:
-            DockerClientWrapper().pull("cool_image")
-            self.assertTrue(pull_mock.called)

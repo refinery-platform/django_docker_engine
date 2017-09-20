@@ -48,7 +48,8 @@ class FileLogger():
 
 
 class Proxy():
-    def __init__(self, logger=NullLogger(), please_wait_content='Please wait.'):
+    def __init__(self, data_dir, logger=NullLogger(), please_wait_content='Please wait.'):
+        self.data_dir = data_dir
         self.logger = logger
         self.content = please_wait_content
 
@@ -61,7 +62,8 @@ class Proxy():
     def _proxy_view(self, request, container_name, url):
         self.logger.log(container_name, url)
         try:
-            container_url = DockerClientWrapper().lookup_container_url(container_name)
+            client = DockerClientWrapper(self.data_dir)
+            container_url = client.lookup_container_url(container_name)
             view = HttpProxy.as_view(base_url=container_url)
             return view(request, url=url)
         except (NotFound, BadStatusLine) as e:

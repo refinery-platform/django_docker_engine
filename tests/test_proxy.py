@@ -8,6 +8,7 @@ class ProxyTests(unittest.TestCase):
     def test_proxy_please_wait(self):
         content = 'please-wait-test-message'
         proxy = Proxy(
+            '/tmp/django-docker-engine-test',
             logger=NullLogger(),
             please_wait_content=content
         )

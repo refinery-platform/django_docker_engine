@@ -4,7 +4,7 @@ import os
 from datetime import datetime
 from time import time
 from container_managers import docker_engine
-
+from shutil import rmtree
 
 logging.basicConfig()
 logger = logging.getLogger(__name__)
@@ -28,9 +28,10 @@ class DockerContainerSpec():
 class DockerClientWrapper():
 
     def __init__(self,
-                 manager=docker_engine.DockerEngineManager(),
+                 data_dir,
+                 manager_class=docker_engine.DockerEngineManager,
                  root_label='io.github.refinery-project.django_docker_engine'):
-        self._containers_manager = manager
+        self._containers_manager = manager_class(data_dir)
         self.root_label = root_label
 
     def _make_directory_on_host(self):
@@ -108,22 +109,33 @@ class DockerClientWrapper():
     def pull(self, image_name, version="latest"):
         self._containers_manager.pull(image_name, version=version)
 
+    # TODO: Just make this the public method?
+    def _purge(self, label=None, seconds=None):
+        for container in self.list({'label': label} if label else {}):
+            # TODO: Confirm that the container belongs to me
+            if seconds and self._is_active(container, seconds):
+                continue
+            mounts = container.attrs['Mounts']
+            container.remove(force=True)
+            for mount in mounts:
+                source = mount['Source']
+                target = source if os.path.isdir(source) else os.path.dirname(source)
+                rmtree(
+                    target,
+                    ignore_errors=True
+                )
+
     def purge_by_label(self, label):
         """
         Removes all containers matching the label.
         """
-        for container in self.list({'label': label}):
-            # TODO: Confirm that it belongs to me
-            container.remove(force=True)
+        self._purge(label=label)
 
     def purge_inactive(self, seconds):
         """
         Removes containers which do not have recent log entries.
         """
-        for container in self.list():
-            # TODO: Confirm that it belongs to me
-            if not self._is_active(container, seconds):
-                container.remove(force=True)
+        self._purge(seconds=seconds)
 
     def _is_active(self, container, seconds):
         utc_start_string = container.attrs['State']['StartedAt']
@@ -139,3 +151,6 @@ class DockerClientWrapper():
             # Doesn't work with non-integer values:
             # https://github.com/docker/docker-py/issues/1515
             return recent_log != ''
+
+    def _get_data_dir(self):
+        return self._containers_manager._data_dir
