@@ -85,7 +85,7 @@ class Proxy():
 
     def _please_wait_view_factory(self):
         class PleaseWaitView(View):
-            def get(self, request, *args, **kwargs):
+            def get(inner_self, request, *args, **kwargs):
                 response = HttpResponse(self.content)
                 response.status_code = 503
                 response.reason_phrase = 'Container not yet available'
