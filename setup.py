@@ -9,7 +9,7 @@ os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 setup(
     name='django_docker_engine',
-    version='0.0.22',
+    version='0.0.23',
     install_requires=[
         'django',
         'docker==2.1.0',
@@ -20,10 +20,9 @@ setup(
     ],
     packages=find_packages(exclude=['*_demo']),
     include_package_data=True,
-    license='MIT License',  # example license
+    license='MIT License',
     description='Django app that manages the creation of, ' +
                 'and proxies requests to, Docker containers',
-    long_description=README,
     url='https://github.com/refinery-platform/django_docker_engine/',
     author='Chuck McCallum',
     classifiers=[
