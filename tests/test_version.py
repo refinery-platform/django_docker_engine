@@ -1,7 +1,6 @@
 import unittest
 import requests
 import os
-import re
 
 
 class VersionTests(unittest.TestCase):
@@ -14,10 +13,12 @@ class VersionTests(unittest.TestCase):
         for v in pypi_versions:
             self.assertRegexpMatches(v, version_re)
 
-        version_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'VERSION.txt')
+        version_path = os.path.join(
+            os.path.dirname(os.path.dirname(__file__)),
+            'VERSION.txt'
+        )
         local_version = open(version_path).read().strip()
 
         self.assertRegexpMatches(local_version, version_re)
 
         self.assertNotIn(local_version, pypi_versions)
-
