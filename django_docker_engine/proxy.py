@@ -9,6 +9,8 @@ from httpproxy.views import HttpProxy
 from docker_utils import DockerClientWrapper
 from datetime import datetime
 from collections import namedtuple
+import socket
+import errno
 
 try:
     from django.views import View
@@ -70,13 +72,21 @@ class Proxy():
             logger.info(
                 'Normal transient error. '
                 'Container: %s, Exception: %s', container_name, e)
-            view = self._please_wait_view_factory(self.content).as_view()
+            view = self._please_wait_view_factory().as_view()
+            return view(request)
+        except socket.error as e:
+            if e.errno != errno.ECONNRESET:
+                raise
+            logger.info(
+                'Container not yet listening. '
+                'Container: %s, Exception: %s', container_name, e)
+            view = self._please_wait_view_factory().as_view()
             return view(request)
 
-    def _please_wait_view_factory(self, content):
+    def _please_wait_view_factory(self):
         class PleaseWaitView(View):
             def get(self, request, *args, **kwargs):
-                response = HttpResponse(content)
+                response = HttpResponse(self.content)
                 response.status_code = 503
                 response.reason_phrase = 'Container not yet available'
                 # Non-standard, but more clear than default;
