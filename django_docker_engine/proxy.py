@@ -3,6 +3,7 @@ from __future__ import print_function
 import logging
 from django.conf.urls import url
 from django.http import HttpResponse
+from django.template import Context, Template
 from docker.errors import NotFound
 from httplib import BadStatusLine
 from httpproxy.views import HttpProxy
@@ -11,6 +12,7 @@ from datetime import datetime
 from collections import namedtuple
 import socket
 import errno
+import os
 
 try:
     from django.views import View
@@ -50,10 +52,21 @@ class FileLogger():
 
 
 class Proxy():
-    def __init__(self, data_dir, logger=NullLogger(), please_wait_content='Please wait.'):
+    def __init__(self, data_dir, logger=NullLogger(),
+                 please_wait_title='Please wait',
+                 please_wait_body='<h1>Please wait</h1>'):
         self.data_dir = data_dir
         self.logger = logger
-        self.content = please_wait_content
+
+        # Normally, we would use template loaders, but could there be
+        # interactions between the configs necessary here and the parent app?
+        path = os.path.join(os.path.dirname(__file__), 'please-wait.html')
+        template = Template(open(path).read())
+        context = Context({
+            'title': please_wait_title,
+            'body': please_wait_body
+        })
+        self.content = template.render(context)
 
     def url_patterns(self):
         return [url(

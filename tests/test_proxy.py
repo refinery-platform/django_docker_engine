@@ -6,11 +6,13 @@ from django.test import RequestFactory
 class ProxyTests(unittest.TestCase):
 
     def test_proxy_please_wait(self):
-        content = 'please-wait-test-message'
+        title = 'test-title'
+        body = 'test-body'
         proxy = Proxy(
             '/tmp/django-docker-engine-test',
             logger=NullLogger(),
-            please_wait_content=content
+            please_wait_title=title,
+            please_wait_body=body
         )
         urlpatterns = proxy.url_patterns()
         self.assertEquals(len(urlpatterns), 1)
@@ -23,4 +25,7 @@ class ProxyTests(unittest.TestCase):
 
         self.assertEqual(response.status_code, 503)
         self.assertEqual(response.reason_phrase, 'Container not yet available')
-        self.assertEqual(response.content, content)
+
+        self.assertIn('<title>'+title+'</title>', response.content)
+        self.assertIn(body, response.content)
+        self.assertIn('http-equiv="refresh"', response.content)
