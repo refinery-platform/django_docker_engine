@@ -1,9 +1,10 @@
 # django_docker_engine 
 
-.. image:: https://travis-ci.org/refinery-platform/django_docker_engine.svg?branch=master
-    :target: https://travis-ci.org/refinery-platform/django_docker_engine
+[![Build Status](https://travis-ci.org/refinery-platform/django_docker_engine.svg?branch=master)](https://travis-ci.org/refinery-platform/django_docker_engine)
+
+[django_docker_engine on PyPi](https://pypi.python.org/pypi/django-docker-engine)
     
-This is a Django app which manages and proxies requests to Docker containers.
+This Django app manages and proxies requests to Docker containers.
 The primary goal has been to provide a visualization framework for the
 [Refinery Project](https://github.com/refinery-platform/refinery-platform),
 but nothing should prevent its use in other contexts, as well.
@@ -100,7 +101,7 @@ Docker SDK provides so that we can use either interface, as needed.
 ## Usage: Launching Containers
 
 `DockerContainerSpec` exposes a subset of Docker functionality so your application can launch containers as needed.
-This is under active development and for now the best demonstrations of the functionality are in the test suite,
+This is under development and for now the best demonstrations of the functionality are in the test suite,
 but here's a basic example:
 
 ```
