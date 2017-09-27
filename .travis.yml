@@ -27,9 +27,10 @@ script:
   start egg
   python setup.py bdist_egg
   end egg
-- |-
-  start version
-  if [ ! -z "$TRAVIS_TAG" ]; then
-    [ "$TRAVIS_TAG" == `python setup.py --version` ]
-  fi
-  end version
+deploy:
+  # Defaults to only deploy on master;
+  # PyPi blocks the same version from being uploaded twice.
+  provider: pypi
+  user: mccalluc
+  password:
+    secure: Lo7Y4U+ozwrDyqWSTO6wcrbB1XK18y8bEMb5mNcUQaytoXJLxVrjyPEOlRln8DlNjtGWpcZW6gKomfuOqZziQLe+UdMV3h1HRLXnxNhy1YtZ74ZveZPl+sgKAmX5dsNQ6QocJdkcu82a+3xvVq07z/jrnX6He3QvO10LyGyYiTfZt723ZV1o6+cc6hk97tMkIC42N6wD5qCxCc7ijT5NNXnQ414OtCBZYSx0CwoAAym7cN6WdZdDHyKN3HFo+Kz+bBorMFvJ4voOYcarFXX9g6OH1+R2MG1Ub3POWSg3iJojg1RQc2JRd0E/HSCCcD2YaLHGUDwcY4Yfmi/8zXRpAQGAYP6WNZ+tFl/sxpkCwEsEiRTObEHKe4fR+DNt1V7G+/bvJF8g4xJLOEhetditNG6Qi5C/EmDGBhOE43hhR1x6I23FnKH6fnk7LYSP3dYPPLR9MLsthCUGVhSvQtKYU6UDech38JG7EFDIbk4JzuiT2YuoA+X2RVrJyDShDO0nBw2IPuZuj1k92tA61y7TWkXBlZSBv79EdGvuayCkAF/zt5Q1Fpj6t2P/BWE0g+7bu2lJrCp4YHGMLHZlF5muSyLZMkxe2b8fYO5LW2PMMoDbGTIJXdOGkwvVEc+22ivPckdi4psvHGcezlCwT7YIkNcH+xhgHQOWoPr3tO/U/bY=
