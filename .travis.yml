@@ -9,16 +9,20 @@ install:
 - pip install -r requirements-dev.txt
 - start() { echo travis_fold':'start:$1; echo 'start:' $1; }
 - end() { echo travis_fold':'end:$1; }
+env:
+  matrix:
+    - VERSION='1.7.1'
+    - VERSION='1.10.6'
+matrix:
+  fast_finish: true
 script:
 - set -o errexit
 - |-
-  for VERSION in '1.7.1' '1.10.6'; do
-    start docker-$WHERE_IS_DOCKER-django-$VERSION
-    pip install django==$VERSION
-    docker info | grep 'Operating System'  # Are we able to connect to Docker, and what OS is it?
-    python manage.py test tests --verbosity=2
-    end docker-$WHERE_IS_DOCKER-django-$VERSION
-  done
+  start django-$VERSION
+  pip install django==$VERSION
+  docker info | grep 'Operating System'  # Are we able to connect to Docker, and what OS is it?
+  python manage.py test tests --verbosity=2
+  end django-$VERSION
 - |-
   start format
   flake8
