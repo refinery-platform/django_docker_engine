@@ -4,7 +4,7 @@
     <meta http-equiv="refresh" content="10">
 </head>
 <body>
-    {{ body }}
+    {{ body_html|safe }}
     <script>
         // Hi-frequency meta-refreshes are bad, but we can keep the 10 second
         // meta-refresh as a fall-back, in case something goes wrong here:

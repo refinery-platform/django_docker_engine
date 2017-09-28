@@ -58,12 +58,12 @@ class FileLogger():
 class Proxy():
     def __init__(self, data_dir, logger=NullLogger(),
                  please_wait_title='Please wait',
-                 please_wait_body='<h1>Please wait</h1>'):
+                 please_wait_body_html='<h1>Please wait</h1>'):
         self.data_dir = data_dir
         self.logger = logger
         self.content = self._render({
                 'title': please_wait_title,
-                'body': please_wait_body
+                'body_html': please_wait_body_html
         })
 
     def _render(self, context):
