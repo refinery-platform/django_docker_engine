@@ -11,11 +11,17 @@ from datetime import datetime
 from collections import namedtuple
 import socket
 import errno
+import os
 
 try:
     from django.views import View
-except ImportError:  # Support older versions of django
+except ImportError:  # Support Django 1.7
     from django.views.generic import View
+
+try:
+    from django.template.backends.django import DjangoTemplates
+except ImportError:  # Support Django 1.7
+    from django.template import Context, Template
 
 logging.basicConfig()
 logger = logging.getLogger(__name__)
@@ -50,10 +56,33 @@ class FileLogger():
 
 
 class Proxy():
-    def __init__(self, data_dir, logger=NullLogger(), please_wait_content='Please wait.'):
+    def __init__(self, data_dir, logger=NullLogger(),
+                 please_wait_title='Please wait',
+                 please_wait_body='<h1>Please wait</h1>'):
         self.data_dir = data_dir
         self.logger = logger
-        self.content = please_wait_content
+        self.content = self._render({
+                'title': please_wait_title,
+                'body': please_wait_body
+        })
+
+    def _render(self, context):
+        template_path = os.path.join(os.path.dirname(__file__), 'please-wait.html')
+        template_code = open(template_path).read()
+
+        # Normally, we would use template loaders, but could there be
+        # interactions between the configs necessary here and in the parent app?
+        try:  # 1.11
+            engine = DjangoTemplates({
+                'OPTIONS': {}, 'NAME': None, 'DIRS': [], 'APP_DIRS': []
+            })
+            # All the keys are required, but the values don't seem to matter.
+            template = engine.from_string(template_code)
+        except NameError:  # 1.7
+            template = Template(template_code)
+            context = Context(context)
+
+        return template.render(context)
 
     def url_patterns(self):
         return [url(

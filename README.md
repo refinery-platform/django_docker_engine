@@ -132,7 +132,7 @@ pip install -r requirements-dev.txt
 python manage.py test --verbosity=2
 ```
 
-To make a new release, branch, increment the version number in `setup.py`, and make a PR on github.
+To make a new release, branch, increment the version number in `VERSION.txt`, and make a PR on github.
 If it passes tests, merge to `master`, and Travis will push to PyPi.
 (Travis will try pushing to PyPi on every merge to `master`,
 but unless the version is new, the push will fail.)
