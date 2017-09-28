@@ -7,6 +7,7 @@ from docker.errors import NotFound
 from httplib import BadStatusLine
 from httpproxy.views import HttpProxy
 from docker_utils import DockerClientWrapper
+from container_managers.docker_engine import (NoPortsOpen, ExpectedPortMissing)
 from datetime import datetime
 from collections import namedtuple
 import socket
@@ -97,7 +98,7 @@ class Proxy():
             container_url = client.lookup_container_url(container_name)
             view = HttpProxy.as_view(base_url=container_url)
             return view(request, url=url)
-        except (NotFound, BadStatusLine) as e:
+        except (NotFound, BadStatusLine, NoPortsOpen, ExpectedPortMissing) as e:
             logger.info(
                 'Normal transient error. '
                 'Container: %s, Exception: %s', container_name, e)
