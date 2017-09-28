@@ -73,7 +73,9 @@ class Proxy():
         # Normally, we would use template loaders, but could there be
         # interactions between the configs necessary here and in the parent app?
         try:  # 1.11
-            engine = DjangoTemplates({'OPTIONS': {}, 'NAME': None, 'DIRS': [], 'APP_DIRS': []})
+            engine = DjangoTemplates({
+                'OPTIONS': {}, 'NAME': None, 'DIRS': [], 'APP_DIRS': []
+            })
             # All the keys are required, but the values don't seem to matter.
             template = engine.from_string(template_code)
         except NameError:  # 1.7
