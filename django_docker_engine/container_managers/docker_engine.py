@@ -8,6 +8,14 @@ from distutils import dir_util
 import subprocess
 
 
+class NoPortsOpen(Exception):
+    pass
+
+
+class ExpectedPortMissing(Exception):
+    pass
+
+
 class DockerEngineManager(BaseManager):
 
     def __init__(
@@ -36,7 +44,7 @@ class DockerEngineManager(BaseManager):
     def pull(self, image_name, version="latest"):
         return self._images_client.pull("{}:{}".format(image_name, version))
 
-    def get_url(self, container_name):
+    def get_url(self, container_name, container_port=80):
         remote_host_match = re.match(r'^http://([^:]+):\d+$', self._base_url)
         if remote_host_match:
             host = remote_host_match.group(1)
@@ -45,9 +53,27 @@ class DockerEngineManager(BaseManager):
         else:
             raise RuntimeError('Unexpected client base_url: %s', self._base_url)
         container = self._containers_client.get(container_name)
-        port = container. \
-            attrs['NetworkSettings']['Ports']['80/tcp'][0]['HostPort']
-        return 'http://{}:{}'.format(host, port)
+
+        settings = container.attrs['NetworkSettings']
+        port_infos = settings['Ports']
+        if port_infos is None:
+            raise NoPortsOpen(
+                'Container {} has no ports: {}'.format(
+                    container_name, settings
+                )
+            )
+
+        http_port_info = port_infos['{}/tcp'.format(container_port)]
+        if http_port_info is None:
+            raise ExpectedPortMissing(
+                'On container {}, port {} is not available, but these are: {}'.format(
+                    container_name, container_port, port_infos
+                )
+            )
+
+        assert len(http_port_info) == 1
+        port_number = http_port_info[0]['HostPort']
+        return 'http://{}:{}'.format(host, port_number)
 
     def list(self, filters={}):
         return self._containers_client.list(filters=filters)

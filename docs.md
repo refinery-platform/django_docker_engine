@@ -1,5 +1,5 @@
 ## class DockerClientWrapper
-### __init__(self, manager=<django_docker_engine.container_managers.docker_engine.DockerEngineManager object>, root_label='io.github.refinery-project.django_docker_engine')
+### __init__(self, data_dir, manager_class=<class 'django_docker_engine.container_managers.docker_engine.DockerEngineManager'>, root_label='io.github.refinery-project.django_docker_engine')
 ### list(self, filters={})
 ### lookup_container_url(self, container_name)
 Given the name of a container, returns the url mapped to port 80.

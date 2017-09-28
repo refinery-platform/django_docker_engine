@@ -7,6 +7,7 @@ from docker.errors import NotFound
 from httplib import BadStatusLine
 from httpproxy.views import HttpProxy
 from docker_utils import DockerClientWrapper
+from container_managers.docker_engine import (NoPortsOpen, ExpectedPortMissing)
 from datetime import datetime
 from collections import namedtuple
 import socket
@@ -58,12 +59,12 @@ class FileLogger():
 class Proxy():
     def __init__(self, data_dir, logger=NullLogger(),
                  please_wait_title='Please wait',
-                 please_wait_body='<h1>Please wait</h1>'):
+                 please_wait_body_html='<h1>Please wait</h1>'):
         self.data_dir = data_dir
         self.logger = logger
         self.content = self._render({
                 'title': please_wait_title,
-                'body': please_wait_body
+                'body_html': please_wait_body_html
         })
 
     def _render(self, context):
@@ -97,7 +98,7 @@ class Proxy():
             container_url = client.lookup_container_url(container_name)
             view = HttpProxy.as_view(base_url=container_url)
             return view(request, url=url)
-        except (NotFound, BadStatusLine) as e:
+        except (NotFound, BadStatusLine, NoPortsOpen, ExpectedPortMissing) as e:
             logger.info(
                 'Normal transient error. '
                 'Container: %s, Exception: %s', container_name, e)
