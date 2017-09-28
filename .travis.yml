@@ -24,7 +24,8 @@ script:
 - start django-live; ./live-test.sh; end django-live
 - start format;      flake8; end format
 - start egg;         python setup.py bdist_egg; end egg
-- start docs;        diff <(./docs.sh) docs.md; end docs
+# TODO: No output on travis: Is pydoc installed?
+#- start docs;        diff <(./docs.sh) docs.md; end docs
 deploy:
   # Defaults to only deploy on master;
   # PyPi blocks the same version from being uploaded twice.
