@@ -6,7 +6,7 @@ from django.test import RequestFactory
 class ProxyTests(unittest.TestCase):
 
     def test_proxy_please_wait(self):
-        title_text = 'test-title' #
+        title_text = 'test-title'
         body_html = '<p>test-body</p>'
         proxy = Proxy(
             '/tmp/django-docker-engine-test',
