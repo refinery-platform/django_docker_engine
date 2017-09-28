@@ -125,12 +125,24 @@ For more detail, consult the [generated documentation](docs.md).
 
 ## Development
 ```
-git clone https://github.com/mccalluc/django_docker_engine.git
-cd django_docker_engine
-pip install -r requirements.txt
-pip install -r requirements-dev.txt
-python manage.py test --verbosity=2
+$ git clone https://github.com/mccalluc/django_docker_engine.git
+$ cd django_docker_engine
+$ pip install -r requirements.txt
+$ pip install -r requirements-dev.txt
+$ ./manage.py test --verbosity=2
 ```
+
+To run it end-to-end, use the included demo server:
+```
+$ ./manage.py runserver &
+# In your browser, visit: http://127.0.0.1:8000/docker/my-container/
+# You should get a "please wait" page: We're waiting for "my-container" to start.
+$ docker run --name my-container --publish 80 --detach nginx:1.10.3-alpine
+# In a second, you should get the nginx welcom page.
+# If your container did something useful, then you'd be seeing that instead.
+```
+
+### Release Process
 
 To make a new release, branch, increment the version number in `VERSION.txt`, and make a PR on github.
 If it passes tests, merge to `master`, and Travis will push to PyPi.
