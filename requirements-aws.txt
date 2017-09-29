@@ -1,0 +1,4 @@
+# TODO: Clarify what our direction with AWS is
+# paramiko==2.1.2
+# boto3
+# troposphere

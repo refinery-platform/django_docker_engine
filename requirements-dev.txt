@@ -1,5 +1,2 @@
 flake8==3.3.0
 mock==2.0.0
-paramiko==2.1.2
-# boto3?
-# troposphere?
