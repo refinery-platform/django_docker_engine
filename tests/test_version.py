@@ -15,6 +15,7 @@ class VersionTests(unittest.TestCase):
 
         version_path = os.path.join(
             os.path.dirname(os.path.dirname(__file__)),
+            'django_docker_engine',
             'VERSION.txt'
         )
         local_version = open(version_path).read().strip()
