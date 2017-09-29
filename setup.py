@@ -10,13 +10,13 @@ os.chdir(normpath(join(abspath(__file__), os.pardir)))
 
 setup(
     name='django_docker_engine',
-    version=open(join(dirname(__file__), 'django_docker_engine', 'VERSION.txt')).read().strip(),
+    version=open(join(
+        dirname(__file__), 'django_docker_engine', 'VERSION.txt'
+    )).read().strip(),
     install_requires=[
         'django',
         'docker==2.1.0',
         'django-http-proxy',
-        'boto3',
-        'troposphere',
         'requests'
     ],
     packages=find_packages(exclude=['*_demo']),
