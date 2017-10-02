@@ -1,10 +1,10 @@
 import unittest
 import requests
-import os
 import subprocess
 import time
 import socket
 from django_docker_engine.docker_utils import (DockerContainerSpec, DockerClientWrapper)
+
 
 class SubprocessTests(unittest.TestCase):
 
@@ -32,7 +32,7 @@ class SubprocessTests(unittest.TestCase):
     def test_container(self):
         DockerClientWrapper('/tmp/test-' + self.port).run(
             DockerContainerSpec(
-                image_name='nginx:1.10.3-alpine', 
+                image_name='nginx:1.10.3-alpine',
                 container_name=self.container_name
             )
         )
