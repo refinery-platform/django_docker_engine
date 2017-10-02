@@ -100,25 +100,23 @@ Docker SDK provides so that we can use either interface, as needed.
 
 ## Usage: Launching Containers
 
-`DockerContainerSpec` exposes a subset of Docker functionality so your application can launch containers as needed.
-This is under development and for now the best demonstrations of the functionality are in the test suite,
-but here's a basic example:
+`DockerContainerSpec` exposes a subset of Docker functionality so your application can launch containers as needed:
 
 ```
 $ echo 'Hello World' > /tmp/hello.txt
 $ python
->>> from django_docker_engine.docker_utils import DockerContainerSpec
->>> DockerContainerSpec(
-      image_name='nginx:1.10.3-alpine',
-      container_name='my-content-server',
-      input_mount='/usr/share/nginx/html',
-      input_files=['/tmp/hello.txt']
-   ).run()
-$ curl http://localhost:8000/docker/my-content-server/hello.txt
+>>> from django_docker_engine.docker_utils import (DockerClientWrapper, DockerContainerSpec)
+>>> DockerClientWrapper('/tmp/docker').run(
+      DockerContainerSpec(
+        image_name='nginx:1.10.3-alpine',
+        container_name='my-server',
+        input_mount='/usr/share/nginx/html',
+        input_files=['/tmp/hello.txt']
+      )
+    )
+$ curl http://localhost:8000/docker/my-server/hello.txt
 Hello World
 ```
-
-Note that this is only a Docker utility: You could persist this information in a database, but that is not a requirement.
 
 For more detail, consult the [generated documentation](docs.md).
 
@@ -137,7 +135,7 @@ To run it end-to-end, use the included demo server:
 $ ./manage.py runserver &
 # In your browser, visit: http://127.0.0.1:8000/docker/my-container/
 # You should get a "please wait" page: We're waiting for "my-container" to start.
-$ docker run --name my-container --publish 80 --detach nginx:1.10.3-alpine
+$ docker run --name my-container --publish 80 --detach nginx:1.10.3-alpine # TODO: add tag.
 # In a second, you should get the nginx welcom page.
 # If your container did something useful, then you'd be seeing that instead.
 ```
