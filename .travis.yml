@@ -20,10 +20,9 @@ script:
 - docker info | grep 'Operating System'  # Are we able to connect to Docker, and what OS is it?
 - pip install django==$VERSION
 
-- start django-test; ./manage.py test --verbosity=2; end django-test
-- start django-live; ./live-test.sh; end django-live
-- start format;      flake8; end format
-- start egg;         python setup.py bdist_egg; end egg
+- start test;   ./manage.py test --verbosity=2; end test
+- start format; flake8;                         end format
+- start egg;    python setup.py bdist_egg;      end egg
 # TODO: No output on travis: Is pydoc installed?
 #- start docs;        diff <(./docs.sh) docs.md; end docs
 deploy:
