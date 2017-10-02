@@ -16,13 +16,15 @@ class DockerContainerSpec():
                  input={},
                  container_input_path='/tmp/input.json',
                  extra_directories=[],
-                 labels={}):
+                 labels={},
+                 container_port=80):
         self.image_name = image_name
         self.container_name = container_name
         self.container_input_path = container_input_path
         self.extra_directories = extra_directories
         self.input = input
         self.labels = labels
+        self.container_port = container_port
 
 
 class DockerClientWrapper():
@@ -31,7 +33,7 @@ class DockerClientWrapper():
                  data_dir,
                  manager_class=docker_engine.DockerEngineManager,
                  root_label='io.github.refinery-project.django_docker_engine'):
-        self._containers_manager = manager_class(data_dir)
+        self._containers_manager = manager_class(data_dir, root_label)
         self.root_label = root_label
 
     def _make_directory_on_host(self):
@@ -84,12 +86,15 @@ class DockerClientWrapper():
             volumes[host_directory] = binding
 
         labels = container_spec.labels
-        labels.update({self.root_label: 'true'})
+        labels.update({
+            self.root_label: 'true',
+            self.root_label+'.port': str(container_spec.container_port)
+        })
 
         self._containers_manager.run(
             image_name,
             name=container_spec.container_name,
-            ports={'80/tcp': None},
+            ports={'{}/tcp'.format(container_spec.container_port): None},
             cmd=None,
             detach=True,
             labels=labels,
@@ -99,7 +104,7 @@ class DockerClientWrapper():
 
     def lookup_container_url(self, container_name):
         """
-        Given the name of a container, returns the url mapped to port 80.
+        Given the name of a container, returns the url mapped to the right port.
         """
         return self._containers_manager.get_url(container_name)
 

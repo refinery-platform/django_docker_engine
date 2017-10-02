@@ -21,6 +21,7 @@ class DockerEngineManager(BaseManager):
     def __init__(
             self,
             data_dir,
+            root_label,
             client=docker.from_env(),
             pem='django_docker_cloudformation.pem'
     ):
@@ -29,6 +30,7 @@ class DockerEngineManager(BaseManager):
         self._images_client = client.images
         self.pem = pem
         self._data_dir = data_dir
+        self._root_label = root_label
 
         remote_host_match = re.match(r'^http://([^:]+):\d+$', self._base_url)
         if remote_host_match:
@@ -44,7 +46,7 @@ class DockerEngineManager(BaseManager):
     def pull(self, image_name, version="latest"):
         return self._images_client.pull("{}:{}".format(image_name, version))
 
-    def get_url(self, container_name, container_port=80):
+    def get_url(self, container_name):
         remote_host_match = re.match(r'^http://([^:]+):\d+$', self._base_url)
         if remote_host_match:
             host = remote_host_match.group(1)
@@ -53,6 +55,8 @@ class DockerEngineManager(BaseManager):
         else:
             raise RuntimeError('Unexpected client base_url: %s', self._base_url)
         container = self._containers_client.get(container_name)
+
+        container_port = container.attrs['Config']['Labels'][self._root_label+'.port']
 
         settings = container.attrs['NetworkSettings']
         port_infos = settings['Ports']
