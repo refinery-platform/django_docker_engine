@@ -135,7 +135,8 @@ To run it end-to-end, use the included demo server:
 $ ./manage.py runserver &
 # In your browser, visit: http://127.0.0.1:8000/docker/my-container/
 # You should get a "please wait" page: We're waiting for "my-container" to start.
-$ docker run --name my-container --publish 80 --detach nginx:1.10.3-alpine # TODO: add tag.
+$ docker run --name my-container --publish 80 --detach nginx:1.10.3-alpine \
+  --label io.github.refinery-project.django_docker_engine.port=80
 # In a second, you should get the nginx welcom page.
 # If your container did something useful, then you'd be seeing that instead.
 ```
