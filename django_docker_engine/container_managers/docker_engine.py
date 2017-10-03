@@ -8,11 +8,23 @@ from distutils import dir_util
 import subprocess
 
 
-class NoPortsOpen(Exception):
+class DockerEngineManagerError(Exception):
     pass
 
 
-class ExpectedPortMissing(Exception):
+class NoPortLabel(DockerEngineManagerError):
+    pass
+
+
+class NoPortsOpen(DockerEngineManagerError):
+    pass
+
+
+class ExpectedPortMissing(DockerEngineManagerError):
+    pass
+
+
+class MisconfiguredPort(DockerEngineManagerError):
     pass
 
 
@@ -56,7 +68,15 @@ class DockerEngineManager(BaseManager):
             raise RuntimeError('Unexpected client base_url: %s', self._base_url)
         container = self._containers_client.get(container_name)
 
-        container_port = container.attrs['Config']['Labels'][self._root_label+'.port']
+        port_key = self._root_label+'.port'
+        try:
+            container_port = container.attrs['Config']['Labels'][port_key]
+        except KeyError:
+            raise NoPortLabel(
+                'On container {}, no label with key {}'.format(
+                    container_name, port_key
+                )
+            )
 
         settings = container.attrs['NetworkSettings']
         port_infos = settings['Ports']
@@ -67,20 +87,28 @@ class DockerEngineManager(BaseManager):
                 )
             )
 
-        http_port_info = port_infos['{}/tcp'.format(container_port)]
-        if http_port_info is None:
+        try:
+            http_port_info = port_infos['{}/tcp'.format(container_port)]
+        except KeyError:
             raise ExpectedPortMissing(
                 'On container {}, port {} is not available, but these are: {}'.format(
                     container_name, container_port, port_infos
                 )
             )
 
-        assert len(http_port_info) == 1
+        if http_port_info is None:
+            raise MisconfiguredPort(
+                'On container {}, port {} is misconfigured; port info: {}'.format(
+                    container_name, container_port, port_infos
+                )
+            )
+
+        assert len(http_port_info) == 1  # TODO: Can we produce this condition in a test?
         port_number = http_port_info[0]['HostPort']
         return 'http://{}:{}'.format(host, port_number)
 
     def list(self, filters={}):
-        return self._containers_client.list(filters=filters)
+        return self._containers_client.list(all=True, filters=filters)
 
     def mkdtemp(self):
         timestamp = re.sub(r'\W', '_', str(datetime.now()))

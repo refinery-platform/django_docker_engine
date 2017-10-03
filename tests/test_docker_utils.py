@@ -80,12 +80,12 @@ class LiveDockerTests(unittest.TestCase):
             filters={'label': self.test_label}
         ))
 
-    def assert_loads_immediately(self, url, content, client=django.test.Client()):
-        response = client.get(url)
-        # TODO: check status: confirm response.status_code != 200:
-        self.assertIn(content, response.content)
-
     def assert_loads_eventually(self, url, content, client=django.test.Client()):
+        """
+        Retries until it gets a 200 response. Note that these tests hit the
+        container directly, rather than going through the proxy, so there
+        is no corresponding "assert_loads_immediately".
+        """
         for i in xrange(10):
             try:
                 response = client.get(url)
@@ -150,7 +150,6 @@ class LiveDockerTestsClean(LiveDockerTests):
             container_name=self.timestamp(),
             labels={self.test_label: 'true'}
         ))
-        # TODO: self.assert_loads_immediately(url, 'Please wait')
         self.assert_loads_eventually(url, 'Welcome to nginx!')
 
     def test_container_spec_with_input(self):
