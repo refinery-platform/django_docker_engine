@@ -14,7 +14,9 @@ INSTALLED_APPS = (
     'httpproxy'
 )
 
-MIDDLEWARE_CLASSES = ()
+MIDDLEWARE_CLASSES = (
+    'django_docker_engine.middleware.hostname_routing.HostnameRouting'
+)
 
 ROOT_URLCONF = 'django_docker_engine_demo.urls'
 WSGI_APPLICATION = 'django_docker_engine_demo.wsgi.application'
