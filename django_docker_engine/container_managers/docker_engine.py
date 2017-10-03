@@ -7,7 +7,12 @@ from abc import ABCMeta, abstractmethod
 from distutils import dir_util
 import subprocess
 
+
 class DockerEngineManagerError(Exception):
+    pass
+
+
+class NoPortLabel(DockerEngineManagerError):
     pass
 
 
@@ -63,7 +68,15 @@ class DockerEngineManager(BaseManager):
             raise RuntimeError('Unexpected client base_url: %s', self._base_url)
         container = self._containers_client.get(container_name)
 
-        container_port = container.attrs['Config']['Labels'][self._root_label+'.port']
+        port_key = self._root_label+'.port'
+        try:
+            container_port = container.attrs['Config']['Labels'][port_key]
+        except KeyError:
+            raise NoPortLabel(
+                'On container {}, no label with key {}'.format(
+                    container_name, port_key
+                )
+            )
 
         settings = container.attrs['NetworkSettings']
         port_infos = settings['Ports']

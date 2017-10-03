@@ -2,7 +2,7 @@ import unittest
 from datetime import datetime
 import re
 from django_docker_engine.container_managers.docker_engine \
-    import (DockerEngineManager, NoPortsOpen, ExpectedPortMissing, MisconfiguredPort)
+    import (DockerEngineManager, NoPortsOpen, ExpectedPortMissing, MisconfiguredPort, NoPortLabel)
 
 
 class DockerEngineManagerTests(unittest.TestCase):
@@ -20,7 +20,7 @@ class DockerEngineManagerTests(unittest.TestCase):
             'cmd': None
         }
         self.manager.run('alpine:3.6', **kwargs)
-        with self.assertRaises(KeyError):
+        with self.assertRaises(NoPortLabel):
             self.manager.get_url(self.container_name)
 
         self.manager.list({'name': '/' + self.container_name})[0].remove(force=True)
