@@ -21,7 +21,7 @@ class SubprocessTests(unittest.TestCase):
 
     def setUp(self):
         self.port = self.free_port()
-        subprocess.Popen(['./manage.py', 'runserver', self.port])
+        self.process = subprocess.Popen(['./manage.py', 'runserver', self.port])
         time.sleep(1)
         self.container_name = 'test-' + self.port
         self.url = 'http://127.0.0.1:{}/docker/{}/'.format(self.port, self.container_name)
@@ -32,6 +32,7 @@ class SubprocessTests(unittest.TestCase):
         # chmod(self.tmp_dir, 0777)
 
     def tearDown(self):
+        self.process.kill()
         rmtree(self.tmp_dir)
 
     def test_please_wait(self):
