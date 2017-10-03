@@ -95,7 +95,7 @@ class DockerEngineManager(BaseManager):
         return 'http://{}:{}'.format(host, port_number)
 
     def list(self, filters={}):
-        return self._containers_client.list(filters=filters)
+        return self._containers_client.list(all=True, filters=filters)
 
     def mkdtemp(self):
         timestamp = re.sub(r'\W', '_', str(datetime.now()))
