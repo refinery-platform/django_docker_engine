@@ -17,6 +17,12 @@ matrix:
   fast_finish: true
 script:
 - set -o errexit
+
+- cat /etc/hosts
+- ping -c1 localhost
+- sudo sh -c 'echo "127.0.0.1 foobar" >> /etc/hosts'
+- ping -c1 foobar
+
 - docker info | grep 'Operating System'  # Are we able to connect to Docker, and what OS is it?
 - pip install django==$VERSION
 
