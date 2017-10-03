@@ -81,6 +81,11 @@ class LiveDockerTests(unittest.TestCase):
         ))
 
     def assert_loads_eventually(self, url, content, client=django.test.Client()):
+        """
+        Retries until it gets a 200 response. Note that these tests hit the
+        container directly, rather than going through the proxy, so there
+        is no corresponding "assert_loads_immediately".
+        """
         for i in xrange(10):
             try:
                 response = client.get(url)
