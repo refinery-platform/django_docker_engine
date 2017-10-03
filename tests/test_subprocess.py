@@ -20,16 +20,18 @@ class SubprocessTests(unittest.TestCase):
         return str(s.getsockname()[1])
 
     def setUp(self):
+        # TODO: Make sure the name is in /etc/hosts, and that there is no container of that name.
+        self.container_name = 'container-name'
+        hostname = self.container_name + '.docker.localhost'
         self.port = self.free_port()
-        self.process = subprocess.Popen(['./manage.py', 'runserver', self.port])
-        time.sleep(1)
-        self.container_name = 'test-' + self.port
-        self.url = 'http://127.0.0.1:{}/docker/{}/'.format(self.port, self.container_name)
+        self.url = 'http://{}:{}/'.format(hostname, self.port)
         self.tmp_dir = '/tmp/test-' + self.port
         mkdir(self.tmp_dir)
         # TODO: Might use mkdtemp, but Docker couldn't see the directory?
         # self.tmp_dir = mkdtemp()
         # chmod(self.tmp_dir, 0777)
+        self.process = subprocess.Popen(['./manage.py', 'runserver', self.port])
+        time.sleep(1)
 
     def tearDown(self):
         self.process.kill()
