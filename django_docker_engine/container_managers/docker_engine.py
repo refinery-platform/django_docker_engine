@@ -90,7 +90,7 @@ class DockerEngineManager(BaseManager):
                 )
             )
 
-        assert len(http_port_info) == 1
+        assert len(http_port_info) == 1  # TODO: Can we produce this condition in a test?
         port_number = http_port_info[0]['HostPort']
         return 'http://{}:{}'.format(host, port_number)
 

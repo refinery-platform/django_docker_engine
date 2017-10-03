@@ -37,7 +37,7 @@ class DockerEngineManagerTests(unittest.TestCase):
         with self.assertRaises(NoPortsOpen):
             self.manager.get_url(self.container_name)
 
-    def test_wrong_port(self):
+    def test_expected_port_missing(self):
         self.manager.run(
             'nginx:1.10.3-alpine',
             name=self.container_name,
@@ -58,3 +58,14 @@ class DockerEngineManagerTests(unittest.TestCase):
         )
         with self.assertRaises(MisconfiguredPort):
             self.manager.get_url(self.container_name)
+
+    def test_actually_works(self):
+        self.manager.run(
+            'nginx:1.10.3-alpine',
+            name=self.container_name,
+            cmd=None,
+            labels={self.root_label + '.port': '80'},
+            detach=True,
+            ports={'80/tcp': None}
+        )
+        self.manager.get_url(self.container_name)
