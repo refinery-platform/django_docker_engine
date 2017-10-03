@@ -15,7 +15,7 @@ INSTALLED_APPS = (
 )
 
 MIDDLEWARE_CLASSES = (
-    'django_docker_engine.middleware.hostname_routing.HostnameRouting'
+    'django_docker_engine.middleware.hostname_routing.HostnameRoutingMiddleware', # The comma makes it a tuple.
 )
 
 ROOT_URLCONF = 'django_docker_engine_demo.urls'
