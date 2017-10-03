@@ -43,7 +43,7 @@ class DockerEngineManagerTests(unittest.TestCase):
             name=self.container_name,
             cmd=None,
             labels={self.root_label+'.port': '12345'},
-            detach = True
+            detach=True
         )
         with self.assertRaises(ExpectedPortMissing):
             self.manager.get_url(self.container_name)
