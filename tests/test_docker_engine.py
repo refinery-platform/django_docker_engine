@@ -19,11 +19,11 @@ class DockerEngineManagerTests(unittest.TestCase):
         self.container_name = timestamp
 
     def test_missing_port_label(self):
-        self.manager.run(
-            'alpine:3.6',
-            name=self.container_name,
-            cmd=None
-        )
+        kwargs = {
+            'name': self.container_name,
+            'cmd': None
+        }
+        self.manager.run('alpine:3.6', **kwargs)
         with self.assertRaises(KeyError):
             self.manager.get_url(self.container_name)
 
