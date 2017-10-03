@@ -67,8 +67,9 @@ class DockerEngineManager(BaseManager):
                 )
             )
 
-        http_port_info = port_infos['{}/tcp'.format(container_port)]
-        if http_port_info is None:
+        try:
+            http_port_info = port_infos['{}/tcp'.format(container_port)]
+        except KeyError:
             raise ExpectedPortMissing(
                 'On container {}, port {} is not available, but these are: {}'.format(
                     container_name, container_port, port_infos

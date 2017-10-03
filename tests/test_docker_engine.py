@@ -3,7 +3,7 @@ from datetime import datetime
 import logging
 import re
 from django_docker_engine.container_managers.docker_engine \
-    import (DockerEngineManager, NoPortsOpen)
+    import (DockerEngineManager, NoPortsOpen, ExpectedPortMissing)
 
 logging.basicConfig()
 logger = logging.getLogger(__name__)
@@ -35,4 +35,15 @@ class DockerEngineManagerTests(unittest.TestCase):
             labels={self.root_label+'.port': '12345'}
         )
         with self.assertRaises(NoPortsOpen):
+            self.manager.get_url(self.container_name)
+
+    def test_wrong_port(self):
+        self.manager.run(
+            'nginx:1.10.3-alpine',
+            name=self.container_name,
+            cmd=None,
+            labels={self.root_label+'.port': '12345'},
+            detach = True
+        )
+        with self.assertRaises(ExpectedPortMissing):
             self.manager.get_url(self.container_name)
