@@ -7,12 +7,19 @@ from abc import ABCMeta, abstractmethod
 from distutils import dir_util
 import subprocess
 
-
-class NoPortsOpen(Exception):
+class DockerEngineManagerError(Exception):
     pass
 
 
-class ExpectedPortMissing(Exception):
+class NoPortsOpen(DockerEngineManagerError):
+    pass
+
+
+class ExpectedPortMissing(DockerEngineManagerError):
+    pass
+
+
+class MisconfiguredPort(DockerEngineManagerError):
     pass
 
 
@@ -72,6 +79,13 @@ class DockerEngineManager(BaseManager):
         except KeyError:
             raise ExpectedPortMissing(
                 'On container {}, port {} is not available, but these are: {}'.format(
+                    container_name, container_port, port_infos
+                )
+            )
+
+        if http_port_info is None:
+            raise MisconfiguredPort(
+                'On container {}, port {} is misconfigured; port info: {}'.format(
                     container_name, container_port, port_infos
                 )
             )
