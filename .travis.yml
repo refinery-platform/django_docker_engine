@@ -7,7 +7,7 @@ services:
 install:
 - pip install -r requirements.txt
 - pip install -r requirements-dev.txt
-- start() { echo travis_fold':'start:$1; echo 'start:' $1; }
+- start() { echo travis_fold':'start:$1; }
 - end() { echo travis_fold':'end:$1; }
 env:
   matrix:
