@@ -22,9 +22,9 @@ INSTALLED_APPS = (
 
 MIDDLEWARE_CLASSES = (
     # REMEMBER to keep a trailing comma so this will be a tuple.
-    # 'django_docker_engine.middleware.request_debugging.RequestDebuggingMiddleware',
-    # 'django_docker_engine.middleware.hostname_routing.HostnameRoutingMiddleware',
-    # 'django_docker_engine.middleware.request_debugging.RequestDebuggingMiddleware',
+    'django_docker_engine.middleware.request_debugging.RequestDebuggingMiddleware',
+    'django_docker_engine.middleware.hostname_routing.HostnameRoutingMiddleware',
+    'django_docker_engine.middleware.request_debugging.RequestDebuggingMiddleware',
 )
 
 ROOT_URLCONF = 'django_docker_engine_demo.urls'

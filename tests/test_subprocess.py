@@ -8,7 +8,7 @@ from shutil import rmtree
 from os import mkdir
 
 
-class SubprocessTests(unittest.TestCase):
+class PlainRoutingTests(unittest.TestCase):
     """
     Check that the basic functionality works from end-to-end,
     starting the django server as you would from the command-line.
@@ -54,7 +54,7 @@ class SubprocessTests(unittest.TestCase):
         client.purge_by_label(self.container_name)
 
 
-class HostnameRoutingTests(SubprocessTests):
+class HostnameRoutingTests(PlainRoutingTests):
 
     def setUp(self):
         # TODO: Make sure the name is in /etc/hosts,
@@ -70,3 +70,5 @@ class HostnameRoutingTests(SubprocessTests):
         # chmod(self.tmp_dir, 0777)
         self.process = subprocess.Popen(['./manage.py', 'runserver', self.port])
         time.sleep(1)
+
+    # Tests from superclass are run
