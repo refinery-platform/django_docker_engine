@@ -18,10 +18,8 @@ matrix:
 script:
 - set -o errexit
 
-- cat /etc/hosts
-- ping -c1 localhost
-- sudo sh -c 'echo "127.0.0.1 foobar" >> /etc/hosts'
-- ping -c1 foobar
+- sudo sh -c 'echo "127.0.0.1 container-name.docker.localhost" >> /etc/hosts'
+- ping -c1 container-name.docker.localhost  # Prereq for hostname-based dispatch.
 
 - docker info | grep 'Operating System'  # Are we able to connect to Docker, and what OS is it?
 - pip install django==$VERSION
