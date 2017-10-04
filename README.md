@@ -1,8 +1,7 @@
 # django_docker_engine 
 
 [![Build Status](https://travis-ci.org/refinery-platform/django_docker_engine.svg?branch=master)](https://travis-ci.org/refinery-platform/django_docker_engine)
-
-[django_docker_engine on PyPi](https://pypi.python.org/pypi/django-docker-engine)
+[![PyPI version](https://badge.fury.io/py/django-docker-engine.svg)](https://pypi.python.org/pypi/django-docker-engine)
     
 This Django app manages and proxies requests to Docker containers.
 The primary goal has been to provide a visualization framework for the

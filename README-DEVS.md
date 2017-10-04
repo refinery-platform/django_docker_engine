@@ -1,6 +1,9 @@
 # Developer documentation
 
 ## Development
+
+Install [Docker](https://store.docker.com/search?offering=community&type=edition)
+if you haven't already, and then get the Python dependencies:
 ```
 $ git clone https://github.com/mccalluc/django_docker_engine.git
 $ cd django_docker_engine
@@ -19,6 +22,15 @@ $ docker run --name my-container --publish 80 --detach nginx:1.10.3-alpine \
 # In a second, you should get the nginx welcome page.
 # If your container did something useful, then you'd be seeing that instead.
 ```
+
+For tests to pass, you'll need to add one entry to your `/etc/hosts`:
+```
+127.0.0.1 container-name.docker.localhost
+```
+
+`/etc/hosts` does not support wildcard entries: If you are spending too much time
+in that file, you might try running DNS locally with
+[dnsmasq](http://www.thekelleys.org.uk/dnsmasq/doc.html).
 
 ## Release Process
 
