@@ -30,6 +30,9 @@ MIDDLEWARE_CLASSES = (
 ROOT_URLCONF = 'demo_host_routing.urls'
 WSGI_APPLICATION = 'demo_host_routing.wsgi.application'
 
+DJANGO_DOCKER_HOST_SUFFIX = '.docker.localhost'
+DJANGO_DOCKER_PATH_PREFIX = '/docker/'
+
 DATABASES = {}
 
 LANGUAGE_CODE = 'en-us'

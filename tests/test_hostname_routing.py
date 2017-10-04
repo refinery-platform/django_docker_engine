@@ -3,7 +3,7 @@ from django.test import RequestFactory
 import unittest
 
 
-class HostnameRoutingTest(unittest.TestCase):
+class HostnameRoutingTests(unittest.TestCase):
 
     def test_hostname_routing(self):
         name = 'foobar'

@@ -19,6 +19,11 @@ MIDDLEWARE_CLASSES = ()
 ROOT_URLCONF = 'demo_path_routing.urls'
 WSGI_APPLICATION = 'demo_path_routing.wsgi.application'
 
+# These are only really needed for hostname-based routing,
+# but tests also use this settings.py. Fix?
+DJANGO_DOCKER_HOST_SUFFIX = '.docker.localhost'
+DJANGO_DOCKER_PATH_PREFIX = '/docker/'
+
 DATABASES = {}
 
 LANGUAGE_CODE = 'en-us'
