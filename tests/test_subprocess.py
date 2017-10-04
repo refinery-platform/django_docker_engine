@@ -71,7 +71,7 @@ class HostnameRoutingTests(PlainRoutingTests):
         # TODO: Might use mkdtemp, but Docker couldn't see the directory?
         # self.tmp_dir = mkdtemp()
         # chmod(self.tmp_dir, 0777)
-        self.process = subprocess.Popen(['./manage.py', 'runserver', self.port])
+        self.process = subprocess.Popen(['./manage.py', 'runserver', self.port, '--settings', 'demo_host_routing.settings'])
         time.sleep(1)
         self.client = DockerClientWrapper(self.tmp_dir)
 
