@@ -7,7 +7,8 @@ class HostnameRoutingTest(unittest.TestCase):
 
     def test_hostname_routing(self):
         name = 'foobar'
-        request = RequestFactory().get('/', HTTP_HOST='{}.docker.localhost'.format(name))
-        self.assertEqual(request.path, '/')
+        path = '/barfoo'
+        request = RequestFactory().get(path , HTTP_HOST='{}.docker.localhost'.format(name))
+        self.assertEqual(request.path, path)
         HostnameRoutingMiddleware().process_request(request)
-        self.assertEqual(request.path, '/docker/{}/'.format(name))
+        self.assertEqual(request.path, '/docker/{}{}'.format(name, path))
