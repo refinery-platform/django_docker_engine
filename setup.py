@@ -19,7 +19,7 @@ setup(
         'django-http-proxy',
         'requests'
     ],
-    packages=find_packages(exclude=['*_demo']),
+    packages=find_packages(exclude=['demo_*']),
     include_package_data=True,
     license='MIT License',
     description='Django app that manages the creation of, ' +

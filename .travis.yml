@@ -7,7 +7,7 @@ services:
 install:
 - pip install -r requirements.txt
 - pip install -r requirements-dev.txt
-- start() { echo travis_fold':'start:$1; echo 'start:' $1; }
+- start() { echo travis_fold':'start:$1; }
 - end() { echo travis_fold':'end:$1; }
 env:
   matrix:
@@ -17,6 +17,10 @@ matrix:
   fast_finish: true
 script:
 - set -o errexit
+
+- sudo sh -c 'echo "127.0.0.1 container-name.docker.localhost" >> /etc/hosts'
+- ping -c1 container-name.docker.localhost  # Prereq for hostname-based dispatch.
+
 - docker info | grep 'Operating System'  # Are we able to connect to Docker, and what OS is it?
 - pip install django==$VERSION
 

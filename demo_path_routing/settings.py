@@ -16,8 +16,8 @@ INSTALLED_APPS = (
 
 MIDDLEWARE_CLASSES = ()
 
-ROOT_URLCONF = 'django_docker_engine_demo.urls'
-WSGI_APPLICATION = 'django_docker_engine_demo.wsgi.application'
+ROOT_URLCONF = 'demo_path_routing.urls'
+WSGI_APPLICATION = 'demo_path_routing.wsgi.application'
 
 DATABASES = {}
 
