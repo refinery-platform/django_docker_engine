@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 import logging
 from django.conf.urls import url
 from django.http import HttpResponse
@@ -7,9 +5,9 @@ from docker.errors import NotFound
 from httplib import BadStatusLine
 from httpproxy.views import HttpProxy
 from docker_utils import DockerClientWrapper
-from container_managers.docker_engine import (NoPortsOpen, ExpectedPortMissing)
-from datetime import datetime
+from container_managers.docker_engine import DockerEngineManagerError
 from collections import namedtuple
+from django_docker_engine.historian import NullHistorian
 import socket
 import errno
 import os
@@ -30,38 +28,12 @@ logger = logging.getLogger(__name__)
 UrlPatterns = namedtuple('UrlPatterns', ['urlpatterns'])
 
 
-class NullLogger():
-    def __init__(self):
-        pass
-
-    def log(self, *args):
-        pass
-
-
-class FileLogger():
-    # This is not the best for the long term, but it will help us understand our needs.
-    def __init__(self, path):
-        self.path = path
-
-    def log(self, *args):
-        with open(self.path, 'a') as f:
-            timestamp = datetime.now().isoformat()
-            args_list = list(args)
-            args_list.insert(0, timestamp)
-            print('\t'.join(args_list), file=f)
-
-    def list(self):
-        with open(self.path) as f:
-            lines = f.readlines()
-        return lines
-
-
 class Proxy():
-    def __init__(self, data_dir, logger=NullLogger(),
+    def __init__(self, data_dir, historian=NullHistorian(),
                  please_wait_title='Please wait',
                  please_wait_body_html='<h1>Please wait</h1>'):
         self.data_dir = data_dir
-        self.logger = logger
+        self.historian = historian
         self.content = self._render({
                 'title': please_wait_title,
                 'body_html': please_wait_body_html
@@ -92,13 +64,14 @@ class Proxy():
         )]
 
     def _proxy_view(self, request, container_name, url):
-        self.logger.log(container_name, url)
+        self.historian.record(container_name, url)
         try:
             client = DockerClientWrapper(self.data_dir)
             container_url = client.lookup_container_url(container_name)
             view = HttpProxy.as_view(base_url=container_url)
             return view(request, url=url)
-        except (NotFound, BadStatusLine, NoPortsOpen, ExpectedPortMissing) as e:
+        except (DockerEngineManagerError, NotFound, BadStatusLine) as e:
+            # TODO: Should DockerEngineManagerError be sufficient by itself?
             logger.info(
                 'Normal transient error. '
                 'Container: %s, Exception: %s', container_name, e)
