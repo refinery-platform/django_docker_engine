@@ -27,8 +27,8 @@ MIDDLEWARE_CLASSES = (
     'django_docker_engine.middleware.request_debugging.RequestDebuggingMiddleware',
 )
 
-ROOT_URLCONF = 'django_docker_engine_demo.urls'
-WSGI_APPLICATION = 'django_docker_engine_demo.wsgi.application'
+ROOT_URLCONF = 'demo_host_routing.urls'
+WSGI_APPLICATION = 'demo_host_routing.wsgi.application'
 
 DATABASES = {}
 
