@@ -12,7 +12,7 @@ class NullHistorian():
 
 
 class FileHistorian():
-    # This is not the best for the long term, but it will help us understand our needs.
+    # This is not suitable for the long term, but it will help us understand our needs.
     def __init__(self, path):
         self.path = path
 
