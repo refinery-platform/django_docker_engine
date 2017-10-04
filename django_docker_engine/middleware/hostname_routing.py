@@ -4,7 +4,7 @@ class HostnameRoutingMiddleware():
     def process_request(self, request):
         # TODO: Move these to config:
         host_suffix = '.docker.localhost'
-        path_prefix = 'docker/'
+        path_prefix = '/docker/'
 
         request_host_and_port = request.META['HTTP_HOST']
         request_host = re.sub(r':\d+$', '', request_host_and_port)
