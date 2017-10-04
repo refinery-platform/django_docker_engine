@@ -57,7 +57,7 @@ class PathRoutingTests(unittest.TestCase):
         self.assertRegexpMatches(self.url, r'http://localhost:\d+/docker/test-\d+/')
 
 
-class HostRoutingTests(PlainRoutingTests):
+class HostRoutingTests(PathRoutingTests):
 
     def setUp(self):
         # TODO: Make sure the name is in /etc/hosts,
@@ -71,7 +71,10 @@ class HostRoutingTests(PlainRoutingTests):
         # TODO: Might use mkdtemp, but Docker couldn't see the directory?
         # self.tmp_dir = mkdtemp()
         # chmod(self.tmp_dir, 0777)
-        self.process = subprocess.Popen(['./manage.py', 'runserver', self.port, '--settings', 'demo_host_routing.settings'])
+        self.process = subprocess.Popen([
+            './manage.py', 'runserver', self.port,
+            '--settings', 'demo_host_routing.settings'
+        ])
         time.sleep(1)
         self.client = DockerClientWrapper(self.tmp_dir)
 
