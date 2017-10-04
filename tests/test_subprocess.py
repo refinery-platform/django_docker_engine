@@ -60,15 +60,21 @@ class PathRoutingTests(unittest.TestCase):
 class HostRoutingTests(PathRoutingTests):
 
     def setUp(self):
-        # TODO: Make sure the name is in /etc/hosts,
-        # and that there is not already a container of that name.
         self.container_name = 'container-name'
         hostname = self.container_name + '.docker.localhost'
+
+        with open('/etc/hosts') as f:
+            etc_hosts = f.read()
+            if hostname not in etc_hosts:
+                self.fail('In /etc/hosts add entry for "{}"; currently: {}'.format(
+                    hostname, etc_hosts
+                ))
+
         self.port = self.free_port()
         self.url = 'http://{}:{}/'.format(hostname, self.port)
         self.tmp_dir = '/tmp/test-' + self.port
         mkdir(self.tmp_dir)
-        # TODO: Might use mkdtemp, but Docker couldn't see the directory?
+        # Wanted to use mkdtemp, but Docker couldn't see the directory?
         # self.tmp_dir = mkdtemp()
         # chmod(self.tmp_dir, 0777)
         self.process = subprocess.Popen([
