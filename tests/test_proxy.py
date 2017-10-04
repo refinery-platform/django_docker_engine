@@ -9,7 +9,9 @@ from django_docker_engine.historian import FileHistorian
 class ProxyTests(unittest.TestCase):
 
     def test_proxy_please_wait(self):
-        history_path = '/tmp/django-docker-history-' + re.sub(r'\D', '-', str(datetime.now()))
+        history_path = '/tmp/django-docker-history-{}'.format(
+            re.sub(r'\D', '-', str(datetime.now()))
+        )
         historian = FileHistorian(history_path)
         title_text = 'test-title'
         body_html = '<p>test-body</p>'
