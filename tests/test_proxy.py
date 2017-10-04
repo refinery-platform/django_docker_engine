@@ -1,5 +1,5 @@
 import unittest
-from django_docker_engine.proxy import NullLogger, Proxy
+from django_docker_engine.proxy import Proxy
 from django.test import RequestFactory
 
 
@@ -10,7 +10,7 @@ class ProxyTests(unittest.TestCase):
         body_html = '<p>test-body</p>'
         proxy = Proxy(
             '/tmp/django-docker-engine-test',
-            logger=NullLogger(),
+            # TODO: test historian
             please_wait_title='<'+title_text+'>',
             please_wait_body_html=body_html
         )

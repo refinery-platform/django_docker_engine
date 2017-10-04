@@ -20,7 +20,7 @@ ROOT_URLCONF = 'demo_path_routing.urls'
 WSGI_APPLICATION = 'demo_path_routing.wsgi.application'
 
 # These are only really needed for hostname-based routing,
-# but tests also use this settings.py. Fix?
+# but tests also use this settings.py, but this is untidy.
 DJANGO_DOCKER_HOST_SUFFIX = '.docker.localhost'
 DJANGO_DOCKER_PATH_PREFIX = '/docker/'
 
@@ -33,5 +33,3 @@ USE_L10N = True
 USE_TZ = True
 
 STATIC_URL = '/static/'
-
-PROXY_LOG = '/tmp/django_docker_engine.log'
