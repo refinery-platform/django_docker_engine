@@ -42,32 +42,7 @@ Hostname-based routing:
 
 Typically, Docker Engine will be installed and running on the same machine as Django:
 Review their [docs](https://docs.docker.com/engine/installation/) for the best information,
-but here is one way to install on Linux:
-
-```
-$ sudo apt-get install libapparmor1
-$ DEB=docker-engine_1.13.0-0~ubuntu-precise_amd64.deb
-$ wget https://apt.dockerproject.org/repo/pool/main/d/docker-engine/$DEB
-$ sudo dpkg -i $DEB
-```
-
-You also need a Docker container listening on some port: `DockerContainerSpec` makes this easy to manage programatically,
-but for now let's start one by hand:
-
-```
-$ docker run --name empty-server --publish 80 --detach nginx:1.10.3-alpine
-```
-    
-Next, if you haven't already, start Django:
-
-```
-$ python manage.py runserver
-```
-
-and visit: http://localhost:8000/docker/empty-server
-
-You should see the Nginx welcome page: `django_docker_engine` has determined the port the container was assigned,
-and has proxied your request. 
+and then [download](https://store.docker.com/search?offering=community&type=edition) and install.
 
 
 ### Docker Engine on AWS-EC2
@@ -105,6 +80,7 @@ $ python
         input_files=['/tmp/hello.txt']
       )
     )
+$ python manage.py runserver
 $ curl http://localhost:8000/docker/my-server/hello.txt
 Hello World
 ```
