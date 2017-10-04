@@ -20,7 +20,8 @@ class SubprocessTests(unittest.TestCase):
         return str(s.getsockname()[1])
 
     def setUp(self):
-        # TODO: Make sure the name is in /etc/hosts, and that there is no container of that name.
+        # TODO: Make sure the name is in /etc/hosts,
+        # and that there is not already a container of that name.
         self.container_name = 'container-name'
         hostname = self.container_name + '.docker.localhost'
         self.port = self.free_port()
