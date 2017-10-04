@@ -8,7 +8,7 @@ from shutil import rmtree
 from os import mkdir
 
 
-class PlainRoutingTests(unittest.TestCase):
+class PathRoutingTests(unittest.TestCase):
     """
     Check that the basic functionality works from end-to-end,
     starting the django server as you would from the command-line.
@@ -57,7 +57,7 @@ class PlainRoutingTests(unittest.TestCase):
         self.assertRegexpMatches(self.url, r'http://localhost:\d+/docker/test-\d+/')
 
 
-class HostnameRoutingTests(PlainRoutingTests):
+class HostRoutingTests(PlainRoutingTests):
 
     def setUp(self):
         # TODO: Make sure the name is in /etc/hosts,

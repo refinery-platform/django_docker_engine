@@ -17,6 +17,21 @@ import django_docker_engine
 urlpatterns = [ url(r'^docker/', include('django_docker_engine.urls')) ]
 ```
 
+## Path vs. hostname routing
+
+There are two ways to map incoming requests to containers. The default is path-based routing, but the domain-name
+can also be used.
+
+Path-based routing:
+- is simpler, but
+- it requires a prefix on every path passed to the containerized webapp.
+- ie: You may not use any paths starting with "/".
+
+Hostname-based routing:
+- is more complex, because it requires `HostnameRoutingMiddleware`,
+- and you will need to set up a wildcard entry in DNS to capture all subdomains.
+- but the webapp can use paths starting with "/".
+
 
 ## Docker
 
