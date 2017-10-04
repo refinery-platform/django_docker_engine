@@ -24,34 +24,37 @@ class PlainRoutingTests(unittest.TestCase):
         self.process = subprocess.Popen(['./manage.py', 'runserver', self.port])
         time.sleep(1)
         self.container_name = 'test-' + self.port
-        self.url = 'http://127.0.0.1:{}/docker/{}/'.format(self.port, self.container_name)
+        self.url = 'http://localhost:{}/docker/{}/'.format(self.port, self.container_name)
         self.tmp_dir = '/tmp/test-' + self.port
         mkdir(self.tmp_dir)
         # TODO: Might use mkdtemp, but Docker couldn't see the directory?
         # self.tmp_dir = mkdtemp()
         # chmod(self.tmp_dir, 0777)
+        self.client = DockerClientWrapper(self.tmp_dir)
 
     def tearDown(self):
         self.process.kill()
         rmtree(self.tmp_dir)
+        self.client.purge_by_label('subprocess-test-label')
 
     def test_please_wait(self):
         r = requests.get(self.url)
         self.assertIn('Please wait', r.content)
 
     def test_container(self):
-        client = DockerClientWrapper(self.tmp_dir)
-        client.run(
+        self.client.run(
             DockerContainerSpec(
                 image_name='nginx:1.10.3-alpine',
-                container_name=self.container_name
+                container_name=self.container_name,
+                labels={'subprocess-test-label': 'True'}
             )
         )
         time.sleep(1)
         r = requests.get(self.url)
         self.assertIn('nginx', r.content)
 
-        client.purge_by_label(self.container_name)
+    def test_url(self):
+        self.assertRegexpMatches(self.url, r'http://localhost:\d+/docker/test-\d+/')
 
 
 class HostnameRoutingTests(PlainRoutingTests):
@@ -70,5 +73,9 @@ class HostnameRoutingTests(PlainRoutingTests):
         # chmod(self.tmp_dir, 0777)
         self.process = subprocess.Popen(['./manage.py', 'runserver', self.port])
         time.sleep(1)
+        self.client = DockerClientWrapper(self.tmp_dir)
 
     # Tests from superclass are run
+
+    def test_url(self):
+        self.assertRegexpMatches(self.url, r'http://container-name.docker.localhost:\d+/')

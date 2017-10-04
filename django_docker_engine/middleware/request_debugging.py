@@ -1,5 +1,4 @@
 class RequestDebuggingMiddleware():
     def process_request(self, request):
-        with open('/tmp/test-log.txt', 'a') as f:
-            f.write(request.get_raw_uri() + '\n')
+        # Add logging here to see the before and after.
         return None
