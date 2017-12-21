@@ -1,20 +1,11 @@
 # User documentation
 
-## Configuring Django
+## Install
 
-Use pip to install `django_docker_engine`, either adding a line to `requirements.txt`
+Use pip to install `django_docker_engine`, either adding a line to your `requirements.txt`
 or on the commandline:
 ```
 $ pip install django_docker_engine
-```
-
-You will need to decide on a path that should be routed to Docker. A minimal `urls.py` could look like:
-
-```
-from django.conf.urls import include, url
-import django_docker_engine
-
-urlpatterns = [ url(r'^docker/', include('django_docker_engine.urls')) ]
 ```
 
 ## Path vs. hostname routing
@@ -22,12 +13,12 @@ urlpatterns = [ url(r'^docker/', include('django_docker_engine.urls')) ]
 There are two ways to map incoming requests to containers. The default is path-based routing, but the domain-name
 can also be used.
 
-Path-based routing:
+[Path-based routing](demo_path_routing):
 - is simpler, but
 - it requires a prefix on every path passed to the containerized webapp.
 - ie: You may not use any paths starting with "/".
 
-Hostname-based routing:
+[Hostname-based routing](demo_host_routing):
 - is more complex, because it requires `HostnameRoutingMiddleware`,
 - and you will need to set up a wildcard entry in DNS to capture all subdomains.
 - but the webapp can use paths starting with "/".

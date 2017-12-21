@@ -8,6 +8,31 @@ from django_docker_engine.historian import FileHistorian
 
 class ProxyTests(unittest.TestCase):
 
+    def test_csrf_exempt_true(self):
+        proxy = Proxy(
+            '/tmp/django-docker-engine-test',
+            csrf_exempt=True
+        )
+        urlpatterns = proxy.url_patterns()
+        response = urlpatterns[0].callback(
+            request=RequestFactory().get('/fake-url'),
+            container_name='fake-container',
+            url='fake-url'
+        )
+        self.assertEqual(response.status_code, 503)
+
+    def test_csrf_exempt_default_false(self):
+        proxy = Proxy(
+            '/tmp/django-docker-engine-test'
+        )
+        urlpatterns = proxy.url_patterns()
+        response = urlpatterns[0].callback(
+            request=RequestFactory().get('/fake-url'),
+            container_name='fake-container',
+            url='fake-url'
+        )
+        self.assertEqual(response.status_code, 503)
+
     def test_proxy_please_wait(self):
         history_path = '/tmp/django-docker-history-{}'.format(
             re.sub(r'\D', '-', str(datetime.now()))
