@@ -6,7 +6,14 @@ from datetime import datetime
 from django_docker_engine.historian import FileHistorian
 
 
-class ProxyTests(unittest.TestCase):
+class CSRFTests(unittest.TestCase):
+
+    def setUp(self):
+        self.fake_kwargs = {
+            'request': RequestFactory().get('/fake-url'),
+            'container_name': 'fake-container',
+            'url': 'fake-url'
+        }
 
     def test_csrf_exempt_true(self):
         proxy = Proxy(
@@ -14,24 +21,19 @@ class ProxyTests(unittest.TestCase):
             csrf_exempt=True
         )
         urlpatterns = proxy.url_patterns()
-        response = urlpatterns[0].callback(
-            request=RequestFactory().get('/fake-url'),
-            container_name='fake-container',
-            url='fake-url'
-        )
-        self.assertEqual(response.status_code, 503)
+        get_response = urlpatterns[0].callback(**self.fake_kwargs)
+        self.assertEqual(get_response.status_code, 503)
 
     def test_csrf_exempt_default_false(self):
         proxy = Proxy(
             '/tmp/django-docker-engine-test'
         )
         urlpatterns = proxy.url_patterns()
-        response = urlpatterns[0].callback(
-            request=RequestFactory().get('/fake-url'),
-            container_name='fake-container',
-            url='fake-url'
-        )
-        self.assertEqual(response.status_code, 503)
+        get_response = urlpatterns[0].callback(**self.fake_kwargs)
+        self.assertEqual(get_response.status_code, 503)
+
+
+class ProxyTests(unittest.TestCase):
 
     def test_proxy_please_wait(self):
         history_path = '/tmp/django-docker-history-{}'.format(
