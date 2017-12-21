@@ -9,11 +9,27 @@ from django_docker_engine.historian import FileHistorian
 class CSRFTests(unittest.TestCase):
 
     def setUp(self):
-        self.fake_kwargs = {
+        self.fake_get_kwargs = {
             'request': RequestFactory().get('/fake-url'),
             'container_name': 'fake-container',
             'url': 'fake-url'
         }
+        self.fake_post_kwargs = {
+            'request': RequestFactory().post('/fake-url'),
+            'container_name': 'fake-container',
+            'url': 'fake-url'
+        }
+    # TODO?
+    #     timestamp = re.sub(r'\W', '-', datetime.now().isoformat())
+    #     data_dir = '/tmp/django-docker-tests-' + timestamp
+    #     self.root_label = 'test-root'
+    #     self.manager = DockerEngineManager(data_dir, self.root_label)
+    #     self.container_name = timestamp
+    #     self.manager.run('nginx:1.10.3-alpine',
+    #                      ports={'80/tcp': None},
+    #                      detach=True,
+    #                      labels={'test-root.port': '80'},
+    #                      cmd=None)
 
     def test_csrf_exempt_true(self):
         proxy = Proxy(
@@ -21,16 +37,22 @@ class CSRFTests(unittest.TestCase):
             csrf_exempt=True
         )
         urlpatterns = proxy.url_patterns()
-        get_response = urlpatterns[0].callback(**self.fake_kwargs)
+        get_response = urlpatterns[0].callback(**self.fake_get_kwargs)
         self.assertEqual(get_response.status_code, 503)
+        get_response = urlpatterns[0].callback(**self.fake_post_kwargs)
+        self.assertEqual(get_response.status_code, 405)
+        # TODO: We want to see that csrf is not present
 
     def test_csrf_exempt_default_false(self):
         proxy = Proxy(
             '/tmp/django-docker-engine-test'
         )
         urlpatterns = proxy.url_patterns()
-        get_response = urlpatterns[0].callback(**self.fake_kwargs)
+        get_response = urlpatterns[0].callback(**self.fake_get_kwargs)
         self.assertEqual(get_response.status_code, 503)
+        get_response = urlpatterns[0].callback(**self.fake_post_kwargs)
+        self.assertEqual(get_response.status_code, 405)
+        # TODO: We want to see that csrf is present
 
 
 class ProxyTests(unittest.TestCase):

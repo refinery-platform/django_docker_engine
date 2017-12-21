@@ -2,7 +2,7 @@ import unittest
 from datetime import datetime
 import re
 from django_docker_engine.container_managers.docker_engine \
-    import (DockerEngineManager, NoPortsOpen, ExpectedPortMissing,
+    import (DockerEngineManager, ExpectedPortMissing,
             MisconfiguredPort, NoPortLabel)
 
 
