@@ -39,7 +39,7 @@ class DockerEngineManagerTests(unittest.TestCase):
         self.assert_add_kwarg_still_fails(
             'labels', {self.root_label+'.port': '12345'},
             'alpine:3.6',
-            NoPortsOpen
+            ExpectedPortMissing
         )
 
         self.assert_add_kwarg_still_fails(
