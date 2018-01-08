@@ -17,7 +17,7 @@ setup(
     install_requires=[
         # Latest django does not work with python2.
         'django' if sys.version_info[0] > 2 else 'django<2.0',
-        'docker==2.1.0', # TODO: Why?
+        'docker==2.1.0',  # TODO: Why?
         'django-http-proxy',
         'requests'
     ],
