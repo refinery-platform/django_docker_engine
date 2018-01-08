@@ -15,7 +15,8 @@ setup(
         dirname(__file__), 'django_docker_engine', 'VERSION.txt'
     )).read().strip(),
     install_requires=[
-        'django' if sys.version_info[0] > 2 else 'django<2.0'
+        # Latest django does not work with python2.
+        'django' if sys.version_info[0] > 2 else 'django<2.0',
         'docker==2.1.0', # TODO: Why?
         'django-http-proxy',
         'requests'
