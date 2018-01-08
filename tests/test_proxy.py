@@ -1,4 +1,7 @@
 import unittest
+
+from django.http import HttpResponse, HttpResponseNotAllowed
+from httpproxy.views import HttpProxy
 from mock import mock
 from django_docker_engine.proxy import Proxy
 from django.test import RequestFactory
@@ -32,12 +35,18 @@ class CSRFTests(unittest.TestCase):
         )
         urlpatterns = proxy.url_patterns()
 
-        with mock.patch("django_docker_engine.proxy.csrf_exempt_decorator") \
-                as csrf_decorator_mock:
-            urlpatterns[0].callback(**self.fake_get_kwargs)
-            self.assertEqual(csrf_decorator_mock.call_count, 1)
-            urlpatterns[0].callback(**self.fake_post_kwargs)
-            self.assertEqual(csrf_decorator_mock.call_count, 2)
+        # Mock the HttpResponse to avoid 404 from non-existant container
+        with mock.patch.object(
+            HttpProxy,
+            "get_response",
+            return_value=HttpResponse("hello world", status=200)
+        ):
+            get_response = urlpatterns[0].callback(**self.fake_get_kwargs)
+            post_response = urlpatterns[0].callback(**self.fake_post_kwargs)
+
+        # Assert that responses coming back are actually csrf exempt
+        for response in [get_response, post_response]:
+            self.assertTrue(response.csrf_exempt)
 
     def test_csrf_exempt_default_false(self):
         proxy = Proxy(
@@ -48,8 +57,8 @@ class CSRFTests(unittest.TestCase):
                 as csrf_decorator_mock:
             get_response = urlpatterns[0].callback(**self.fake_get_kwargs)
             self.assertEqual(get_response.status_code, 503)
-            get_response = urlpatterns[0].callback(**self.fake_post_kwargs)
-            self.assertEqual(get_response.status_code, 405)
+            post_response = urlpatterns[0].callback(**self.fake_post_kwargs)
+            self.assertEqual(post_response.status_code, 405)
             self.assertEqual(csrf_decorator_mock.call_count, 0)
 
 
