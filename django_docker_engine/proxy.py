@@ -74,6 +74,7 @@ class Proxy():
             container_url = client.lookup_container_url(container_name)
             view = HttpProxy.as_view(base_url=container_url)
             if self.csrf_exempt:
+                request._dont_enforce_csrf_checks = True
                 view = csrf_exempt_decorator(view)
             return view(request, url=url)
         except (DockerEngineManagerError, NotFound, BadStatusLine) as e:
