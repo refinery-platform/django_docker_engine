@@ -20,17 +20,6 @@ class CSRFTests(unittest.TestCase):
             'container_name': 'fake-container',
             'url': 'fake-url'
         }
-    # TODO?
-    #     timestamp = re.sub(r'\W', '-', datetime.now().isoformat())
-    #     data_dir = '/tmp/django-docker-tests-' + timestamp
-    #     self.root_label = 'test-root'
-    #     self.manager = DockerEngineManager(data_dir, self.root_label)
-    #     self.container_name = timestamp
-    #     self.manager.run('nginx:1.10.3-alpine',
-    #                      ports={'80/tcp': None},
-    #                      detach=True,
-    #                      labels={'test-root.port': '80'},
-    #                      cmd=None)
 
     @mock.patch(
         "django_docker_engine.proxy.DockerClientWrapper"
