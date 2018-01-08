@@ -1,6 +1,6 @@
 import unittest
 
-from django.http import HttpResponse, HttpResponseNotAllowed
+from django.http import HttpResponse
 from httpproxy.views import HttpProxy
 from mock import mock
 from django_docker_engine.proxy import Proxy
