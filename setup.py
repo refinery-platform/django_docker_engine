@@ -1,6 +1,7 @@
 import os
 from os.path import (join, normpath, dirname, abspath)
 from setuptools import find_packages, setup
+import sys
 
 with open(join(dirname(__file__), 'README.rst')) as readme:
     README = readme.read()
@@ -14,8 +15,9 @@ setup(
         dirname(__file__), 'django_docker_engine', 'VERSION.txt'
     )).read().strip(),
     install_requires=[
-        'django',
-        'docker==2.1.0',
+        # Latest django does not work with python2.
+        'django' if sys.version_info[0] > 2 else 'django<2.0',
+        'docker==2.1.0',  # TODO: Why?
         'django-http-proxy',
         'requests'
     ],

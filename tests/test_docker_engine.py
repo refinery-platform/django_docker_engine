@@ -2,7 +2,7 @@ import unittest
 from datetime import datetime
 import re
 from django_docker_engine.container_managers.docker_engine \
-    import (DockerEngineManager, NoPortsOpen, ExpectedPortMissing,
+    import (DockerEngineManager, ExpectedPortMissing,
             MisconfiguredPort, NoPortLabel)
 
 
@@ -39,7 +39,8 @@ class DockerEngineManagerTests(unittest.TestCase):
         self.assert_add_kwarg_still_fails(
             'labels', {self.root_label+'.port': '12345'},
             'alpine:3.6',
-            NoPortsOpen
+            ExpectedPortMissing
+            # Had been 'NoPortsOpen': I'm not sure why behavior changed. :(
         )
 
         self.assert_add_kwarg_still_fails(

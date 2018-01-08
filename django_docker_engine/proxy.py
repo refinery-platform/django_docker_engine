@@ -1,6 +1,7 @@
 import logging
 from django.conf.urls import url
 from django.http import HttpResponse
+from django.views.decorators.csrf import csrf_exempt as csrf_exempt_decorator
 from docker.errors import NotFound
 from httplib import BadStatusLine
 from httpproxy.views import HttpProxy
@@ -11,6 +12,7 @@ from django_docker_engine.historian import NullHistorian
 import socket
 import errno
 import os
+
 
 try:
     from django.views import View
@@ -31,9 +33,11 @@ UrlPatterns = namedtuple('UrlPatterns', ['urlpatterns'])
 class Proxy():
     def __init__(self, data_dir, historian=NullHistorian(),
                  please_wait_title='Please wait',
-                 please_wait_body_html='<h1>Please wait</h1>'):
+                 please_wait_body_html='<h1>Please wait</h1>',
+                 csrf_exempt=False):
         self.data_dir = data_dir
         self.historian = historian
+        self.csrf_exempt = csrf_exempt
         self.content = self._render({
                 'title': please_wait_title,
                 'body_html': please_wait_body_html
@@ -69,6 +73,8 @@ class Proxy():
             client = DockerClientWrapper(self.data_dir)
             container_url = client.lookup_container_url(container_name)
             view = HttpProxy.as_view(base_url=container_url)
+            if self.csrf_exempt:
+                view = csrf_exempt_decorator(view)
             return view(request, url=url)
         except (DockerEngineManagerError, NotFound, BadStatusLine) as e:
             # TODO: Should DockerEngineManagerError be sufficient by itself?

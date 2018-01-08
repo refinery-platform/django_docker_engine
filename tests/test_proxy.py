@@ -1,9 +1,56 @@
 import unittest
+from mock import mock
 from django_docker_engine.proxy import Proxy
 from django.test import RequestFactory
 import re
 from datetime import datetime
 from django_docker_engine.historian import FileHistorian
+
+
+class CSRFTests(unittest.TestCase):
+
+    def setUp(self):
+        self.fake_get_kwargs = {
+            'request': RequestFactory().get('/fake-url'),
+            'container_name': 'fake-container',
+            'url': 'fake-url'
+        }
+        self.fake_post_kwargs = {
+            'request': RequestFactory().post('/fake-url'),
+            'container_name': 'fake-container',
+            'url': 'fake-url'
+        }
+
+    @mock.patch(
+        "django_docker_engine.proxy.DockerClientWrapper"
+        ".lookup_container_url", return_value="http://example.com"
+    )
+    def test_csrf_exempt_true(self, url_mock):
+        proxy = Proxy(
+            '/tmp/django-docker-engine-test',
+            csrf_exempt=True
+        )
+        urlpatterns = proxy.url_patterns()
+
+        with mock.patch("django_docker_engine.proxy.csrf_exempt_decorator") \
+                as csrf_decorator_mock:
+            urlpatterns[0].callback(**self.fake_get_kwargs)
+            self.assertEqual(csrf_decorator_mock.call_count, 1)
+            urlpatterns[0].callback(**self.fake_post_kwargs)
+            self.assertEqual(csrf_decorator_mock.call_count, 2)
+
+    def test_csrf_exempt_default_false(self):
+        proxy = Proxy(
+            '/tmp/django-docker-engine-test'
+        )
+        urlpatterns = proxy.url_patterns()
+        with mock.patch("django_docker_engine.proxy.csrf_exempt_decorator") \
+                as csrf_decorator_mock:
+            get_response = urlpatterns[0].callback(**self.fake_get_kwargs)
+            self.assertEqual(get_response.status_code, 503)
+            get_response = urlpatterns[0].callback(**self.fake_post_kwargs)
+            self.assertEqual(get_response.status_code, 405)
+            self.assertEqual(csrf_decorator_mock.call_count, 0)
 
 
 class ProxyTests(unittest.TestCase):
