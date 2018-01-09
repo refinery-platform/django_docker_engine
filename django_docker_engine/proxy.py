@@ -34,7 +34,7 @@ class Proxy():
     def __init__(self, data_dir, historian=NullHistorian(),
                  please_wait_title='Please wait',
                  please_wait_body_html='<h1>Please wait</h1>',
-                 csrf_exempt=False):
+                 csrf_exempt=True):
         self.data_dir = data_dir
         self.historian = historian
         self.csrf_exempt = csrf_exempt
@@ -62,10 +62,13 @@ class Proxy():
         return template.render(context)
 
     def url_patterns(self):
-        return [url(
-            r'^(?P<container_name>[^/]*)/(?P<url>.*)$',
-            self._proxy_view
-        )]
+        return [
+            url(
+                r'^(?P<container_name>[^/]*)/(?P<url>.*)$',
+                csrf_exempt_decorator(self._proxy_view) if self.csrf_exempt
+                else self._proxy_view
+            )
+        ]
 
     def _proxy_view(self, request, container_name, url):
         self.historian.record(container_name, url)
@@ -73,8 +76,6 @@ class Proxy():
             client = DockerClientWrapper(self.data_dir)
             container_url = client.lookup_container_url(container_name)
             view = HttpProxy.as_view(base_url=container_url)
-            if self.csrf_exempt:
-                view = csrf_exempt_decorator(view)
             return view(request, url=url)
         except (DockerEngineManagerError, NotFound, BadStatusLine) as e:
             # TODO: Should DockerEngineManagerError be sufficient by itself?
