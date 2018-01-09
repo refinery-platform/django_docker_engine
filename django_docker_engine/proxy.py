@@ -74,8 +74,10 @@ class Proxy():
             container_url = client.lookup_container_url(container_name)
             view = HttpProxy.as_view(base_url=container_url)
             if self.csrf_exempt:
-                request._dont_enforce_csrf_checks = True
-                view = csrf_exempt_decorator(view)
+                response = csrf_exempt_decorator(view(request, url=url))
+                response.set_cookie('csrftoken', '', expires=0)
+                return response
+
             return view(request, url=url)
         except (DockerEngineManagerError, NotFound, BadStatusLine) as e:
             # TODO: Should DockerEngineManagerError be sufficient by itself?
