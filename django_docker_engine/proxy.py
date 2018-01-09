@@ -34,7 +34,7 @@ class Proxy():
     def __init__(self, data_dir, historian=NullHistorian(),
                  please_wait_title='Please wait',
                  please_wait_body_html='<h1>Please wait</h1>',
-                 csrf_exempt=False):
+                 csrf_exempt=True):
         self.data_dir = data_dir
         self.historian = historian
         self.csrf_exempt = csrf_exempt
