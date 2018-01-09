@@ -21,36 +21,24 @@ class CSRFTests(unittest.TestCase):
             'url': 'fake-url'
         }
 
-    @mock.patch(
-        "django_docker_engine.proxy.DockerClientWrapper"
-        ".lookup_container_url", return_value="http://example.com"
-    )
-    def test_csrf_exempt_true(self, url_mock):
-        proxy = Proxy(
-            '/tmp/django-docker-engine-test',
-            csrf_exempt=True
-        )
-        urlpatterns = proxy.url_patterns()
-
+    def _check_proxy_csrf(self, csrf_exempt=True):
         with mock.patch("django_docker_engine.proxy.csrf_exempt_decorator") \
-                as csrf_decorator_mock:
-            urlpatterns[0].callback(**self.fake_get_kwargs)
-            self.assertEqual(csrf_decorator_mock.call_count, 1)
-            urlpatterns[0].callback(**self.fake_post_kwargs)
-            self.assertEqual(csrf_decorator_mock.call_count, 2)
+                as csrf_mock:
+            Proxy(
+                '/tmp/django-docker-engine-test',
+                csrf_exempt=csrf_exempt
+            ).url_patterns()
 
-    def test_csrf_exempt_default_false(self):
-        proxy = Proxy(
-            '/tmp/django-docker-engine-test'
-        )
-        urlpatterns = proxy.url_patterns()
-        with mock.patch("django_docker_engine.proxy.csrf_exempt_decorator") \
-                as csrf_decorator_mock:
-            get_response = urlpatterns[0].callback(**self.fake_get_kwargs)
-            self.assertEqual(get_response.status_code, 503)
-            get_response = urlpatterns[0].callback(**self.fake_post_kwargs)
-            self.assertEqual(get_response.status_code, 405)
-            self.assertEqual(csrf_decorator_mock.call_count, 0)
+            if csrf_exempt:
+                self.assertTrue(csrf_mock.called)
+            else:
+                self.assertFalse(csrf_mock.called)
+
+    def test_csrf_exempt_default_true(self):
+        self._check_proxy_csrf()
+
+    def test_csrf_exempt_false(self):
+        self._check_proxy_csrf(csrf_exempt=False)
 
 
 class ProxyTests(unittest.TestCase):
