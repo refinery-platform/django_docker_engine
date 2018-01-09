@@ -23,16 +23,12 @@ class CSRFTests(unittest.TestCase):
 
     def _check_proxy_csrf(self, csrf_exempt=True):
         with mock.patch("django_docker_engine.proxy.csrf_exempt_decorator") \
-                as csrf_mock:
+                as csrf_exempt_mock:
             Proxy(
                 '/tmp/django-docker-engine-test',
                 csrf_exempt=csrf_exempt
             ).url_patterns()
-
-            if csrf_exempt:
-                self.assertTrue(csrf_mock.called)
-            else:
-                self.assertFalse(csrf_mock.called)
+            assert csrf_exempt_mock.called == csrf_exempt
 
     def test_csrf_exempt_default_true(self):
         self._check_proxy_csrf()
