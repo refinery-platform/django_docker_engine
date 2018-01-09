@@ -62,15 +62,13 @@ class Proxy():
         return template.render(context)
 
     def url_patterns(self):
-        if self.csrf_exempt:
-            proxy_view = csrf_exempt_decorator(self._proxy_view)
-        else:
-            proxy_view = self._proxy_view
-
-        return [url(
-            r'^(?P<container_name>[^/]*)/(?P<url>.*)$',
-            proxy_view
-        )]
+        return [
+            url(
+                r'^(?P<container_name>[^/]*)/(?P<url>.*)$',
+                csrf_exempt_decorator(self._proxy_view) if self.csrf_exempt
+                else self._proxy_view
+            )
+        ]
 
     def _proxy_view(self, request, container_name, url):
         self.historian.record(container_name, url)
