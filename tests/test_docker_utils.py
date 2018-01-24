@@ -160,15 +160,26 @@ class LiveDockerTestsClean(LiveDockerTests):
         # Put what should be the fastest one first, so we will be less
         # likely to be confused by warm-up time.
 
-        with Timer() as default:
-            url = self.get_docker_url()  # Default: 0.5
+        with Timer() as default_cold:
+            url = self.get_docker_url()
             self.assert_loads_eventually(url, 'Welcome to nginx!')
 
         with Timer() as slow:
             url = self.get_docker_url({'cpus': 0.01})
             self.assert_loads_eventually(url, 'Welcome to nginx!')
 
-        self.assertLess(default.elapsed, slow.elapsed)
+        with Timer() as default_warm:
+            url = self.get_docker_url()
+            self.assert_loads_eventually(url, 'Welcome to nginx!')
+
+        message = 'Less CPU should be slow: ' \
+                  '{cold} < {slow} > {warm}?'.format(
+            cold=default_cold.elapsed,
+            warm=default_warm.elapsed,
+            slow=slow.elapsed
+        )
+        self.assertLess(default_warm.elapsed, slow.elapsed, message)
+        self.assertLess(default_cold.elapsed, slow.elapsed, message)
 
     def test_container_spec_with_extra_directories_good(self):
         self.get_docker_url({
