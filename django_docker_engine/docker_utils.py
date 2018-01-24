@@ -17,7 +17,8 @@ class DockerContainerSpec():
                  container_input_path='/tmp/input.json',
                  extra_directories=[],
                  labels={},
-                 container_port=80):
+                 container_port=80,
+                 cpus=0.5):
         self.image_name = image_name
         self.container_name = container_name
         self.container_input_path = container_input_path
@@ -25,6 +26,7 @@ class DockerContainerSpec():
         self.input = input
         self.labels = labels
         self.container_port = container_port
+        self.cpus = cpus
 
 
 class DockerClientWrapper():
@@ -98,7 +100,8 @@ class DockerClientWrapper():
             cmd=None,
             detach=True,
             labels=labels,
-            volumes=volumes
+            volumes=volumes,
+            nano_cpus=int(container_spec.cpus * 10e9)
         )
         return self.lookup_container_url(container_spec.container_name)
 
