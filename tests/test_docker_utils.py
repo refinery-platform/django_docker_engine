@@ -11,7 +11,7 @@ from requests.exceptions import ConnectionError
 from distutils import dir_util
 from time import sleep
 from django_docker_engine.docker_utils import DockerClientWrapper, DockerContainerSpec
-
+from contexttimer import Timer
 
 logging.basicConfig()
 logger = logging.getLogger(__name__)
@@ -95,7 +95,7 @@ class LiveDockerTests(unittest.TestCase):
         container directly, rather than going through the proxy, so there
         is no corresponding "assert_loads_immediately".
         """
-        for i in xrange(10):
+        for i in xrange(100):
             try:
                 response = client.get(url)
                 if response.status_code == 200:
@@ -103,7 +103,7 @@ class LiveDockerTests(unittest.TestCase):
                 return
             except (ConnectionError, URLError):
                 pass
-            sleep(1)
+            sleep(0.1)
         self.fail('Never got 200')
 
     def ls_tmp(self):
@@ -154,18 +154,25 @@ class LiveDockerTestsClean(LiveDockerTests):
         })
         self.assert_loads_eventually(url, '{"foo": "bar"}')
 
-    # def test_container_spec_cpu_quota(self):
+    def test_container_spec_cpu_quota(self):
         # This test is based on timing, so race conditions are likely.
-        # TODO: Make timing assertions
 
-        # url = self.get_docker_url({'cpus': 1})
-        # self.assert_loads_eventually(url, 'Welcome to nginx!')
-        #
-        # url = self.get_docker_url({'cpus': 0.25})
-        # self.assert_loads_eventually(url, 'Welcome to nginx!')
-        #
-        # url = self.get_docker_url({'cpus': 1})
-        # self.assert_loads_eventually(url, 'Welcome to nginx!')
+        # Put what should be the fastest one first, so we will be less
+        # likely to be confused by warm-up time.
+        with Timer() as cpu_100:
+            url = self.get_docker_url({'cpus': 1})
+            self.assert_loads_eventually(url, 'Welcome to nginx!')
+
+        with Timer() as cpu_50:
+            url = self.get_docker_url()  # Default: 0.5
+            self.assert_loads_eventually(url, 'Welcome to nginx!')
+
+        with Timer() as cpu_25:
+            url = self.get_docker_url({'cpus': 0.25})
+            self.assert_loads_eventually(url, 'Welcome to nginx!')
+
+        self.assertLess(cpu_100.elapsed, cpu_50.elapsed)
+        self.assertLess(cpu_50.elapsed, cpu_25.elapsed)
 
     def test_container_spec_with_extra_directories_good(self):
         self.get_docker_url({

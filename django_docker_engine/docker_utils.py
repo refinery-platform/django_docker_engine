@@ -101,7 +101,7 @@ class DockerClientWrapper():
             detach=True,
             labels=labels,
             volumes=volumes,
-            nano_cpus=int(container_spec.cpus * 10e9)
+            nano_cpus=int(container_spec.cpus * 1e9)
         )
         return self.lookup_container_url(container_spec.container_name)
 
