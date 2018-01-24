@@ -27,7 +27,8 @@ class DockerEngineManagerTests(unittest.TestCase):
         else:
             self.manager.get_url(self.container_name)
         # TODO: Why the '/'?
-        self.manager.list({'name': '/' + self.container_name})[0].remove(force=True)
+        self.manager.list({'name': '/' + self.container_name}
+                          )[0].remove(force=True)
 
     def test_expected_errors(self):
         self.assert_add_kwarg_still_fails(
@@ -37,7 +38,7 @@ class DockerEngineManagerTests(unittest.TestCase):
         )
 
         self.assert_add_kwarg_still_fails(
-            'labels', {self.root_label+'.port': '12345'},
+            'labels', {self.root_label + '.port': '12345'},
             'alpine:3.6',
             ExpectedPortMissing
             # Had been 'NoPortsOpen': I'm not sure why behavior changed. :(
@@ -50,7 +51,7 @@ class DockerEngineManagerTests(unittest.TestCase):
         )
 
         self.assert_add_kwarg_still_fails(
-            'labels', {self.root_label+'.port': '80'},
+            'labels', {self.root_label + '.port': '80'},
             'nginx:1.10.3-alpine',
             MisconfiguredPort
         )

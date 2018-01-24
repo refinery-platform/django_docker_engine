@@ -24,9 +24,11 @@ class LiveDockerTests(unittest.TestCase):
         # and restarts where it left off when it wakes up.
         # https://github.com/docker/for-mac/issues/17
         # This gets it back in sync with reality.
-        subprocess.call('docker run --rm --privileged alpine hwclock -s'.split(' '))
+        subprocess.call(
+            'docker run --rm --privileged alpine hwclock -s'.split(' '))
 
-        self.client_wrapper = DockerClientWrapper('/tmp/django-docker-engine-test')
+        self.client_wrapper = DockerClientWrapper(
+            '/tmp/django-docker-engine-test')
         self.test_label = self.client_wrapper.root_label + '.test'
         self.initial_containers = self.client_wrapper.list()
         self.initial_tmp = self.ls_tmp()
@@ -177,8 +179,8 @@ class LiveDockerTestsClean(LiveDockerTests):
 
         message = 'Less CPU should be slower: ' \
                   '{} ~ {} < {} > {}?'.format(
-            *[x.elapsed for x in [warmup, fast_1, slow, fast_2]]
-        )
+                      *[x.elapsed for x in [warmup, fast_1, slow, fast_2]]
+                  )
         self.assertLess(fast_1.elapsed, slow.elapsed, message)
         self.assertLess(fast_2.elapsed, slow.elapsed, message)
 

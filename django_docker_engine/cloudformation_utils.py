@@ -59,9 +59,9 @@ def _raw_events(events, since):
 
 def _expand_tags(tags):
     return [{
-                'Key': key,
-                'Value': tags[key]
-            } for key in tags]
+        'Key': key,
+        'Value': tags[key]
+    } for key in tags]
 
 
 def _tail_logs(stack_id, in_progress, complete, timeout=300, increment=2):
@@ -100,7 +100,8 @@ def _create_ec2_template(
     if not(key_name):
         raise RuntimeError('key_name is required')
     if not (host_cidr or extra_security_groups):
-        raise RuntimeError('Either a CIDR or a AWS Security Group must be given')
+        raise RuntimeError(
+            'Either a CIDR or a AWS Security Group must be given')
     sg_cidr = host_cidr or '0.0.0.0/0'
 
     min_port = 32768
@@ -153,7 +154,8 @@ def _create_ec2_template(
             SecurityGroupIngress=security_group_rules
         )
     )
-    all_security_groups = list(extra_security_groups) + [default_security_group]
+    all_security_groups = list(extra_security_groups) + \
+        [default_security_group]
     warning = 'WARNING: dockerd should not be open unless ' \
               'security is provided at a higher level'
     command = "echo 'OPTIONS=\"$OPTIONS -H tcp://0.0.0.0:2375\" # {}' " \
@@ -223,7 +225,7 @@ def _get_ip_for_stack(stack_id):
         output['OutputValue']
         for output in stack.outputs
         if output['OutputKey'] == _EC2_OUTPUT_KEY
-        ]
+    ]
     assert len(ec2_ids) == 1, 'Should be exactly one ec2_id: %s' % ec2_ids
     ec2_id = ec2_ids[0]
     logging.info('ec2 ID: %s', ec2_id)

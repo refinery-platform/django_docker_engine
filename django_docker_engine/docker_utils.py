@@ -90,7 +90,7 @@ class DockerClientWrapper():
         labels = container_spec.labels
         labels.update({
             self.root_label: 'true',
-            self.root_label+'.port': str(container_spec.container_port)
+            self.root_label + '.port': str(container_spec.container_port)
         })
 
         self._containers_manager.run(
@@ -127,7 +127,8 @@ class DockerClientWrapper():
             container.remove(force=True)
             for mount in mounts:
                 source = mount['Source']
-                target = source if os.path.isdir(source) else os.path.dirname(source)
+                target = source if os.path.isdir(
+                    source) else os.path.dirname(source)
                 rmtree(
                     target,
                     ignore_errors=True
