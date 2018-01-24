@@ -34,6 +34,15 @@ class LiveDockerTests(unittest.TestCase):
         # There may be containers running which are not "my containers".
         self.assertEqual(0, self.count_containers())
 
+    def get_docker_url(self, extra_kwargs={}):
+        kwargs = {
+            'image_name': 'nginx:1.10.3-alpine',
+            'container_name': self.timestamp(),
+            'labels': {self.test_label: 'true'}
+        }
+        kwargs.update(extra_kwargs)
+        return self.client_wrapper.run(DockerContainerSpec(**kwargs))
+
     def docker_host(self):
         return os.environ.get('DOCKER_HOST')
 
@@ -109,19 +118,12 @@ class LiveDockerTestsDirty(LiveDockerTests):
     # the same tearDown assertions that we do for other tests.
 
     def test_container_spec_with_extra_directories_bad(self):
-        container_name = self.timestamp()
-        test_dirs = ["/test", "coffee"]
         with self.assertRaises(AssertionError) as context:
-            self.client_wrapper.run(
-                DockerContainerSpec(
-                    image_name='nginx:1.10.3-alpine',
-                    container_name=container_name,
-                    input={'foo': 'bar'},
-                    container_input_path='/usr/share/nginx/html/index.html',
-                    extra_directories=test_dirs,
-                    labels={self.test_label: 'true'}
-                )
-            )
+            self.get_docker_url({
+                'input': {'foo': 'bar'},
+                'container_input_path': '/usr/share/nginx/html/index.html',
+                'extra_directories': ["/test", "coffee"]
+            })
         self.assertEqual(
             context.exception.message,
             "Specified path: `coffee` is not absolute"
@@ -136,46 +138,41 @@ class LiveDockerTestsClean(LiveDockerTests):
         self.assertEqual(self.initial_containers, self.client_wrapper.list())
         self.assertEqual(self.initial_tmp, self.ls_tmp())
 
-    # Tests at the top are low level;
-    # Tests at the bottom are at higher levels of abstraction.
-
     def test_at_a_minimum(self):
         # A no-op, but if the tests stall, it may be
         # helpful to see if they are even starting.
         self.assertTrue(True)
 
     def test_container_spec_no_input(self):
-        url = self.client_wrapper.run(DockerContainerSpec(
-            image_name='nginx:1.10.3-alpine',
-            container_name=self.timestamp(),
-            labels={self.test_label: 'true'}
-        ))
+        url = self.get_docker_url()
         self.assert_loads_eventually(url, 'Welcome to nginx!')
 
     def test_container_spec_with_input(self):
-        url = self.client_wrapper.run(DockerContainerSpec(
-            image_name='nginx:1.10.3-alpine',
-            container_name=self.timestamp(),
-            labels={self.test_label: 'true'},
-            input={'foo': 'bar'},
-            container_input_path='/usr/share/nginx/html/index.html'
-        ))
+        url = self.get_docker_url({
+            'input': {'foo': 'bar'},
+            'container_input_path': '/usr/share/nginx/html/index.html'
+        })
         self.assert_loads_eventually(url, '{"foo": "bar"}')
 
-    def test_container_spec_with_extra_directories_good(self):
-        container_name = self.timestamp()
+    # def test_container_spec_cpu_quota(self):
+        # This test is based on timing, so race conditions are likely.
+        # TODO: Make timing assertions
 
-        test_dirs = ["/test", "/coffee"]
-        self.client_wrapper.run(
-            DockerContainerSpec(
-                image_name='nginx:1.10.3-alpine',
-                container_name=container_name,
-                input={'foo': 'bar'},
-                container_input_path='/usr/share/nginx/html/index.html',
-                extra_directories=test_dirs,
-                labels={self.test_label: 'true'}
-            )
-        )
+        # url = self.get_docker_url({'cpus': 1})
+        # self.assert_loads_eventually(url, 'Welcome to nginx!')
+        #
+        # url = self.get_docker_url({'cpus': 0.25})
+        # self.assert_loads_eventually(url, 'Welcome to nginx!')
+        #
+        # url = self.get_docker_url({'cpus': 1})
+        # self.assert_loads_eventually(url, 'Welcome to nginx!')
+
+    def test_container_spec_with_extra_directories_good(self):
+        self.get_docker_url({
+            'input': {'foo': 'bar'},
+            'container_input_path': '/usr/share/nginx/html/index.html',
+            'extra_directories': ["/test", "/coffee"]
+        })
 
     def test_purge(self):
         """
@@ -185,11 +182,7 @@ class LiveDockerTestsClean(LiveDockerTests):
         self.assertEqual(0, self.count_containers())
         ls_tmp_orig = self.ls_tmp()
 
-        url = self.client_wrapper.run(DockerContainerSpec(
-            image_name='nginx:1.10.3-alpine',
-            container_name=self.timestamp(),
-            labels={self.test_label: 'true'}
-        ))
+        url = self.get_docker_url()
         self.assertEqual(1, self.count_containers())
         self.assert_loads_eventually(url, 'Welcome to nginx!')
         self.assertGreater(self.ls_tmp(), ls_tmp_orig)
