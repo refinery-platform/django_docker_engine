@@ -49,7 +49,7 @@ class LiveDockerTests(unittest.TestCase):
             'labels': {self.test_label: 'true'}
         }
         kwargs.update(extra_kwargs)
-        pair =  (
+        pair = (
             self.client_wrapper.run(DockerContainerSpec(**kwargs)),
             timestamp
         )
