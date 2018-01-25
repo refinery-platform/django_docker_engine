@@ -49,7 +49,7 @@ class ProxyTests(unittest.TestCase):
         proxy = Proxy(
             '/tmp/django-docker-engine-test',
             historian=historian,
-            please_wait_title='<'+title_text+'>',
+            please_wait_title='<' + title_text + '>',
             please_wait_body_html=body_html
         )
         urlpatterns = proxy.url_patterns()
@@ -65,7 +65,8 @@ class ProxyTests(unittest.TestCase):
         self.assertEqual(response.reason_phrase, 'Container not yet available')
 
         # Title is escaped
-        self.assertIn('<title>&lt;'+title_text+'&gt;</title>', response.content)
+        self.assertIn('<title>&lt;' + title_text +
+                      '&gt;</title>', response.content)
         # Body is not escaped
         self.assertIn(body_html, response.content)
 

@@ -3,7 +3,8 @@ import requests
 import subprocess
 import time
 import socket
-from django_docker_engine.docker_utils import (DockerContainerSpec, DockerClientWrapper)
+from django_docker_engine.docker_utils import (
+    DockerContainerSpec, DockerClientWrapper)
 from shutil import rmtree
 from os import mkdir
 
@@ -21,10 +22,12 @@ class PathRoutingTests(unittest.TestCase):
 
     def setUp(self):
         self.port = self.free_port()
-        self.process = subprocess.Popen(['./manage.py', 'runserver', self.port])
+        self.process = subprocess.Popen(
+            ['./manage.py', 'runserver', self.port])
         time.sleep(1)
         self.container_name = 'test-' + self.port
-        self.url = 'http://localhost:{}/docker/{}/'.format(self.port, self.container_name)
+        self.url = 'http://localhost:{}/docker/{}/'.format(
+            self.port, self.container_name)
         self.tmp_dir = '/tmp/test-' + self.port
         mkdir(self.tmp_dir)
         # TODO: Might use mkdtemp, but Docker couldn't see the directory?
@@ -54,7 +57,8 @@ class PathRoutingTests(unittest.TestCase):
         self.assertIn('nginx', r.content)
 
     def test_url(self):
-        self.assertRegexpMatches(self.url, r'http://localhost:\d+/docker/test-\d+/')
+        self.assertRegexpMatches(
+            self.url, r'http://localhost:\d+/docker/test-\d+/')
 
 
 class HostRoutingTests(PathRoutingTests):
@@ -87,4 +91,5 @@ class HostRoutingTests(PathRoutingTests):
     # Tests from superclass are run
 
     def test_url(self):
-        self.assertRegexpMatches(self.url, r'http://container-name.docker.localhost:\d+/')
+        self.assertRegexpMatches(
+            self.url, r'http://container-name.docker.localhost:\d+/')

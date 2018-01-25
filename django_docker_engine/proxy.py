@@ -39,12 +39,13 @@ class Proxy():
         self.historian = historian
         self.csrf_exempt = csrf_exempt
         self.content = self._render({
-                'title': please_wait_title,
-                'body_html': please_wait_body_html
+            'title': please_wait_title,
+            'body_html': please_wait_body_html
         })
 
     def _render(self, context):
-        template_path = os.path.join(os.path.dirname(__file__), 'please-wait.html')
+        template_path = os.path.join(
+            os.path.dirname(__file__), 'please-wait.html')
         template_code = open(template_path).read()
 
         # Normally, we would use template loaders, but could there be

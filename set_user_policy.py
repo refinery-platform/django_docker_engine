@@ -37,7 +37,8 @@ class PolicySetter():
             'RunAndTerminateInstances':
                 ['ec2:RunInstances', 'ec2:TerminateInstances'],
             'AuthorizeSecurityGroupIngressAndEgress':
-                ['ec2:AuthorizeSecurityGroupEgress', 'ec2:AuthorizeSecurityGroupIngress'],
+                ['ec2:AuthorizeSecurityGroupEgress',
+                    'ec2:AuthorizeSecurityGroupIngress'],
             'IamPassRole':  # Assign a role to ECS EC2 instance
                 ['iam:PassRole'],
             'EcsAllowEverything':

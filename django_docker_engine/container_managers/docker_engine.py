@@ -46,11 +46,13 @@ class DockerEngineManager(BaseManager):
 
         remote_host_match = re.match(r'^http://([^:]+):\d+$', self._base_url)
         if remote_host_match:
-            self.host_files = _RemoteHostFiles(remote_host_match.group(1), self.pem)
+            self.host_files = _RemoteHostFiles(
+                remote_host_match.group(1), self.pem)
         elif self._base_url == 'http+docker://localunixsocket':
             self.host_files = _LocalHostFiles()
         else:
-            raise RuntimeError('Unexpected client base_url: %s', self._base_url)
+            raise RuntimeError(
+                'Unexpected client base_url: %s', self._base_url)
 
     def run(self, image_name, cmd, **kwargs):
         return self._containers_client.run(image_name, cmd, **kwargs)
@@ -65,10 +67,11 @@ class DockerEngineManager(BaseManager):
         elif self._base_url == 'http+docker://localunixsocket':
             host = 'localhost'
         else:
-            raise RuntimeError('Unexpected client base_url: %s', self._base_url)
+            raise RuntimeError(
+                'Unexpected client base_url: %s', self._base_url)
         container = self._containers_client.get(container_name)
 
-        port_key = self._root_label+'.port'
+        port_key = self._root_label + '.port'
         try:
             container_port = container.attrs['Config']['Labels'][port_key]
         except KeyError:
@@ -103,7 +106,8 @@ class DockerEngineManager(BaseManager):
                 )
             )
 
-        assert len(http_port_info) == 1  # TODO: Can we produce this condition in a test?
+        # TODO: Can we produce this condition in a test?
+        assert len(http_port_info) == 1
         port_number = http_port_info[0]['HostPort']
         return 'http://{}:{}'.format(host, port_number)
 
@@ -158,7 +162,8 @@ class _RemoteHostFiles(_HostFiles):
             'ec2-user@{}'.format(self.host), command])
 
     def write(self, path, content):
-        self._exec("cat > {} <<'END_CONTENT'\n{}\nEND_CONTENT".format(path, content))
+        self._exec(
+            "cat > {} <<'END_CONTENT'\n{}\nEND_CONTENT".format(path, content))
 
     def mkdir_p(self, path):
         self._exec('mkdir -p {}'.format(path))

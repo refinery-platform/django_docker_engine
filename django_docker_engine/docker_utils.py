@@ -17,7 +17,8 @@ class DockerContainerSpec():
                  container_input_path='/tmp/input.json',
                  extra_directories=[],
                  labels={},
-                 container_port=80):
+                 container_port=80,
+                 cpus=0.5):
         self.image_name = image_name
         self.container_name = container_name
         self.container_input_path = container_input_path
@@ -25,6 +26,7 @@ class DockerContainerSpec():
         self.input = input
         self.labels = labels
         self.container_port = container_port
+        self.cpus = cpus
 
 
 class DockerClientWrapper():
@@ -55,7 +57,7 @@ class DockerClientWrapper():
         image_name = container_spec.image_name
         if (':' not in image_name):
             image_name += ':latest'
-            # Without tag the SDK pulls every version; not what I expected.
+            # Without a tag the SDK pulls every version; not what I expected.
             # https://github.com/docker/docker-py/issues/1510
 
         # TODO: With the tmp volumes in the other branch, this will change.
@@ -88,7 +90,7 @@ class DockerClientWrapper():
         labels = container_spec.labels
         labels.update({
             self.root_label: 'true',
-            self.root_label+'.port': str(container_spec.container_port)
+            self.root_label + '.port': str(container_spec.container_port)
         })
 
         self._containers_manager.run(
@@ -98,7 +100,8 @@ class DockerClientWrapper():
             cmd=None,
             detach=True,
             labels=labels,
-            volumes=volumes
+            volumes=volumes,
+            nano_cpus=int(container_spec.cpus * 1e9)
         )
         return self.lookup_container_url(container_spec.container_name)
 
@@ -124,7 +127,8 @@ class DockerClientWrapper():
             container.remove(force=True)
             for mount in mounts:
                 source = mount['Source']
-                target = source if os.path.isdir(source) else os.path.dirname(source)
+                target = source if os.path.isdir(
+                    source) else os.path.dirname(source)
                 rmtree(
                     target,
                     ignore_errors=True
