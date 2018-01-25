@@ -166,28 +166,23 @@ class LiveDockerTestsClean(LiveDockerTests):
         })[0]
         self.assert_loads_eventually(url, '{"foo": "bar"}')
 
-    
-    @patch.object(DockerEngineManager, 'run')
-    @patch.object(DockerClientWrapper, 'lookup_container_url')
-    def test_container_spec_cpu_default(self, mock_lookup, mock_run):
-        old_dirs = set(self.ls_tmp())
-        self.get_docker_url_timestamp()
-        (args, kwargs) = mock_run.call_args
-        self.assertEqual(kwargs['nano_cpus'], 5e8)
-        new_dirs = set(self.ls_tmp()) - old_dirs
-        for dir in new_dirs:
-            rmtree('/tmp/django-docker-engine-test/' + dir)
+    def assert_cpu_quota(self, expected, given={}):
+        with patch.object(DockerEngineManager, 'run') as mock_run, \
+                patch.object(DockerClientWrapper, 'lookup_container_url'):
+            old_dirs = set(self.ls_tmp())
+            self.get_docker_url_timestamp(given)
+            (args, kwargs) = mock_run.call_args
+            self.assertEqual(kwargs['nano_cpus'], expected)
+            new_dirs = set(self.ls_tmp()) - old_dirs
+            # Can't rely on normal cleanup, because there is no container.
+            for dir in new_dirs:
+                rmtree('/tmp/django-docker-engine-test/' + dir)
 
-    @patch.object(DockerEngineManager, 'run')
-    @patch.object(DockerClientWrapper, 'lookup_container_url')
-    def test_container_spec_cpu_small(self, mock_lookup, mock_run):
-        old_dirs = set(self.ls_tmp())
-        self.get_docker_url_timestamp({'cpus': 0.01})
-        (args, kwargs) = mock_run.call_args
-        self.assertEqual(kwargs['nano_cpus'], 1e7)
-        new_dirs = set(self.ls_tmp()) - old_dirs
-        for dir in new_dirs:
-            rmtree('/tmp/django-docker-engine-test/' + dir)
+    def test_container_spec_cpu_default(self):
+        self.assert_cpu_quota(5e8)
+
+    def test_container_spec_cpu_small(self):
+        self.assert_cpu_quota(1e7, given={'cpus': 0.01})
 
     def test_container_spec_with_extra_directories_good(self):
         self.get_docker_url_timestamp({
