@@ -13,6 +13,7 @@ from time import sleep
 from django_docker_engine.docker_utils import DockerClientWrapper, DockerContainerSpec
 from django_docker_engine.container_managers.docker_engine import DockerEngineManager
 from mock import patch
+from shutil import rmtree
 
 logging.basicConfig()
 logger = logging.getLogger(__name__)
@@ -33,18 +34,26 @@ class LiveDockerTests(unittest.TestCase):
         self.test_label = self.client_wrapper.root_label + '.test'
         self.initial_containers = self.client_wrapper.list()
         self.initial_tmp = self.ls_tmp()
+        if self.initial_tmp != []:
+            logger.warn('Previous tests left junk in {}'.format(
+                self.client_wrapper._get_data_dir()))
 
         # There may be containers running which are not "my containers".
         self.assertEqual(0, self.count_containers())
 
-    def get_docker_url(self, extra_kwargs={}):
+    def get_docker_url_timestamp(self, extra_kwargs={}):
+        timestamp = self.timestamp()
         kwargs = {
             'image_name': 'nginx:1.10.3-alpine',
-            'container_name': self.timestamp(),
+            'container_name': timestamp,
             'labels': {self.test_label: 'true'}
         }
         kwargs.update(extra_kwargs)
-        return self.client_wrapper.run(DockerContainerSpec(**kwargs))
+        pair =  (
+            self.client_wrapper.run(DockerContainerSpec(**kwargs)),
+            timestamp
+        )
+        return pair
 
     def docker_host(self):
         return os.environ.get('DOCKER_HOST')
@@ -122,7 +131,7 @@ class LiveDockerTestsDirty(LiveDockerTests):
 
     def test_container_spec_with_extra_directories_bad(self):
         with self.assertRaises(AssertionError) as context:
-            self.get_docker_url({
+            self.get_docker_url_timestamp({
                 'input': {'foo': 'bar'},
                 'container_input_path': '/usr/share/nginx/html/index.html',
                 'extra_directories': ["/test", "coffee"]
@@ -147,32 +156,41 @@ class LiveDockerTestsClean(LiveDockerTests):
         self.assertTrue(True)
 
     def test_container_spec_no_input(self):
-        url = self.get_docker_url()
+        url = self.get_docker_url_timestamp()[0]
         self.assert_loads_eventually(url, 'Welcome to nginx!')
 
     def test_container_spec_with_input(self):
-        url = self.get_docker_url({
+        url = self.get_docker_url_timestamp({
             'input': {'foo': 'bar'},
             'container_input_path': '/usr/share/nginx/html/index.html'
-        })
+        })[0]
         self.assert_loads_eventually(url, '{"foo": "bar"}')
 
+    
     @patch.object(DockerEngineManager, 'run')
     @patch.object(DockerClientWrapper, 'lookup_container_url')
     def test_container_spec_cpu_default(self, mock_lookup, mock_run):
-        self.get_docker_url()
+        old_dirs = set(self.ls_tmp())
+        self.get_docker_url_timestamp()
         (args, kwargs) = mock_run.call_args
         self.assertEqual(kwargs['nano_cpus'], 5e8)
+        new_dirs = set(self.ls_tmp()) - old_dirs
+        for dir in new_dirs:
+            rmtree('/tmp/django-docker-engine-test/' + dir)
 
     @patch.object(DockerEngineManager, 'run')
     @patch.object(DockerClientWrapper, 'lookup_container_url')
     def test_container_spec_cpu_small(self, mock_lookup, mock_run):
-        self.get_docker_url({'cpus': 0.01})
+        old_dirs = set(self.ls_tmp())
+        self.get_docker_url_timestamp({'cpus': 0.01})
         (args, kwargs) = mock_run.call_args
         self.assertEqual(kwargs['nano_cpus'], 1e7)
+        new_dirs = set(self.ls_tmp()) - old_dirs
+        for dir in new_dirs:
+            rmtree('/tmp/django-docker-engine-test/' + dir)
 
     def test_container_spec_with_extra_directories_good(self):
-        self.get_docker_url({
+        self.get_docker_url_timestamp({
             'input': {'foo': 'bar'},
             'container_input_path': '/usr/share/nginx/html/index.html',
             'extra_directories': ["/test", "/coffee"]
@@ -186,7 +204,7 @@ class LiveDockerTestsClean(LiveDockerTests):
         self.assertEqual(0, self.count_containers())
         ls_tmp_orig = self.ls_tmp()
 
-        url = self.get_docker_url()
+        url = self.get_docker_url_timestamp()[0]
         self.assertEqual(1, self.count_containers())
         self.assert_loads_eventually(url, 'Welcome to nginx!')
         self.assertGreater(self.ls_tmp(), ls_tmp_orig)
