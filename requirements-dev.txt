@@ -1,4 +1,3 @@
 flake8==3.3.0
-mock==2.0.0
-contexttimer==0.3.3
+mock==2.0.0  # This is a builtin in Python 3.3 and above
 paramiko==2.1.2  # Only needed if trying to run tests against remote docker engine

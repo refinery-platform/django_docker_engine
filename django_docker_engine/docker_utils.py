@@ -57,7 +57,7 @@ class DockerClientWrapper():
         image_name = container_spec.image_name
         if (':' not in image_name):
             image_name += ':latest'
-            # Without tag the SDK pulls every version; not what I expected.
+            # Without a tag the SDK pulls every version; not what I expected.
             # https://github.com/docker/docker-py/issues/1510
 
         # TODO: With the tmp volumes in the other branch, this will change.

@@ -11,7 +11,8 @@ from requests.exceptions import ConnectionError
 from distutils import dir_util
 from time import sleep
 from django_docker_engine.docker_utils import DockerClientWrapper, DockerContainerSpec
-from contexttimer import Timer
+from django_docker_engine.container_managers.docker_engine import DockerEngineManager
+from mock import patch
 
 logging.basicConfig()
 logger = logging.getLogger(__name__)
@@ -156,33 +157,19 @@ class LiveDockerTestsClean(LiveDockerTests):
         })
         self.assert_loads_eventually(url, '{"foo": "bar"}')
 
-    def test_container_spec_cpu_quota(self):
-        # This test is based on timing, so race conditions are likely.
+    @patch.object(DockerEngineManager, 'run')
+    @patch.object(DockerClientWrapper, 'lookup_container_url')
+    def test_container_spec_cpu_default(self, mock_lookup, mock_run):
+        self.get_docker_url()
+        (args, kwargs) = mock_run.call_args
+        self.assertEqual(kwargs['nano_cpus'], 5e8)
 
-        # This one is not compared against the others,
-        # since behavior varies depending on whether it is in cache or not.
-        with Timer() as warmup:
-            url = self.get_docker_url()
-            self.assert_loads_eventually(url, 'Welcome to nginx!')
-
-        with Timer() as fast_1:
-            url = self.get_docker_url({'cpus': 1})
-            self.assert_loads_eventually(url, 'Welcome to nginx!')
-
-        with Timer() as slow:
-            url = self.get_docker_url({'cpus': 0.01})
-            self.assert_loads_eventually(url, 'Welcome to nginx!')
-
-        with Timer() as fast_2:
-            url = self.get_docker_url({'cpus': 1})
-            self.assert_loads_eventually(url, 'Welcome to nginx!')
-
-        message = 'Less CPU should be slower: ' \
-                  '{} ~ {} < {} > {}?'.format(
-                      *[x.elapsed for x in [warmup, fast_1, slow, fast_2]]
-                  )
-        self.assertLess(fast_1.elapsed, slow.elapsed, message)
-        self.assertLess(fast_2.elapsed, slow.elapsed, message)
+    @patch.object(DockerEngineManager, 'run')
+    @patch.object(DockerClientWrapper, 'lookup_container_url')
+    def test_container_spec_cpu_small(self, mock_lookup, mock_run):
+        self.get_docker_url({'cpus': 0.01})
+        (args, kwargs) = mock_run.call_args
+        self.assertEqual(kwargs['nano_cpus'], 1e7)
 
     def test_container_spec_with_extra_directories_good(self):
         self.get_docker_url({
