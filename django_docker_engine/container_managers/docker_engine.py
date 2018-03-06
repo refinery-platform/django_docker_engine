@@ -48,7 +48,9 @@ class DockerEngineManager(BaseManager):
         if remote_host_match:
             self.host_files = _RemoteHostFiles(
                 remote_host_match.group(1), self.pem)
-        elif self._base_url == 'http+docker://localunixsocket':
+        elif self._base_url in [
+            'http+docker://' + host for host in ['localunixsocket', 'localhost']
+        ]:
             self.host_files = _LocalHostFiles()
         else:
             raise RuntimeError(
