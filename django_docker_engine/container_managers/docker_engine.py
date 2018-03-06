@@ -44,15 +44,24 @@ class DockerEngineManager(BaseManager):
         self._data_dir = data_dir
         self._root_label = root_label
 
-        remote_host_match = re.match(r'^http://([^:]+):\d+$', self._base_url)
-        if remote_host_match:
-            self.host_files = _RemoteHostFiles(
-                remote_host_match.group(1), self.pem)
-        elif self._base_url == 'http+docker://localunixsocket':
+        remote_host = self._get_base_url_remote_host()
+        if remote_host:
+            self.host_files = _RemoteHostFiles(remote_host, self.pem)
+        elif self._is_base_url_local():
             self.host_files = _LocalHostFiles()
         else:
             raise RuntimeError(
                 'Unexpected client base_url: %s', self._base_url)
+
+    def _get_base_url_remote_host(self):
+        remote_host_match = re.match(r'^http://([^:]+):\d+$', self._base_url)
+        if remote_host_match:
+            return remote_host_match.group(1)
+
+    def _is_base_url_local(self):
+        return self._base_url in [
+            'http+docker://' + host for host in ['localunixsocket', 'localhost']
+        ]
 
     def run(self, image_name, cmd, **kwargs):
         return self._containers_client.run(image_name, cmd, **kwargs)
@@ -61,10 +70,10 @@ class DockerEngineManager(BaseManager):
         return self._images_client.pull("{}:{}".format(image_name, version))
 
     def get_url(self, container_name):
-        remote_host_match = re.match(r'^http://([^:]+):\d+$', self._base_url)
-        if remote_host_match:
-            host = remote_host_match.group(1)
-        elif self._base_url == 'http+docker://localunixsocket':
+        remote_host = self._get_base_url_remote_host()
+        if remote_host:
+            host = remote_host
+        elif self._is_base_url_local():
             host = 'localhost'
         else:
             raise RuntimeError(
