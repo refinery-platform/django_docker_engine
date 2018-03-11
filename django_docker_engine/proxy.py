@@ -13,6 +13,10 @@ import socket
 import errno
 import os
 
+try:
+    from urllib.error import HTTPError
+except ImportError:
+    from urllib2 import HTTPError
 
 try:
     from django.views import View
@@ -93,6 +97,10 @@ class Proxy():
                 'Container: %s, Exception: %s', container_name, e)
             view = self._please_wait_view_factory().as_view()
             return view(request)
+        except HTTPError as e:
+            logger.warn(e.message)
+            # The response is not going to change, so we shouldn't retry,
+            # but I'm not sure if some kind of response is required.
 
     def _please_wait_view_factory(self):
         class PleaseWaitView(View):

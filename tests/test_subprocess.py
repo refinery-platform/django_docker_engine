@@ -56,6 +56,9 @@ class PathRoutingTests(unittest.TestCase):
         r = requests.get(self.url)
         self.assertIn('nginx', r.content)
 
+        r_404 = requests.get(self.url + 'bad-path')
+        # TODO: What should happen here?
+
     def test_url(self):
         self.assertRegexpMatches(
             self.url, r'http://localhost:\d+/docker/test-\d+/')
