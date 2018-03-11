@@ -56,7 +56,7 @@ class PathRoutingTests(unittest.TestCase):
         r = requests.get(self.url)
         self.assertIn('nginx', r.content)
 
-        r_404 = requests.get(self.url + 'bad-path')
+        requests.get(self.url + 'bad-path')
         # TODO: What should happen here?
 
     def test_url(self):
