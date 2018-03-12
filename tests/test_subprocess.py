@@ -1,12 +1,14 @@
-import unittest
-import requests
+import socket
 import subprocess
 import time
-import socket
-from django_docker_engine.docker_utils import (
-    DockerContainerSpec, DockerClientWrapper)
-from shutil import rmtree
+import unittest
 from os import mkdir
+from shutil import rmtree
+
+import requests
+
+from django_docker_engine.docker_utils import (DockerClientWrapper,
+                                               DockerContainerSpec)
 
 
 class PathRoutingTests(unittest.TestCase):

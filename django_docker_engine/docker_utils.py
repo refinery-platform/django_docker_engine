@@ -2,9 +2,10 @@ import json
 import logging
 import os
 from datetime import datetime
-from time import time
-from container_managers import docker_engine
 from shutil import rmtree
+from time import time
+
+from container_managers import docker_engine
 
 logging.basicConfig()
 logger = logging.getLogger(__name__)

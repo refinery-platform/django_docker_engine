@@ -1,18 +1,20 @@
+import errno
 import logging
+import os
+import socket
+from collections import namedtuple
+from httplib import BadStatusLine
+
 from django.conf.urls import url
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt as csrf_exempt_decorator
-from docker.errors import NotFound
-from httplib import BadStatusLine
-from httpproxy.views import HttpProxy
-from docker_utils import DockerClientWrapper
-from container_managers.docker_engine import DockerEngineManagerError
-from collections import namedtuple
-from django_docker_engine.historian import NullHistorian
 from django.views.defaults import page_not_found
-import socket
-import errno
-import os
+from docker.errors import NotFound
+from httpproxy.views import HttpProxy
+
+from container_managers.docker_engine import DockerEngineManagerError
+from django_docker_engine.historian import NullHistorian
+from docker_utils import DockerClientWrapper
 
 try:
     from urllib.error import HTTPError
