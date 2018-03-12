@@ -3,7 +3,6 @@ import requests
 import subprocess
 import time
 import socket
-import mock
 from django_docker_engine.docker_utils import (
     DockerContainerSpec, DockerClientWrapper)
 from shutil import rmtree
@@ -45,8 +44,7 @@ class PathRoutingTests(unittest.TestCase):
         r = requests.get(self.url)
         self.assertIn('Please wait', r.content)
 
-    @mock.patch('django_docker_engine.proxy.logging')
-    def test_container(self, mock_logging):
+    def test_container(self, mock_logger):
         self.client.run(
             DockerContainerSpec(
                 image_name='nginx:1.10.3-alpine',
@@ -55,11 +53,15 @@ class PathRoutingTests(unittest.TestCase):
             )
         )
         time.sleep(1)
-        r = requests.get(self.url)
-        self.assertIn('nginx', r.content)
+        r_good = requests.get(self.url)
+        self.assertIn('nginx', r_good.content)
 
-        requests.get(self.url + 'bad-path')
-        # TODO: What should happen here?
+        r_bad = requests.get(self.url + 'bad-path')
+        self.assertEqual(
+            '<h1>Not Found</h1>'
+            '<p>The requested URL /bad-path was not found on this server.</p>',
+            r_bad.content)
+        self.assertEqual(404, r_bad.status_code)
 
     def test_url(self):
         self.assertRegexpMatches(

@@ -9,6 +9,7 @@ from docker_utils import DockerClientWrapper
 from container_managers.docker_engine import DockerEngineManagerError
 from collections import namedtuple
 from django_docker_engine.historian import NullHistorian
+from django.views.defaults import page_not_found
 import socket
 import errno
 import os
@@ -98,9 +99,10 @@ class Proxy():
             view = self._please_wait_view_factory().as_view()
             return view(request)
         except HTTPError as e:
-            logger.warn(e.message)
-            # The response is not going to change, so we shouldn't retry,
-            # but I'm not sure if some kind of response is required.
+            logger.warn(e)
+            return page_not_found(request, e)
+            # The underlying error is not necessarily a 404,
+            # but this seems ok.
 
     def _please_wait_view_factory(self):
         class PleaseWaitView(View):
