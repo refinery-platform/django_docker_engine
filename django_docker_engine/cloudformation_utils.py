@@ -1,19 +1,18 @@
 #!/usr/bin/env python
-import boto3
-import re
-import datetime
-import time
-import logging
-import pytz
 import collections
-import requests
-import sys
+import datetime
+import logging
+import re
 import subprocess
-import troposphere
+import sys
+import time
 from pprint import pformat
-from troposphere import (
-    ec2, Ref, Output, Base64,
-)
+
+import boto3
+import pytz
+import requests
+import troposphere
+from troposphere import Base64, Output, Ref, ec2
 
 
 def _uniq_id():

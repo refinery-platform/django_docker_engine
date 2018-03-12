@@ -1,5 +1,6 @@
 from abc import ABCMeta, abstractmethod
 
+
 """
 This provides an interface which satisfies both local and remote Docker use.
 The methods are based on a subset of those provided by

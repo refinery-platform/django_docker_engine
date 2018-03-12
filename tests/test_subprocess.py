@@ -1,12 +1,14 @@
-import unittest
-import requests
+import socket
 import subprocess
 import time
-import socket
-from django_docker_engine.docker_utils import (
-    DockerContainerSpec, DockerClientWrapper)
-from shutil import rmtree
+import unittest
 from os import mkdir
+from shutil import rmtree
+
+import requests
+
+from django_docker_engine.docker_utils import (DockerClientWrapper,
+                                               DockerContainerSpec)
 
 
 class PathRoutingTests(unittest.TestCase):
@@ -53,8 +55,15 @@ class PathRoutingTests(unittest.TestCase):
             )
         )
         time.sleep(1)
-        r = requests.get(self.url)
-        self.assertIn('nginx', r.content)
+        r_good = requests.get(self.url)
+        self.assertIn('nginx', r_good.content)
+
+        r_bad = requests.get(self.url + 'bad-path')
+        self.assertEqual(
+            '<h1>Not Found</h1>'
+            '<p>The requested URL /bad-path was not found on this server.</p>',
+            r_bad.content)
+        self.assertEqual(404, r_bad.status_code)
 
     def test_url(self):
         self.assertRegexpMatches(

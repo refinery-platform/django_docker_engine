@@ -1,6 +1,9 @@
-from django_docker_engine.middleware.hostname_routing import HostnameRoutingMiddleware
-from django.test import RequestFactory
 import unittest
+
+from django.test import RequestFactory
+
+from django_docker_engine.middleware.hostname_routing import \
+    HostnameRoutingMiddleware
 
 
 class HostnameRoutingTests(unittest.TestCase):

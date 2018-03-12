@@ -1,11 +1,13 @@
-import docker
-import re
-from base import BaseManager
 import os
-from datetime import datetime
-from abc import ABCMeta, abstractmethod
-from distutils import dir_util
+import re
 import subprocess
+from abc import ABCMeta, abstractmethod
+from datetime import datetime
+from distutils import dir_util
+
+import docker
+
+from base import BaseManager
 
 
 class DockerEngineManagerError(Exception):

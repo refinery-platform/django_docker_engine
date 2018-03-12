@@ -1,18 +1,25 @@
+import errno
 import logging
+import os
+import socket
+from collections import namedtuple
+from httplib import BadStatusLine
+
 from django.conf.urls import url
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt as csrf_exempt_decorator
+from django.views.defaults import page_not_found
 from docker.errors import NotFound
-from httplib import BadStatusLine
 from httpproxy.views import HttpProxy
-from docker_utils import DockerClientWrapper
-from container_managers.docker_engine import DockerEngineManagerError
-from collections import namedtuple
-from django_docker_engine.historian import NullHistorian
-import socket
-import errno
-import os
 
+from container_managers.docker_engine import DockerEngineManagerError
+from django_docker_engine.historian import NullHistorian
+from docker_utils import DockerClientWrapper
+
+try:
+    from urllib.error import HTTPError
+except ImportError:
+    from urllib2 import HTTPError
 
 try:
     from django.views import View
@@ -93,6 +100,11 @@ class Proxy():
                 'Container: %s, Exception: %s', container_name, e)
             view = self._please_wait_view_factory().as_view()
             return view(request)
+        except HTTPError as e:
+            logger.warn(e)
+            return page_not_found(request, e)
+            # The underlying error is not necessarily a 404,
+            # but this seems ok.
 
     def _please_wait_view_factory(self):
         class PleaseWaitView(View):

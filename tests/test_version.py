@@ -1,6 +1,7 @@
-import unittest
-import requests
 import os
+import unittest
+
+import requests
 
 
 class VersionTests(unittest.TestCase):

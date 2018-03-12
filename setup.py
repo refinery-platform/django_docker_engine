@@ -1,7 +1,8 @@
 import os
-from os.path import (join, normpath, dirname, abspath)
-from setuptools import find_packages, setup
 import sys
+from os.path import abspath, dirname, join, normpath
+
+from setuptools import find_packages, setup
 
 with open(join(dirname(__file__), 'README.rst')) as readme:
     README = readme.read()

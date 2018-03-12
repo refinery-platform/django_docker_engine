@@ -1,19 +1,23 @@
-import unittest
-import os
 import datetime
-import re
-import django
 import logging
-import paramiko
+import os
+import re
 import subprocess
-from urllib2 import URLError
-from requests.exceptions import ConnectionError
+import unittest
 from distutils import dir_util
-from time import sleep
-from django_docker_engine.docker_utils import DockerClientWrapper, DockerContainerSpec
-from django_docker_engine.container_managers.docker_engine import DockerEngineManager
-from mock import patch
 from shutil import rmtree
+from time import sleep
+from urllib2 import URLError
+
+import django
+import paramiko
+from mock import patch
+from requests.exceptions import ConnectionError
+
+from django_docker_engine.container_managers.docker_engine import \
+    DockerEngineManager
+from django_docker_engine.docker_utils import (DockerClientWrapper,
+                                               DockerContainerSpec)
 
 logging.basicConfig()
 logger = logging.getLogger(__name__)
