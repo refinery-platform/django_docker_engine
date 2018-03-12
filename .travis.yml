@@ -7,8 +7,6 @@ services:
 install:
 - pip install -r requirements.txt
 - pip install -r requirements-dev.txt
-- start() { echo travis_fold':'start:$1; echo $1; }
-- end() { echo travis_fold':'end:$1; }
 env:
   matrix:
     - VERSION='1.7.1'
@@ -17,18 +15,9 @@ matrix:
   fast_finish: true
 script:
 - set -o errexit
-
-- sudo sh -c 'echo "127.0.0.1 container-name.docker.localhost" >> /etc/hosts'
-- ping -c1 container-name.docker.localhost > /dev/null  # Prereq for hostname-based dispatch.
-
-- docker info | grep 'Operating System'  # Are we able to connect to Docker, and what OS is it?
 - pip install django==$VERSION
-
-- start test;   ./manage.py test --verbosity=2; end test
-- start format; flake8;                         end format
-- start egg;    python setup.py bdist_egg;      end egg
-# TODO: No output on travis: Is pydoc installed?
-#- start docs;        diff <(./docs.sh) docs.md; end docs
+- sudo sh -c 'echo "127.0.0.1 container-name.docker.localhost" >> /etc/hosts'
+- ./test.sh
 deploy:
   # Defaults to only deploy on master;
   # PyPi blocks the same version from being uploaded twice.

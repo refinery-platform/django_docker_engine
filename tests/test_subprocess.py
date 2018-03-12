@@ -3,6 +3,7 @@ import requests
 import subprocess
 import time
 import socket
+import mock
 from django_docker_engine.docker_utils import (
     DockerContainerSpec, DockerClientWrapper)
 from shutil import rmtree
@@ -44,7 +45,8 @@ class PathRoutingTests(unittest.TestCase):
         r = requests.get(self.url)
         self.assertIn('Please wait', r.content)
 
-    def test_container(self):
+    @mock.patch('django_docker_engine.proxy.logging')
+    def test_container(self, mock_logging):
         self.client.run(
             DockerContainerSpec(
                 image_name='nginx:1.10.3-alpine',
