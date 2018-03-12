@@ -13,7 +13,7 @@ start test
 end test
 
 start format
-flake8 . || die "Run 'autopep8 --in-place -r .'"
+flake8 --exclude build . || die "Run 'autopep8 --in-place -r .'"
 end format
 
 start isort
