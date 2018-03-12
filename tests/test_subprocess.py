@@ -46,7 +46,7 @@ class PathRoutingTests(unittest.TestCase):
         r = requests.get(self.url)
         self.assertIn('Please wait', r.content)
 
-    def test_container(self, mock_logger):
+    def test_container(self):
         self.client.run(
             DockerContainerSpec(
                 image_name='nginx:1.10.3-alpine',
