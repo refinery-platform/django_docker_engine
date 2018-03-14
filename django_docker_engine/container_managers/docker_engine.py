@@ -37,18 +37,21 @@ class DockerEngineManager(BaseManager):
             data_dir,
             root_label,
             client=docker.from_env(),
-            pem='django_docker_cloudformation.pem'
+            pem=None,
+            ssh_username='ubuntu'  # TODO: Make this None
     ):
         self._base_url = client.api.base_url
         self._containers_client = client.containers
         self._images_client = client.images
-        self.pem = pem
         self._data_dir = data_dir
         self._root_label = root_label
 
         remote_host = self._get_base_url_remote_host()
         if remote_host:
-            self.host_files = _RemoteHostFiles(remote_host, self.pem)
+            self.host_files = _RemoteHostFiles(
+                host=remote_host,
+                pem=pem,
+                ssh_username=ssh_username)
         elif self._is_base_url_local():
             self.host_files = _LocalHostFiles()
         else:
@@ -161,16 +164,25 @@ class _LocalHostFiles(_HostFiles):
 
 class _RemoteHostFiles(_HostFiles):
     # TODO: Try again with paramiko: https://github.com/paramiko/paramiko/issues/959
-    def __init__(self, host, pem):
+    def __init__(self, host, pem, ssh_username=None,
+                 strict_host_key_checking=False):
         self.host = host
         self.pem = pem
+        self.ssh_username = ssh_username
+        self.strict_host_key_checking = strict_host_key_checking
 
     def _exec(self, command):
-        subprocess.check_call([
-            'ssh',
-            '-oStrictHostKeyChecking=no',
-            '-i', 'django_docker_cloudformation.pem',
-            'ec2-user@{}'.format(self.host), command])
+        cmd_tokens = ['ssh']
+        if not self.strict_host_key_checking:
+            cmd_tokens.append('-oStrictHostKeyChecking=no')
+        if self.pem:
+            cmd_tokens.extend(['-i', self.pem])
+        if self.ssh_username:
+            cmd_tokens.append('{}@{}'.format(self.ssh_username, self.host))
+        else:
+            cmd_tokens.append(self.host)
+        cmd_tokens.append(command)
+        subprocess.check_call(cmd_tokens)
 
     def write(self, path, content):
         self._exec(
