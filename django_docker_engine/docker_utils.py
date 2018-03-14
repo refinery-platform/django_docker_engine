@@ -35,8 +35,15 @@ class DockerClientWrapper():
     def __init__(self,
                  data_dir,
                  manager_class=docker_engine.DockerEngineManager,
-                 root_label='io.github.refinery-project.django_docker_engine'):
-        self._containers_manager = manager_class(data_dir, root_label)
+                 root_label='io.github.refinery-project.django_docker_engine',
+                 pem=None,
+                 ssh_username=None):
+        manager_kwargs = {}
+        if pem:
+            manager_kwargs['pem'] = pem
+        if ssh_username:
+            manager_kwargs['ssh_username'] = ssh_username
+        self._containers_manager = manager_class(data_dir, root_label, **manager_kwargs)
         self.root_label = root_label
 
     def _make_directory_on_host(self):
