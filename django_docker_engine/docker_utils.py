@@ -35,9 +35,18 @@ class DockerClientWrapper():
     def __init__(self,
                  data_dir,
                  manager_class=docker_engine.DockerEngineManager,
-                 root_label='io.github.refinery-project.django_docker_engine'):
+                 root_label='io.github.refinery-project.django_docker_engine',
+                 # These do_input_json_* variables are redundant,
+                 # but until all the containers know to look at envvars,
+                 # this probably makes sense.
+                 do_input_json_file=True,
+                 do_input_json_envvar=True,
+                 input_json_url=None):
         self._containers_manager = manager_class(data_dir, root_label)
         self.root_label = root_label
+        self.do_input_json_file = do_input_json_file
+        self.do_input_json_envvar = do_input_json_envvar
+        self.input_json_url = input_json_url
 
     def _make_directory_on_host(self):
         return self._containers_manager.mkdtemp()
@@ -61,11 +70,11 @@ class DockerClientWrapper():
             # Without a tag the SDK pulls every version; not what I expected.
             # https://github.com/docker/docker-py/issues/1510
 
-        # TODO: With the tmp volumes in the other branch, this will change.
-        # It's untidy right now, but let it be until that merge.
-        volume_spec = [{
-            'host': self._write_input_to_host(container_spec.input),
-            'bind': container_spec.container_input_path}]
+        volume_spec = []
+        if self.do_input_json_file:
+            volume_spec.append({
+                'host': self._write_input_to_host(container_spec.input),
+                'bind': container_spec.container_input_path})
 
         for directory in container_spec.extra_directories:
             assert os.path.isabs(directory), \
@@ -94,6 +103,12 @@ class DockerClientWrapper():
             self.root_label + '.port': str(container_spec.container_port)
         })
 
+        environment = {}
+        if self.do_input_json_envvar:
+            environment['INPUT_JSON'] = json.dumps(container_spec.input)
+        if self.input_json_url:
+            environment['INPUT_JSON_URL'] = self.input_json_url
+
         self._containers_manager.run(
             image_name,
             name=container_spec.container_name,
@@ -102,7 +117,8 @@ class DockerClientWrapper():
             detach=True,
             labels=labels,
             volumes=volumes,
-            nano_cpus=int(container_spec.cpus * 1e9)
+            nano_cpus=int(container_spec.cpus * 1e9),
+            environment=environment
         )
         return self.lookup_container_url(container_spec.container_name)
 
