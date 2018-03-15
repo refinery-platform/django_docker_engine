@@ -38,7 +38,7 @@ class DockerEngineManager(BaseManager):
             root_label,
             client=docker.from_env(),
             pem=None,
-            ssh_username='ubuntu'  # TODO: Make this None
+            ssh_username=None
     ):
         self._base_url = client.api.base_url
         self._containers_client = client.containers
