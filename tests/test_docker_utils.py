@@ -26,7 +26,8 @@ logger = logging.getLogger(__name__)
 
 class LiveDockerTests(unittest.TestCase):
 
-    def get_spec(self):
+    @property
+    def spec(self):
         return DockerClientSpec('/tmp/django-docker-engine-test',
                                 do_input_json_envvar=True)
 
@@ -37,7 +38,7 @@ class LiveDockerTests(unittest.TestCase):
         # This gets it back in sync with reality.
         subprocess.call(
             'docker run --rm --privileged alpine hwclock -s'.split(' '))
-        self.client_wrapper = DockerClientWrapper(self.get_spec())
+        self.client_wrapper = DockerClientWrapper(self.spec)
         self.test_label = self.client_wrapper.root_label + '.test'
         self.initial_containers = self.client_wrapper.list()
         self.initial_tmp = self.ls_tmp()
@@ -240,7 +241,8 @@ class LiveDockerTestsClean(LiveDockerTests):
 
 class LiveDockerTestsCleanJsonFile(LiveDockerTestsClean):
 
-    def get_spec(self):
+    @property
+    def spec(self):
         return DockerClientSpec('/tmp/django-docker-engine-test',
                                 do_input_json_file=True)
 
