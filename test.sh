@@ -18,7 +18,7 @@ end format
 
 start isort
 isort --recursive . --check-only --skip django_docker_engine/cloudformation_utils.py || die "Run 'isort --recursive .'"
-# TODO: Getting a failure on travis that I can't reproduce locally.
+# TODO: Getting a failure in cloudformation_utils.py that I can't reproduce locally.
 end isort
 
 start egg

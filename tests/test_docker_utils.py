@@ -237,6 +237,7 @@ class LiveDockerTestsClean(LiveDockerTests):
         self.assertEqual(0, self.count_containers())
         # But with an even tighter limit, it should be purged.
 
+
 class LiveDockerTestsCleanJsonFile(LiveDockerTestsClean):
 
     def get_spec(self):
