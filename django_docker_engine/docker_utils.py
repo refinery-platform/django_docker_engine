@@ -39,9 +39,16 @@ class DockerClientWrapper():
                  # These do_input_json_* variables are redundant,
                  # but until all the containers know to look at envvars,
                  # this probably makes sense.
-                 do_input_json_file=True,
-                 do_input_json_envvar=True,
+                 do_input_json_file=False,
+                 do_input_json_envvar=False,
                  input_json_url=None):
+        assert do_input_json_file or do_input_json_envvar or input_json_url,\
+            'Input must be provided to the container, '\
+            'either as a json file to mount, '\
+            'an environment variable containing json, '\
+            'or an environment variable containing a url pointing to json'
+            # Multiple can be specified: The container needs to be able
+            # to read from at least one specified source.
         self._containers_manager = manager_class(data_dir, root_label)
         self.root_label = root_label
         self.do_input_json_file = do_input_json_file
