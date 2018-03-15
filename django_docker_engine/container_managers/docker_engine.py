@@ -68,11 +68,9 @@ class DockerEngineManager(BaseManager):
             'http+docker://' + host for host in ['localunixsocket', 'localhost']
         ]
 
-    def run(self, image_name, cmd, environment={}, **kwargs):
-        assert 'environment' not in kwargs
-        # This could be loosened,
-        # but for now I don't want to worry about dict merging.
-        kwargs['environment'] = environment
+    def run(self, image_name, cmd, **kwargs):
+        # In particular, passing "environment" as a kwarg
+        # will set environment variables.
         return self._containers_client.run(image_name, cmd, **kwargs)
 
     def pull(self, image_name, version="latest"):
