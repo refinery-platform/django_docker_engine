@@ -60,9 +60,16 @@ class DockerClientWrapper():
     def __init__(self,
                  docker_client_spec,
                  manager_class=docker_engine.DockerEngineManager,
-                 root_label='io.github.refinery-project.django_docker_engine'):
+                 root_label='io.github.refinery-project.django_docker_engine',
+                 pem=None,
+                 ssh_username=None):
+        manager_kwargs = {}
+        if pem:
+            manager_kwargs['pem'] = pem
+        if ssh_username:
+            manager_kwargs['ssh_username'] = ssh_username
         self._containers_manager = manager_class(
-            docker_client_spec.data_dir, root_label)
+            docker_client_spec.data_dir, root_label, **manager_kwargs)
         self.root_label = root_label
         self._do_input_json_file = docker_client_spec.do_input_json_file
         self._do_input_json_envvar = docker_client_spec.do_input_json_envvar
