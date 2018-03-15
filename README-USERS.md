@@ -63,12 +63,11 @@ Docker SDK provides so that we can use either interface, as needed.
 $ echo 'Hello World' > /tmp/hello.txt
 $ python
 >>> from django_docker_engine.docker_utils import (DockerClientWrapper, DockerContainerSpec)
->>> DockerClientWrapper('/tmp/docker').run(
+>>> DockerClientWrapper('/tmp/docker', do_input_json_file=True).run(
       DockerContainerSpec(
         image_name='nginx:1.10.3-alpine',
         container_name='my-server',
-        input_mount='/usr/share/nginx/html',
-        input_files=['/tmp/hello.txt']
+        container_input_path='/tmp/hello.txt'
       )
     )
 $ python manage.py runserver
