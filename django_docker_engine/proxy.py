@@ -38,11 +38,11 @@ UrlPatterns = namedtuple('UrlPatterns', ['urlpatterns'])
 
 
 class Proxy():
-    def __init__(self, data_dir, historian=NullHistorian(),
+    def __init__(self, docker_client_spec, historian=NullHistorian(),
                  please_wait_title='Please wait',
                  please_wait_body_html='<h1>Please wait</h1>',
                  csrf_exempt=True):
-        self.data_dir = data_dir
+        self.docker_client_spec = docker_client_spec
         self.historian = historian
         self.csrf_exempt = csrf_exempt
         self.content = self._render({
@@ -81,7 +81,7 @@ class Proxy():
     def _proxy_view(self, request, container_name, url):
         self.historian.record(container_name, url)
         try:
-            client = DockerClientWrapper(self.data_dir)
+            client = DockerClientWrapper(self.docker_client_spec)
             container_url = client.lookup_container_url(container_name)
             view = HttpProxy.as_view(base_url=container_url)
             return view(request, url=url)

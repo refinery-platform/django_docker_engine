@@ -16,7 +16,8 @@ from requests.exceptions import ConnectionError
 
 from django_docker_engine.container_managers.docker_engine import \
     DockerEngineManager
-from django_docker_engine.docker_utils import (DockerClientWrapper,
+from django_docker_engine.docker_utils import (DockerClientSpec,
+                                               DockerClientWrapper,
                                                DockerContainerSpec)
 
 logging.basicConfig()
@@ -32,9 +33,9 @@ class LiveDockerTests(unittest.TestCase):
         # This gets it back in sync with reality.
         subprocess.call(
             'docker run --rm --privileged alpine hwclock -s'.split(' '))
-
-        self.client_wrapper = DockerClientWrapper(
-            '/tmp/django-docker-engine-test')
+        spec = DockerClientSpec('/tmp/django-docker-engine-test',
+                                do_input_json_envvar=True)
+        self.client_wrapper = DockerClientWrapper(spec)
         self.test_label = self.client_wrapper.root_label + '.test'
         self.initial_containers = self.client_wrapper.list()
         self.initial_tmp = self.ls_tmp()

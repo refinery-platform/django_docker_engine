@@ -30,15 +30,9 @@ class DockerContainerSpec():
         self.cpus = cpus
 
 
-class DockerClientWrapper():
+class DockerClientSpec():
 
-    def __init__(self,
-                 data_dir,
-                 manager_class=docker_engine.DockerEngineManager,
-                 root_label='io.github.refinery-project.django_docker_engine',
-                 # These do_input_json_* variables are redundant,
-                 # but until all the containers know to look at envvars,
-                 # this probably makes sense.
+    def __init__(self, data_dir,
                  do_input_json_file=False,
                  do_input_json_envvar=False,
                  input_json_url=None):
@@ -47,13 +41,32 @@ class DockerClientWrapper():
             'either as a json file to mount, '\
             'an environment variable containing json, '\
             'or an environment variable containing a url pointing to json'
-            # Multiple can be specified: The container needs to be able
-            # to read from at least one specified source.
-        self._containers_manager = manager_class(data_dir, root_label)
-        self.root_label = root_label
+        # Multiple can be specified: The container needs to be able
+        # to read from at least one specified source. Limitations:
+        # - do_input_json_file:
+        #   Requires ssh access if remote
+        # - do_input_json_envvar:
+        #   Creates potentially problematic huge envvar
+        # - input_json_url:
+        #   World-readable URL could be an unwanted leak
+        self.data_dir = data_dir
         self.do_input_json_file = do_input_json_file
         self.do_input_json_envvar = do_input_json_envvar
         self.input_json_url = input_json_url
+
+
+class DockerClientWrapper():
+
+    def __init__(self,
+                 docker_client_spec,
+                 manager_class=docker_engine.DockerEngineManager,
+                 root_label='io.github.refinery-project.django_docker_engine'):
+        self._containers_manager = manager_class(
+            docker_client_spec.data_dir, root_label)
+        self.root_label = root_label
+        self._do_input_json_file = docker_client_spec.do_input_json_file
+        self._do_input_json_envvar = docker_client_spec.do_input_json_envvar
+        self._input_json_url = docker_client_spec.input_json_url
 
     def _make_directory_on_host(self):
         return self._containers_manager.mkdtemp()
@@ -78,7 +91,7 @@ class DockerClientWrapper():
             # https://github.com/docker/docker-py/issues/1510
 
         volume_spec = []
-        if self.do_input_json_file:
+        if self._do_input_json_file:
             volume_spec.append({
                 'host': self._write_input_to_host(container_spec.input),
                 'bind': container_spec.container_input_path})
@@ -111,10 +124,10 @@ class DockerClientWrapper():
         })
 
         environment = {}
-        if self.do_input_json_envvar:
+        if self._do_input_json_envvar:
             environment['INPUT_JSON'] = json.dumps(container_spec.input)
-        if self.input_json_url:
-            environment['INPUT_JSON_URL'] = self.input_json_url
+        if self._input_json_url:
+            environment['INPUT_JSON_URL'] = self._input_json_url
 
         self._containers_manager.run(
             image_name,

@@ -1,3 +1,5 @@
 from django_docker_engine.proxy import Proxy
+from django_docker_engine.docker_utils import DockerClientSpec
 
-urlpatterns = Proxy('/tmp/django-docker-data').url_patterns()
+spec = DockerClientSpec('/tmp/django-docker-data', do_input_json_envvar=True)
+urlpatterns = Proxy(spec).url_patterns()
