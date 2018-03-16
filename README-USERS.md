@@ -8,9 +8,31 @@ or on the commandline:
 $ pip install django_docker_engine
 ```
 
-## Path vs. hostname routing
+## Choices you need to make
 
-There are two ways to map incoming requests to containers. The default is path-based routing, but the domain-name
+### `input.json`: mounted file vs. envvar vs. envvar url
+
+There are essentially two ways of passing input to a container on startup:
+By mounting a file from the host filesystem and by passing environment variables.
+The method used depend on the parameters you use for `DockerClientSpec`.
+
+`do_input_json_file` (boolean):
+- Input is serialized to a JSON file and saved in a tmp directory.
+- If Docker Engine is on a remote host, requires SSH access.
+
+`do_input_json_envvar` (boolean):
+- Instead of writing a file, JSON is stored in an environment variable.
+- There is limit to the size of environment variables: Typically 2M, but it could be lower.
+
+`input_json_url` (string):
+- This option requires the caller to have already made the data available at some URL.
+- Managing access and cleaning up this resource is the caller's responsibility.
+
+
+### Path vs. hostname routing
+
+There are two ways to map incoming requests to containers.
+The default is path-based routing, but domain-name routing
 can also be used.
 
 [Path-based routing](demo_path_routing):
