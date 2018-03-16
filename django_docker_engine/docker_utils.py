@@ -55,14 +55,40 @@ class DockerClientSpec():
         self.input_json_url = input_json_url
 
 
-class DockerClientWrapper():
+_DEFAULT_MANAGER = docker_engine.DockerEngineManager
+_DEFAULT_LABEL = 'io.github.refinery-project.django_docker_engine'
+
+class ReadOnlyDockerClientWrapper(object):
+
+    def __init__(self,
+                 data_dir,
+                 manager_class=_DEFAULT_MANAGER,
+                 root_label=_DEFAULT_LABEL):
+        self._containers_manager = manager_class(data_dir, root_label)
+
+    def lookup_container_url(self, container_name):
+        """
+        Given the name of a container, returns the url mapped to the right port.
+        """
+        return self._containers_manager.get_url(container_name)
+
+    def list(self, filters={}):
+        return self._containers_manager.list(filters)
+
+
+class ReadWriteDockerClientWrapper(ReadOnlyDockerClientWrapper):
 
     def __init__(self,
                  docker_client_spec,
-                 manager_class=docker_engine.DockerEngineManager,
-                 root_label='io.github.refinery-project.django_docker_engine',
+                 manager_class=_DEFAULT_MANAGER,
+                 root_label=_DEFAULT_LABEL,
                  pem=None,
                  ssh_username=None):
+        super(ReadWriteDockerClientWrapper, self).__init__(
+            docker_client_spec.data_dir,
+            manager_class=manager_class,
+            root_label=root_label
+        )
         manager_kwargs = {}
         if pem:
             manager_kwargs['pem'] = pem
@@ -148,15 +174,6 @@ class DockerClientWrapper():
             environment=environment
         )
         return self.lookup_container_url(container_spec.container_name)
-
-    def lookup_container_url(self, container_name):
-        """
-        Given the name of a container, returns the url mapped to the right port.
-        """
-        return self._containers_manager.get_url(container_name)
-
-    def list(self, filters={}):
-        return self._containers_manager.list(filters)
 
     def pull(self, image_name, version="latest"):
         self._containers_manager.pull(image_name, version=version)
