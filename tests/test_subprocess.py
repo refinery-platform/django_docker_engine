@@ -8,8 +8,8 @@ from shutil import rmtree
 import requests
 
 from django_docker_engine.docker_utils import (DockerClientSpec,
-                                               DockerClientWrapper,
-                                               DockerContainerSpec)
+                                               DockerContainerSpec,
+                                               ReadWriteDockerClientWrapper)
 
 
 class PathRoutingTests(unittest.TestCase):
@@ -38,7 +38,7 @@ class PathRoutingTests(unittest.TestCase):
         # chmod(self.tmp_dir, 0777)
         spec = DockerClientSpec(self.tmp_dir,
                                 do_input_json_envvar=True)
-        self.client = DockerClientWrapper(spec)
+        self.client = ReadWriteDockerClientWrapper(spec)
 
     def tearDown(self):
         self.process.kill()
@@ -100,7 +100,7 @@ class HostRoutingTests(PathRoutingTests):
         time.sleep(1)
         spec = DockerClientSpec(self.tmp_dir,
                                 do_input_json_envvar=True)
-        self.client = DockerClientWrapper(spec)
+        self.client = ReadWriteDockerClientWrapper(spec)
 
     # Tests from superclass are run
 

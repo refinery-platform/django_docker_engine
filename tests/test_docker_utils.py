@@ -17,8 +17,8 @@ from requests.exceptions import ConnectionError
 from django_docker_engine.container_managers.docker_engine import \
     DockerEngineManager
 from django_docker_engine.docker_utils import (DockerClientSpec,
-                                               DockerClientWrapper,
-                                               DockerContainerSpec)
+                                               DockerContainerSpec,
+                                               ReadWriteDockerClientWrapper)
 
 logging.basicConfig()
 logger = logging.getLogger(__name__)
@@ -38,7 +38,7 @@ class LiveDockerTests(unittest.TestCase):
         # This gets it back in sync with reality.
         subprocess.call(
             'docker run --rm --privileged alpine hwclock -s'.split(' '))
-        self.client_wrapper = DockerClientWrapper(self.spec)
+        self.client_wrapper = ReadWriteDockerClientWrapper(self.spec)
         self.test_label = self.client_wrapper.root_label + '.test'
         self.initial_containers = self.client_wrapper.list()
         self.initial_tmp = self.ls_tmp()
@@ -175,8 +175,11 @@ class LiveDockerTestsClean(LiveDockerTests):
         self.assert_loads_eventually(url, '{"foo": "bar"}')
 
     def assert_cpu_quota(self, expected, given={}):
-        with patch.object(DockerEngineManager, 'run') as mock_run, \
-                patch.object(DockerClientWrapper, 'lookup_container_url'):
+
+        with patch.object(DockerEngineManager,
+                          'run') as mock_run, \
+                patch.object(ReadWriteDockerClientWrapper,
+                             'lookup_container_url'):
             old_dirs = set(self.ls_tmp())
             self.get_docker_url_timestamp(given)
             (args, kwargs) = mock_run.call_args

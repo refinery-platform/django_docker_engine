@@ -58,6 +58,7 @@ class DockerClientSpec():
 _DEFAULT_MANAGER = docker_engine.DockerEngineManager
 _DEFAULT_LABEL = 'io.github.refinery-project.django_docker_engine'
 
+
 class ReadOnlyDockerClientWrapper(object):
 
     def __init__(self,
