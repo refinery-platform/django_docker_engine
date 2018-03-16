@@ -77,24 +77,33 @@ TODO: AWS provides its own wrapper around Docker through ECS. We will need to ab
 Docker SDK provides so that we can use either interface, as needed.
 
 
-## Launching Containers
+## Walk through
 
-`DockerContainerSpec` exposes a subset of Docker functionality so your application can launch containers as needed:
+`django_docker_engine.docker_utils` exposes a subset of Docker functionality 
+so your application can launch containers as needed:
 
 ```
-$ echo 'Hello World' > /tmp/hello.txt
 $ python
->>> from django_docker_engine.docker_utils import (DockerClientWrapper, DockerContainerSpec)
->>> DockerClientWrapper('/tmp/docker', do_input_json_file=True).run(
-      DockerContainerSpec(
+>>> from django_docker_engine.docker_utils import (
+      ReadWriteDockerClientWrapper, DockerClientSpec, DockerContainerSpec)
+>>> client_spec = DockerClientSpec(None, do_input_json_envvar=True)
+>>> container_spec = DockerContainerSpec(
         image_name='nginx:1.10.3-alpine',
-        container_name='my-server',
-        container_input_path='/tmp/hello.txt'
+        container_name='my-server'
       )
-    )
-$ python manage.py runserver
-$ curl http://localhost:8000/docker/my-server/hello.txt
-Hello World
+>>> ReadWriteDockerClientWrapper(client_spec).run(container_spec)
 ```
+Note the URL that's returned: You'll get the Nginx welcome page if you visit it.
+You can run `docker ps` to see the container you've started.
+
+Now let's see how proxying works:
+
+```
+$ python manage.py runserver &
+$ curl http://localhost:8000/docker/my-server/ | grep title
+<title>Welcome to nginx!</title>
+```
+Django receives the request, looks up the container from the name in the URL path,
+proxies the request, and returns the same Nginx welcome page.
 
 For more detail, consult the [generated documentation](docs.md).
