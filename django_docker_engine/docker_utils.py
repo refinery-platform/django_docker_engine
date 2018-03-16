@@ -62,10 +62,11 @@ _DEFAULT_LABEL = 'io.github.refinery-project.django_docker_engine'
 class ReadOnlyDockerClientWrapper(object):
 
     def __init__(self,
-                 data_dir,
                  manager_class=_DEFAULT_MANAGER,
                  root_label=_DEFAULT_LABEL):
-        self._containers_manager = manager_class(data_dir, root_label)
+        self._containers_manager = manager_class(None, root_label)
+        # Some methods of the manager will fail without a data_dir,
+        # but they shouldn't be called from the read-only client in any event.
 
     def lookup_container_url(self, container_name):
         """
@@ -86,7 +87,6 @@ class ReadWriteDockerClientWrapper(ReadOnlyDockerClientWrapper):
                  pem=None,
                  ssh_username=None):
         super(ReadWriteDockerClientWrapper, self).__init__(
-            docker_client_spec.data_dir,
             manager_class=manager_class,
             root_label=root_label
         )
