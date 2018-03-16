@@ -16,7 +16,8 @@ from requests.exceptions import ConnectionError
 
 from django_docker_engine.container_managers.docker_engine import \
     DockerEngineManager
-from django_docker_engine.docker_utils import (DockerClientWrapper,
+from django_docker_engine.docker_utils import (DockerClientSpec,
+                                               DockerClientWrapper,
                                                DockerContainerSpec)
 
 logging.basicConfig()
@@ -25,6 +26,11 @@ logger = logging.getLogger(__name__)
 
 class LiveDockerTests(unittest.TestCase):
 
+    @property
+    def spec(self):
+        return DockerClientSpec('/tmp/django-docker-engine-test',
+                                do_input_json_envvar=True)
+
     def setUp(self):
         # Docker Engine's clock stops when the computer goes to sleep,
         # and restarts where it left off when it wakes up.
@@ -32,9 +38,7 @@ class LiveDockerTests(unittest.TestCase):
         # This gets it back in sync with reality.
         subprocess.call(
             'docker run --rm --privileged alpine hwclock -s'.split(' '))
-
-        self.client_wrapper = DockerClientWrapper(
-            '/tmp/django-docker-engine-test')
+        self.client_wrapper = DockerClientWrapper(self.spec)
         self.test_label = self.client_wrapper.root_label + '.test'
         self.initial_containers = self.client_wrapper.list()
         self.initial_tmp = self.ls_tmp()
@@ -195,6 +199,10 @@ class LiveDockerTestsClean(LiveDockerTests):
             'extra_directories': ["/test", "/coffee"]
         })
 
+    def assert_correct_ls_tmp(self, ls_tmp_orig):
+        self.assertEqual(0, len(self.ls_tmp()))
+        self.assertEqual(0, len(ls_tmp_orig))
+
     def test_purge(self):
         """
         WARNING: I think this is prone to race conditions.
@@ -206,7 +214,7 @@ class LiveDockerTestsClean(LiveDockerTests):
         url = self.get_docker_url_timestamp()[0]
         self.assertEqual(1, self.count_containers())
         self.assert_loads_eventually(url, 'Welcome to nginx!')
-        self.assertGreater(self.ls_tmp(), ls_tmp_orig)
+        self.assert_correct_ls_tmp(ls_tmp_orig)
 
         self.client_wrapper.purge_inactive(5)
         self.assertEqual(1, self.count_containers())
@@ -229,3 +237,14 @@ class LiveDockerTestsClean(LiveDockerTests):
         self.client_wrapper.purge_inactive(0)
         self.assertEqual(0, self.count_containers())
         # But with an even tighter limit, it should be purged.
+
+
+class LiveDockerTestsCleanJsonFile(LiveDockerTestsClean):
+
+    @property
+    def spec(self):
+        return DockerClientSpec('/tmp/django-docker-engine-test',
+                                do_input_json_file=True)
+
+    def assert_correct_ls_tmp(self, ls_tmp_orig):
+        self.assertGreater(self.ls_tmp(), ls_tmp_orig)

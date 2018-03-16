@@ -38,7 +38,7 @@ class DockerEngineManager(BaseManager):
             root_label,
             client=docker.from_env(),
             pem=None,
-            ssh_username='ubuntu'  # TODO: Make this None
+            ssh_username=None
     ):
         self._base_url = client.api.base_url
         self._containers_client = client.containers
@@ -69,6 +69,8 @@ class DockerEngineManager(BaseManager):
         ]
 
     def run(self, image_name, cmd, **kwargs):
+        # In particular, passing "environment" as a kwarg
+        # will set environment variables.
         return self._containers_client.run(image_name, cmd, **kwargs)
 
     def pull(self, image_name, version="latest"):

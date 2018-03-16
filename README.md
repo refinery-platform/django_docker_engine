@@ -11,12 +11,13 @@ but nothing should prevent its use in other contexts, as well.
 In order for a Docker container to work with this package it must:
 
 - listen on some port for HTTP connections, and
-- accept a single json file as input.
+- accept a single JSON file as input.
 
 The following Docker projects have been designed to work with `django_docker_engine`:
 
 - [docker_igv_js](https://github.com/refinery-platform/docker_igv_js)
 - [refinery-higlass-docker](https://github.com/scottx611x/refinery-higlass-docker)
+- [heatmap-scatter-dash](https://github.com/refinery-platform/heatmap-scatter-dash)
 
 More information:
 - [for users of the library](README-USERS.md)

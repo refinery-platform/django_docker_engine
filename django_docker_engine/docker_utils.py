@@ -30,10 +30,35 @@ class DockerContainerSpec():
         self.cpus = cpus
 
 
+class DockerClientSpec():
+
+    def __init__(self, data_dir,
+                 do_input_json_file=False,
+                 do_input_json_envvar=False,
+                 input_json_url=None):
+        assert do_input_json_file or do_input_json_envvar or input_json_url,\
+            'Input must be provided to the container, '\
+            'either as a json file to mount, '\
+            'an environment variable containing json, '\
+            'or an environment variable containing a url pointing to json'
+        # Multiple can be specified: The container needs to be able
+        # to read from at least one specified source. Limitations:
+        # - do_input_json_file:
+        #   Requires ssh access if remote
+        # - do_input_json_envvar:
+        #   Creates potentially problematic huge envvar
+        # - input_json_url:
+        #   World-readable URL could be an unwanted leak
+        self.data_dir = data_dir
+        self.do_input_json_file = do_input_json_file
+        self.do_input_json_envvar = do_input_json_envvar
+        self.input_json_url = input_json_url
+
+
 class DockerClientWrapper():
 
     def __init__(self,
-                 data_dir,
+                 docker_client_spec,
                  manager_class=docker_engine.DockerEngineManager,
                  root_label='io.github.refinery-project.django_docker_engine',
                  pem=None,
@@ -43,8 +68,12 @@ class DockerClientWrapper():
             manager_kwargs['pem'] = pem
         if ssh_username:
             manager_kwargs['ssh_username'] = ssh_username
-        self._containers_manager = manager_class(data_dir, root_label, **manager_kwargs)
+        self._containers_manager = manager_class(
+            docker_client_spec.data_dir, root_label, **manager_kwargs)
         self.root_label = root_label
+        self._do_input_json_file = docker_client_spec.do_input_json_file
+        self._do_input_json_envvar = docker_client_spec.do_input_json_envvar
+        self._input_json_url = docker_client_spec.input_json_url
 
     def _make_directory_on_host(self):
         return self._containers_manager.mkdtemp()
@@ -68,11 +97,11 @@ class DockerClientWrapper():
             # Without a tag the SDK pulls every version; not what I expected.
             # https://github.com/docker/docker-py/issues/1510
 
-        # TODO: With the tmp volumes in the other branch, this will change.
-        # It's untidy right now, but let it be until that merge.
-        volume_spec = [{
-            'host': self._write_input_to_host(container_spec.input),
-            'bind': container_spec.container_input_path}]
+        volume_spec = []
+        if self._do_input_json_file:
+            volume_spec.append({
+                'host': self._write_input_to_host(container_spec.input),
+                'bind': container_spec.container_input_path})
 
         for directory in container_spec.extra_directories:
             assert os.path.isabs(directory), \
@@ -101,6 +130,12 @@ class DockerClientWrapper():
             self.root_label + '.port': str(container_spec.container_port)
         })
 
+        environment = {}
+        if self._do_input_json_envvar:
+            environment['INPUT_JSON'] = json.dumps(container_spec.input)
+        if self._input_json_url:
+            environment['INPUT_JSON_URL'] = self._input_json_url
+
         self._containers_manager.run(
             image_name,
             name=container_spec.container_name,
@@ -109,7 +144,8 @@ class DockerClientWrapper():
             detach=True,
             labels=labels,
             volumes=volumes,
-            nano_cpus=int(container_spec.cpus * 1e9)
+            nano_cpus=int(container_spec.cpus * 1e9),
+            environment=environment
         )
         return self.lookup_container_url(container_spec.container_name)
 

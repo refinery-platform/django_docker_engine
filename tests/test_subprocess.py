@@ -7,7 +7,8 @@ from shutil import rmtree
 
 import requests
 
-from django_docker_engine.docker_utils import (DockerClientWrapper,
+from django_docker_engine.docker_utils import (DockerClientSpec,
+                                               DockerClientWrapper,
                                                DockerContainerSpec)
 
 
@@ -35,7 +36,9 @@ class PathRoutingTests(unittest.TestCase):
         # TODO: Might use mkdtemp, but Docker couldn't see the directory?
         # self.tmp_dir = mkdtemp()
         # chmod(self.tmp_dir, 0777)
-        self.client = DockerClientWrapper(self.tmp_dir)
+        spec = DockerClientSpec(self.tmp_dir,
+                                do_input_json_envvar=True)
+        self.client = DockerClientWrapper(spec)
 
     def tearDown(self):
         self.process.kill()
@@ -95,7 +98,9 @@ class HostRoutingTests(PathRoutingTests):
             '--settings', 'demo_host_routing.settings'
         ])
         time.sleep(1)
-        self.client = DockerClientWrapper(self.tmp_dir)
+        spec = DockerClientSpec(self.tmp_dir,
+                                do_input_json_envvar=True)
+        self.client = DockerClientWrapper(spec)
 
     # Tests from superclass are run
 
