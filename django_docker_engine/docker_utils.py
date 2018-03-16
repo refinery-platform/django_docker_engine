@@ -32,7 +32,8 @@ class DockerContainerSpec():
 
 class DockerClientSpec():
 
-    def __init__(self, data_dir,
+    def __init__(self,
+                 data_dir=None,
                  do_input_json_file=False,
                  do_input_json_envvar=False,
                  input_json_url=None):
@@ -49,6 +50,10 @@ class DockerClientSpec():
         #   Creates potentially problematic huge envvar
         # - input_json_url:
         #   World-readable URL could be an unwanted leak
+        if do_input_json_file:
+            assert data_dir,\
+            'If the container reads input from a file mounted on the host, '
+            'a data_dir needs be given.'
         self.data_dir = data_dir
         self.do_input_json_file = do_input_json_file
         self.do_input_json_envvar = do_input_json_envvar

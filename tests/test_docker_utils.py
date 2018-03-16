@@ -28,8 +28,9 @@ class LiveDockerTests(unittest.TestCase):
 
     @property
     def spec(self):
-        return DockerClientSpec('/tmp/django-docker-engine-test',
-                                do_input_json_envvar=True)
+        return DockerClientSpec(
+            data_dir='/tmp/django-docker-engine-test',
+            do_input_json_envvar=True)
 
     def setUp(self):
         # Docker Engine's clock stops when the computer goes to sleep,
@@ -243,8 +244,9 @@ class LiveDockerTestsCleanJsonFile(LiveDockerTestsClean):
 
     @property
     def spec(self):
-        return DockerClientSpec('/tmp/django-docker-engine-test',
-                                do_input_json_file=True)
+        return DockerClientSpec(
+            data_dir='/tmp/django-docker-engine-test',
+            do_input_json_file=True)
 
     def assert_correct_ls_tmp(self, ls_tmp_orig):
         self.assertGreater(self.ls_tmp(), ls_tmp_orig)

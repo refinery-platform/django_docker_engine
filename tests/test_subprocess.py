@@ -36,7 +36,7 @@ class PathRoutingTests(unittest.TestCase):
         # TODO: Might use mkdtemp, but Docker couldn't see the directory?
         # self.tmp_dir = mkdtemp()
         # chmod(self.tmp_dir, 0777)
-        spec = DockerClientSpec(self.tmp_dir,
+        spec = DockerClientSpec(data_dir=self.tmp_dir,
                                 do_input_json_envvar=True)
         self.client = DockerClientWrapper(spec)
 
@@ -98,7 +98,7 @@ class HostRoutingTests(PathRoutingTests):
             '--settings', 'demo_host_routing.settings'
         ])
         time.sleep(1)
-        spec = DockerClientSpec(self.tmp_dir,
+        spec = DockerClientSpec(data_dir=self.tmp_dir,
                                 do_input_json_envvar=True)
         self.client = DockerClientWrapper(spec)
 

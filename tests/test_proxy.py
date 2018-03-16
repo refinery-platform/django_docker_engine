@@ -27,7 +27,7 @@ class CSRFTests(unittest.TestCase):
     def _check_proxy_csrf(self, csrf_exempt=True):
         with mock.patch("django_docker_engine.proxy.csrf_exempt_decorator") \
                 as csrf_exempt_mock:
-            spec = DockerClientSpec('/tmp/django-docker-data',
+            spec = DockerClientSpec(data_dir='/tmp/django-docker-data',
                                     do_input_json_envvar=True)
             Proxy(spec, csrf_exempt=csrf_exempt).url_patterns()
             assert csrf_exempt_mock.called == csrf_exempt
@@ -48,7 +48,7 @@ class ProxyTests(unittest.TestCase):
         historian = FileHistorian(history_path)
         title_text = 'test-title'
         body_html = '<p>test-body</p>'
-        spec = DockerClientSpec('/tmp/django-docker-data',
+        spec = DockerClientSpec(data_dir='/tmp/django-docker-data',
                                 do_input_json_envvar=True)
         proxy = Proxy(
             docker_client_spec=spec,
