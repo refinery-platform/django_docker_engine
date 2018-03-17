@@ -14,7 +14,7 @@ from httpproxy.views import HttpProxy
 
 from container_managers.docker_engine import DockerEngineManagerError
 from django_docker_engine.historian import NullHistorian
-from docker_utils import ReadOnlyDockerClientWrapper
+from docker_utils import DockerClientWrapper
 
 try:
     from urllib.error import HTTPError
@@ -81,7 +81,7 @@ class Proxy():
     def _proxy_view(self, request, container_name, url):
         self.historian.record(container_name, url)
         try:
-            client = ReadOnlyDockerClientWrapper()
+            client = DockerClientWrapper()
             container_url = client.lookup_container_url(container_name)
             view = HttpProxy.as_view(base_url=container_url)
             return view(request, url=url)

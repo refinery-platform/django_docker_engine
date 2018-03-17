@@ -85,13 +85,13 @@ so your application can launch containers as needed:
 ```
 $ python
 >>> from django_docker_engine.docker_utils import (
-      ReadWriteDockerClientWrapper, DockerClientSpec, DockerContainerSpec)
+      DockerClientRunWrapper, DockerClientSpec, DockerContainerSpec)
 >>> client_spec = DockerClientSpec(None, do_input_json_envvar=True)
 >>> container_spec = DockerContainerSpec(
         image_name='nginx:1.10.3-alpine',
         container_name='my-server'
       )
->>> ReadWriteDockerClientWrapper(client_spec).run(container_spec)
+>>> DockerClientRunWrapper(client_spec).run(container_spec)
 ```
 Note the URL that's returned: You'll get the Nginx welcome page if you visit it.
 You can run `docker ps` to see the container you've started.
