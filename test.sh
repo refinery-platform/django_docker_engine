@@ -16,10 +16,9 @@ start format
 flake8 --exclude build . || die "Run 'autopep8 --in-place -r .'"
 end format
 
-# TODO: Why Is travis giving me errors?!
-#start isort
-#isort --recursive . --verbose --check-only --skip django_docker_engine/cloudformation_utils.py || die "Run 'isort --recursive .'"
-#end isort
+start isort
+isort --recursive . --verbose --check-only --skip django_docker_engine/cloudformation_utils.py || die "Run 'isort --recursive .'"
+end isort
 
 start egg
 python setup.py bdist_egg

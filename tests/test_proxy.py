@@ -3,10 +3,11 @@ import unittest
 from datetime import datetime
 
 from django.test import RequestFactory
+from mock import mock
+
 from django_docker_engine.docker_utils import DockerClientSpec
 from django_docker_engine.historian import FileHistorian
 from django_docker_engine.proxy import Proxy
-from mock import mock
 
 
 class CSRFTests(unittest.TestCase):

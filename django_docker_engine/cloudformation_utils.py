@@ -8,10 +8,9 @@ import sys
 import time
 from pprint import pformat
 
+import boto3
 import pytz
 import requests
-
-import boto3
 import troposphere
 from troposphere import Base64, Output, Ref, ec2
 
