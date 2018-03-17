@@ -55,14 +55,87 @@ class DockerClientSpec():
         self.input_json_url = input_json_url
 
 
-class DockerClientWrapper():
+_DEFAULT_MANAGER = docker_engine.DockerEngineManager
+_DEFAULT_LABEL = 'io.github.refinery-project.django_docker_engine'
+
+
+class DockerClientWrapper(object):
+
+    def __init__(self,
+                 manager_class=_DEFAULT_MANAGER,
+                 root_label=_DEFAULT_LABEL):
+        self._containers_manager = manager_class(None, root_label)
+        # Some methods of the manager will fail without a data_dir,
+        # but they shouldn't be called from the read-only client in any event.
+
+    def lookup_container_url(self, container_name):
+        """
+        Given the name of a container, returns the url mapped to the right port.
+        """
+        return self._containers_manager.get_url(container_name)
+
+    def list(self, filters={}):
+        return self._containers_manager.list(filters)
+
+    def _purge(self, label=None, seconds=None):
+        for container in self.list({'label': label} if label else {}):
+            # TODO: Confirm that the container belongs to me
+            if seconds and self._is_active(container, seconds):
+                continue
+            mounts = container.attrs['Mounts']
+            container.remove(force=True)
+            for mount in mounts:
+                source = mount['Source']
+                target = source if os.path.isdir(
+                    source) else os.path.dirname(source)
+                rmtree(
+                    target,
+                    ignore_errors=True
+                )
+
+    def purge_by_label(self, label):
+        """
+        Removes all containers matching the label.
+        """
+        self._purge(label=label)
+
+    def purge_inactive(self, seconds):
+        """
+        Removes containers which do not have recent log entries.
+        """
+        self._purge(seconds=seconds)
+
+    def _is_active(self, container, seconds):
+        utc_start_string = container.attrs['State']['StartedAt']
+        utc_start = datetime.strptime(
+            utc_start_string[:19], '%Y-%m-%dT%H:%M:%S')
+        utc_now = datetime.utcnow()
+        seconds_since_start = (utc_now - utc_start).total_seconds()
+        if seconds_since_start < seconds:
+            return True
+        else:
+            recent_log = container.logs(since=int(time() - seconds))
+            # Logs are empty locally, but must contain something on travis?
+            # Doesn't work with non-integer values:
+            # https://github.com/docker/docker-py/issues/1515
+            return recent_log != ''
+
+    def pull(self, image_name, version="latest"):
+        self._containers_manager.pull(image_name, version=version)
+
+
+class DockerClientRunWrapper(DockerClientWrapper):
 
     def __init__(self,
                  docker_client_spec,
-                 manager_class=docker_engine.DockerEngineManager,
-                 root_label='io.github.refinery-project.django_docker_engine',
+                 manager_class=_DEFAULT_MANAGER,
+                 root_label=_DEFAULT_LABEL,
                  pem=None,
                  ssh_username=None):
+        super(DockerClientRunWrapper, self).__init__(
+            manager_class=manager_class,
+            root_label=root_label
+        )
         manager_kwargs = {}
         if pem:
             manager_kwargs['pem'] = pem
@@ -148,62 +221,6 @@ class DockerClientWrapper():
             environment=environment
         )
         return self.lookup_container_url(container_spec.container_name)
-
-    def lookup_container_url(self, container_name):
-        """
-        Given the name of a container, returns the url mapped to the right port.
-        """
-        return self._containers_manager.get_url(container_name)
-
-    def list(self, filters={}):
-        return self._containers_manager.list(filters)
-
-    def pull(self, image_name, version="latest"):
-        self._containers_manager.pull(image_name, version=version)
-
-    # TODO: Just make this the public method?
-    def _purge(self, label=None, seconds=None):
-        for container in self.list({'label': label} if label else {}):
-            # TODO: Confirm that the container belongs to me
-            if seconds and self._is_active(container, seconds):
-                continue
-            mounts = container.attrs['Mounts']
-            container.remove(force=True)
-            for mount in mounts:
-                source = mount['Source']
-                target = source if os.path.isdir(
-                    source) else os.path.dirname(source)
-                rmtree(
-                    target,
-                    ignore_errors=True
-                )
-
-    def purge_by_label(self, label):
-        """
-        Removes all containers matching the label.
-        """
-        self._purge(label=label)
-
-    def purge_inactive(self, seconds):
-        """
-        Removes containers which do not have recent log entries.
-        """
-        self._purge(seconds=seconds)
-
-    def _is_active(self, container, seconds):
-        utc_start_string = container.attrs['State']['StartedAt']
-        utc_start = datetime.strptime(
-            utc_start_string[:19], '%Y-%m-%dT%H:%M:%S')
-        utc_now = datetime.utcnow()
-        seconds_since_start = (utc_now - utc_start).total_seconds()
-        if seconds_since_start < seconds:
-            return True
-        else:
-            recent_log = container.logs(since=int(time() - seconds))
-            # Logs are empty locally, but must contain something on travis?
-            # Doesn't work with non-integer values:
-            # https://github.com/docker/docker-py/issues/1515
-            return recent_log != ''
 
     def _get_data_dir(self):
         return self._containers_manager._data_dir
