@@ -7,9 +7,9 @@ from shutil import rmtree
 
 import requests
 
-from django_docker_engine.docker_utils import (DockerClientSpec,
-                                               DockerContainerSpec,
-                                               DockerClientRunWrapper)
+from django_docker_engine.docker_utils import (DockerClientRunWrapper,
+                                               DockerClientSpec,
+                                               DockerContainerSpec)
 
 
 class PathRoutingTests(unittest.TestCase):

@@ -5,16 +5,15 @@ import socket
 from collections import namedtuple
 from httplib import BadStatusLine
 
+from container_managers.docker_engine import DockerEngineManagerError
 from django.conf.urls import url
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt as csrf_exempt_decorator
 from django.views.defaults import page_not_found
-from docker.errors import NotFound
-from httpproxy.views import HttpProxy
-
-from container_managers.docker_engine import DockerEngineManagerError
 from django_docker_engine.historian import NullHistorian
+from docker.errors import NotFound
 from docker_utils import DockerClientWrapper
+from httpproxy.views import HttpProxy
 
 try:
     from urllib.error import HTTPError

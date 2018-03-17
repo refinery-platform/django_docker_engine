@@ -9,16 +9,16 @@ from shutil import rmtree
 from time import sleep
 from urllib2 import URLError
 
-import django
-import paramiko
-from mock import patch
 from requests.exceptions import ConnectionError
 
+import django
+import paramiko
 from django_docker_engine.container_managers.docker_engine import \
     DockerEngineManager
-from django_docker_engine.docker_utils import (DockerClientSpec,
-                                               DockerContainerSpec,
-                                               DockerClientRunWrapper)
+from django_docker_engine.docker_utils import (DockerClientRunWrapper,
+                                               DockerClientSpec,
+                                               DockerContainerSpec)
+from mock import patch
 
 logging.basicConfig()
 logger = logging.getLogger(__name__)

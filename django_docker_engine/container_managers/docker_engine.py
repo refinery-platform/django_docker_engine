@@ -6,7 +6,6 @@ from datetime import datetime
 from distutils import dir_util
 
 import docker
-
 from base import BaseManager
 
 
