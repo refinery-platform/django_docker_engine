@@ -105,5 +105,3 @@ $ curl http://localhost:8000/docker/my-server/ | grep title
 ```
 Django receives the request, looks up the container from the name in the URL path,
 proxies the request, and returns the same Nginx welcome page.
-
-For more detail, consult the [generated documentation](docs.md).

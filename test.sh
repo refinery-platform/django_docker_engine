@@ -23,7 +23,3 @@ end isort
 start egg
 python setup.py bdist_egg
 end egg
-
-start docs
-diff <(./docs.sh) docs.md || die "Run './docs.sh > docs.md'"
-end docs
