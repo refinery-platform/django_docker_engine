@@ -5,7 +5,6 @@ from datetime import datetime
 from django.test import RequestFactory
 from mock import mock
 
-from django_docker_engine.docker_utils import DockerClientSpec
 from django_docker_engine.historian import FileHistorian
 from django_docker_engine.proxy import Proxy
 
@@ -46,8 +45,6 @@ class ProxyTests(unittest.TestCase):
         historian = FileHistorian(history_path)
         title_text = 'test-title'
         body_html = '<p>test-body</p>'
-        spec = DockerClientSpec('/tmp/django-docker-data',
-                                do_input_json_envvar=True)
         proxy = Proxy(
             historian=historian,
             please_wait_title='<' + title_text + '>',
