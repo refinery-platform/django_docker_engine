@@ -5,7 +5,6 @@ from datetime import datetime
 from django.test import RequestFactory
 from mock import mock
 
-from django_docker_engine.docker_utils import DockerClientSpec
 from django_docker_engine.historian import FileHistorian
 from django_docker_engine.proxy import Proxy
 
@@ -27,9 +26,7 @@ class CSRFTests(unittest.TestCase):
     def _check_proxy_csrf(self, csrf_exempt=True):
         with mock.patch("django_docker_engine.proxy.csrf_exempt_decorator") \
                 as csrf_exempt_mock:
-            spec = DockerClientSpec('/tmp/django-docker-data',
-                                    do_input_json_envvar=True)
-            Proxy(spec, csrf_exempt=csrf_exempt).url_patterns()
+            Proxy(csrf_exempt=csrf_exempt).url_patterns()
             assert csrf_exempt_mock.called == csrf_exempt
 
     def test_csrf_exempt_default_true(self):
@@ -48,10 +45,7 @@ class ProxyTests(unittest.TestCase):
         historian = FileHistorian(history_path)
         title_text = 'test-title'
         body_html = '<p>test-body</p>'
-        spec = DockerClientSpec('/tmp/django-docker-data',
-                                do_input_json_envvar=True)
         proxy = Proxy(
-            docker_client_spec=spec,
             historian=historian,
             please_wait_title='<' + title_text + '>',
             please_wait_body_html=body_html

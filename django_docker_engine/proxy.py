@@ -38,11 +38,11 @@ UrlPatterns = namedtuple('UrlPatterns', ['urlpatterns'])
 
 
 class Proxy():
-    def __init__(self, docker_client_spec, historian=NullHistorian(),
+    def __init__(self,
+                 historian=NullHistorian(),
                  please_wait_title='Please wait',
                  please_wait_body_html='<h1>Please wait</h1>',
                  csrf_exempt=True):
-        self.docker_client_spec = docker_client_spec
         self.historian = historian
         self.csrf_exempt = csrf_exempt
         self.content = self._render({
