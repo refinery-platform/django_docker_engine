@@ -6,10 +6,10 @@ from django_docker_engine.container_managers.docker_engine import (DockerEngineM
                                                                    ExpectedPortMissing,
                                                                    MisconfiguredPort,
                                                                    NoPortLabel)
-from tests import ALPINE_IMAGE, NGINX_IMAGE
+from tests import ALPINE_IMAGE, ECHO_IMAGE, NGINX_IMAGE
 
 
-class DockerEngineManagerTests(unittest.TestCase):
+class DockerEngineManagerErrorTests(unittest.TestCase):
 
     def setUp(self):
         timestamp = re.sub(r'\W', '-', datetime.now().isoformat())
@@ -21,7 +21,7 @@ class DockerEngineManagerTests(unittest.TestCase):
             'cmd': None
         }
 
-    def assert_add_kwarg_still_fails(self, key, value, image, expected_error):
+    def assert_kwarg_fails(self, key, value, image, expected_error):
         self.kwargs[key] = value
         self.manager.run(image, **self.kwargs)
         if expected_error:
@@ -33,33 +33,37 @@ class DockerEngineManagerTests(unittest.TestCase):
         self.manager.list({'name': '/' + self.container_name}
                           )[0].remove(force=True)
 
-    def test_expected_errors(self):
-        self.assert_add_kwarg_still_fails(
+    def test_no_port_label(self):
+        self.assert_kwarg_fails(
             'name', self.container_name,
             ALPINE_IMAGE,
             NoPortLabel
         )
 
-        self.assert_add_kwarg_still_fails(
+    def test_expected_port_missing_label(self):
+        self.assert_kwarg_fails(
             'labels', {self.root_label + '.port': '12345'},
             ALPINE_IMAGE,
             ExpectedPortMissing
             # Had been 'NoPortsOpen': I'm not sure why behavior changed. :(
         )
 
-        self.assert_add_kwarg_still_fails(
+    def test_expected_port_missing_detach(self):
+        self.assert_kwarg_fails(
             'detach', True,
             NGINX_IMAGE,
             ExpectedPortMissing
         )
 
-        self.assert_add_kwarg_still_fails(
+    def test_misconfigured_port(self):
+        self.assert_kwarg_fails(
             'labels', {self.root_label + '.port': '80'},
             NGINX_IMAGE,
             MisconfiguredPort
         )
 
-        self.assert_add_kwarg_still_fails(
+    def test_no_error(self):
+        self.assert_kwarg_fails(
             'ports', {'80/tcp': None},
             NGINX_IMAGE,
             None
