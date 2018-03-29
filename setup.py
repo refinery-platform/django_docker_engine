@@ -19,8 +19,7 @@ setup(
         # Latest django does not work with python2.
         'django' if sys.version_info[0] > 2 else 'django<2.0',
         'docker>=2.3.0',  # nano_cpus available with this release
-        'django-revproxy',
-        'requests'
+        'django-revproxy'
     ],
     packages=find_packages(exclude=['demo_*']),
     include_package_data=True,
