@@ -70,7 +70,7 @@ class PathRoutingTests(unittest.TestCase):
         )
         time.sleep(1)  # TODO: Race condition sensitivity?
         r_good = requests.get(self.url)
-        self.assert_in_html('nginx', r_good.content)
+        self.assert_in_html('Welcome to nginx', r_good.content)
 
         r_bad = requests.get(self.url + 'bad-path')
         self.assert_in_html('Not Found', r_bad.content)
