@@ -12,7 +12,7 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = (
     'django_docker_engine',
-    'httpproxy'
+    'revproxy'
 )
 
 MIDDLEWARE_CLASSES = ()

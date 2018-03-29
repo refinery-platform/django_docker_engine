@@ -10,7 +10,6 @@ from time import sleep
 from urllib2 import URLError
 
 import django
-import paramiko
 from mock import patch
 from requests.exceptions import ConnectionError
 
@@ -73,6 +72,11 @@ class LiveDockerTests(unittest.TestCase):
         ).group(1)
 
     def remote_exec(self, command):
+        # TODO: If we target a remote dockerengine during tests,
+        # and we use input.json mounting, then this is necessary...
+        # but, we generally aren't doing that, and in any case
+        # we're moving towards the input modes that don't require SSH.
+        import paramiko
         host_ip = self.docker_host_ip()
         key = paramiko.RSAKey.from_private_key_file(LiveDockerTests.PEM)
         client = paramiko.SSHClient()

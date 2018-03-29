@@ -1,7 +1,7 @@
 language: python
 python:
 - 2.7
-sudo: required # TODO: Remind me why?
+sudo: required # For overwriting /etc/hosts, to test hostname based routing.
 services:
 - docker
 install:
@@ -11,6 +11,7 @@ env:
   matrix:
     - VERSION='1.7.1'
     - VERSION='1.11.5'
+    # sync with setup.py
 matrix:
   fast_finish: true
 script:
