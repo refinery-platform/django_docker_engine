@@ -11,7 +11,7 @@ from bs4 import BeautifulSoup
 from django_docker_engine.docker_utils import (DockerClientRunWrapper,
                                                DockerClientSpec,
                                                DockerContainerSpec)
-from tests import NGINX_IMAGE
+from tests import ECHO_IMAGE, NGINX_IMAGE
 
 
 class PathRoutingTests(unittest.TestCase):
@@ -53,7 +53,7 @@ class PathRoutingTests(unittest.TestCase):
 
     def assert_in_html(self, substring, html):
         # Looks for substring in the text content of html.
-        soup = BeautifulSoup(html, from_encoding='latin-1')
+        soup = BeautifulSoup(html, 'html.parser', from_encoding='latin-1')
         # Document misencoded, I think...
         # Pick "latin-1" because it's forgiving.
         text = soup.get_text()
@@ -61,7 +61,7 @@ class PathRoutingTests(unittest.TestCase):
             self.fail(u'"{}" not found in text of html:\n{}'
                       .format(substring, text))
 
-    def test_container(self):
+    def test_nginx_container(self):
         self.client.run(
             DockerContainerSpec(
                 image_name=NGINX_IMAGE,
@@ -76,6 +76,19 @@ class PathRoutingTests(unittest.TestCase):
         r_bad = requests.get(self.url + 'bad-path')
         self.assert_in_html('Not Found', r_bad.content)
         self.assertEqual(404, r_bad.status_code)
+
+    def test_http_echo_get(self):
+        self.client.run(
+            DockerContainerSpec(
+                image_name=ECHO_IMAGE,
+                container_port=8080,  # and/or set PORT envvar
+                container_name=self.container_name,
+                labels={'subprocess-test-label': 'True'}
+            )
+        )
+        time.sleep(1)  # TODO: Race condition sensitivity?
+        response = requests.__dict__['get'](self.url)
+        self.assert_in_html('HTTP/1.1 GET /', response.content)
 
     def test_url(self):
         self.assertRegexpMatches(
