@@ -79,16 +79,25 @@ class Proxy():
             )
         ]
 
+    def _internal_proxy_view(self, request, container_url, path_url):
+        # Any dependencies on the 3rd party proxy should be contained here.
+        try:
+            view = ProxyView.as_view(upstream=container_url)
+            return view(request, path=path_url)
+        except MaxRetryError as e:
+            logger.info('Normal transient error: %s', e)
+            view = self._please_wait_view_factory(e).as_view()
+            return view(request)
+
     def _proxy_view(self, request, container_name, url):
         self.historian.record(container_name, url)
         try:
             client = DockerClientWrapper()
             container_url = client.lookup_container_url(container_name)
-            view = ProxyView.as_view(upstream=container_url)
-            return view(request, path=url)
-        except (DockerEngineManagerError, NotFound, BadStatusLine,
-                MaxRetryError) as e:
-            # TODO: Make reproducers for ones beyond MaxRetryError.
+            return self._internal_proxy_view(request, container_url, url)
+        except (DockerEngineManagerError, NotFound, BadStatusLine) as e:
+            # TODO: Can we reproduce any of these?
+            # Make tests if so, and move to _internal_proxy_view
             logger.info(
                 'Normal transient error. '
                 'Container: %s, Exception: %s', container_name, e)
