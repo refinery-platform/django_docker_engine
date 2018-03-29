@@ -84,7 +84,7 @@ class Proxy():
             client = DockerClientWrapper()
             container_url = client.lookup_container_url(container_name)
             view = ProxyView.as_view(upstream=container_url)
-            return view(request, url=url)
+            return view(request, path=url)
         except (DockerEngineManagerError, NotFound, BadStatusLine) as e:
             # TODO: Should DockerEngineManagerError be sufficient by itself?
             logger.info(
