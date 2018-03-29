@@ -57,6 +57,8 @@ class PathRoutingTests(unittest.TestCase):
         )
         r = requests.get(self.url)
         self.assert_in_html('Please wait', r.content)
+        self.assertIn('Container not yet available', r.reason)
+        self.assertIn('Max retries exceeded', r.reason)
 
     def assert_in_html(self, substring, html):
         # Looks for substring in the text content of html.

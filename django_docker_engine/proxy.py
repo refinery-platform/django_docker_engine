@@ -88,11 +88,11 @@ class Proxy():
             return view(request, path=url)
         except (DockerEngineManagerError, NotFound, BadStatusLine,
                 MaxRetryError) as e:
-            # TODO: Should DockerEngineManagerError be sufficient by itself?
+            # TODO: Make reproducers for ones beyond MaxRetryError.
             logger.info(
                 'Normal transient error. '
                 'Container: %s, Exception: %s', container_name, e)
-            view = self._please_wait_view_factory().as_view()
+            view = self._please_wait_view_factory(e).as_view()
             return view(request)
         except socket.error as e:
             if e.errno != errno.ECONNRESET:
@@ -100,7 +100,7 @@ class Proxy():
             logger.info(
                 'Container not yet listening. '
                 'Container: %s, Exception: %s', container_name, e)
-            view = self._please_wait_view_factory().as_view()
+            view = self._please_wait_view_factory(e).as_view()
             return view(request)
         except HTTPError as e:
             logger.warn(e)
@@ -108,14 +108,15 @@ class Proxy():
             # The underlying error is not necessarily a 404,
             # but this seems ok.
 
-    def _please_wait_view_factory(self):
+    def _please_wait_view_factory(self, message):
         class PleaseWaitView(View):
             def get(inner_self, request, *args, **kwargs):
                 response = HttpResponse(self.content)
                 response.status_code = 503
-                response.reason_phrase = 'Container not yet available'
-                # Non-standard, but more clear than default;
-                # Also, before 1.9, this is not set just by changing status code.
+                response.reason_phrase = \
+                    'Container not yet available: {}'.format(message)
+                # There are different failure modes, and including the message
+                # lets us make sure we're getting the one we expect.
                 return response
             http_method_named = ['get']
         return PleaseWaitView
