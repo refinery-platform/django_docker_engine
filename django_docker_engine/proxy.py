@@ -11,12 +11,13 @@ from django.views.decorators.csrf import csrf_exempt as csrf_exempt_decorator
 from django.views.defaults import page_not_found
 from docker.errors import NotFound
 from revproxy.views import ProxyView
+from urllib3.exceptions import MaxRetryError
 
 from container_managers.docker_engine import DockerEngineManagerError
 from django_docker_engine.historian import NullHistorian
 from docker_utils import DockerClientWrapper
 
-try:
+try:  # TODO: Can these still be thrown?
     from urllib.error import HTTPError
 except ImportError:
     from urllib2 import HTTPError
@@ -85,7 +86,8 @@ class Proxy():
             container_url = client.lookup_container_url(container_name)
             view = ProxyView.as_view(upstream=container_url)
             return view(request, path=url)
-        except (DockerEngineManagerError, NotFound, BadStatusLine) as e:
+        except (DockerEngineManagerError, NotFound, BadStatusLine,
+                MaxRetryError) as e:
             # TODO: Should DockerEngineManagerError be sufficient by itself?
             logger.info(
                 'Normal transient error. '

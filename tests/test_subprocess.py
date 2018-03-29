@@ -11,7 +11,7 @@ from bs4 import BeautifulSoup
 from django_docker_engine.docker_utils import (DockerClientRunWrapper,
                                                DockerClientSpec,
                                                DockerContainerSpec)
-from tests import ECHO_IMAGE, NGINX_IMAGE
+from tests import ALPINE_IMAGE, ECHO_IMAGE, NGINX_IMAGE
 
 
 class PathRoutingTests(unittest.TestCase):
@@ -48,9 +48,13 @@ class PathRoutingTests(unittest.TestCase):
         self.client.purge_by_label('subprocess-test-label')
 
     def test_please_wait(self):
-        # Do not launch a container: The point is that we
-        # get the please-wait if the container is not up,
-        # and the best way to insure that is just not to start it.
+        self.client.run(
+            DockerContainerSpec(
+                image_name=ALPINE_IMAGE,  # Will never response to HTTP
+                container_name=self.container_name,
+                labels={'subprocess-test-label': 'True'}
+            )
+        )
         r = requests.get(self.url)
         self.assert_in_html('Please wait', r.content)
 
@@ -91,7 +95,8 @@ class PathRoutingTests(unittest.TestCase):
             DockerContainerSpec(
                 image_name=ECHO_IMAGE,
                 container_port=8080,  # and/or set PORT envvar
-                container_name=self.container_name
+                container_name=self.container_name,
+                labels={'subprocess-test-label': 'True'}
             )
         )
         time.sleep(1)  # TODO: Race condition sensitivity?
