@@ -21,7 +21,7 @@ setup(
         'docker>=2.3.0',  # nano_cpus available with this release
         'django-revproxy'
     ],
-    packages=find_packages(exclude=['demo_*']),
+    packages=find_packages(exclude=['demo_*', 'tests']),
     include_package_data=True,
     license='MIT License',
     description='Django app that manages the creation of, ' +
