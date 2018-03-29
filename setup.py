@@ -19,7 +19,7 @@ setup(
         # Latest django does not work with python2.
         'django' if sys.version_info[0] > 2 else 'django<2.0',
         'docker>=2.3.0',  # nano_cpus available with this release
-        'django-http-proxy',
+        'django-revproxy',
         'requests'
     ],
     packages=find_packages(exclude=['demo_*']),
@@ -33,6 +33,7 @@ setup(
         'Environment :: Web Environment',
         'Framework :: Django',
         'Framework :: Django :: 1.7',
+        'Framework :: Django :: 1.11',  # sync with .travis.yml matrix
         'Intended Audience :: Developers',
         'License :: OSI Approved :: MIT License',
         'Operating System :: OS Independent',

@@ -11,6 +11,8 @@ from django_docker_engine.docker_utils import (DockerClientRunWrapper,
                                                DockerClientSpec,
                                                DockerContainerSpec)
 
+from bs4 import BeautifulSoup
+
 
 class PathRoutingTests(unittest.TestCase):
     """
@@ -49,6 +51,16 @@ class PathRoutingTests(unittest.TestCase):
         r = requests.get(self.url)
         self.assertIn('Please wait', r.content)
 
+    def assert_in_html(self, substring, html):
+        # Looks for substring in the text content of html.
+        soup = BeautifulSoup(html, from_encoding='latin-1')
+        # Document misencoded, I think...
+        # Pick "latin-1" because it's forgiving.
+        text = soup.get_text()
+        if substring not in text:
+            self.fail(u'"{}" not found in text of html:\n{}'
+                      .format(substring, text))
+
     def test_container(self):
         self.client.run(
             DockerContainerSpec(
@@ -59,7 +71,8 @@ class PathRoutingTests(unittest.TestCase):
         )
         time.sleep(1)
         r_good = requests.get(self.url)
-        self.assertIn('nginx', r_good.content)
+
+        self.assert_in_html('nginx', r_good.content)
 
         r_bad = requests.get(self.url + 'bad-path')
         self.assertEqual(

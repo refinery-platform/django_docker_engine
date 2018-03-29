@@ -10,7 +10,7 @@ from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt as csrf_exempt_decorator
 from django.views.defaults import page_not_found
 from docker.errors import NotFound
-from httpproxy.views import HttpProxy
+from revproxy.views import ProxyView
 
 from container_managers.docker_engine import DockerEngineManagerError
 from django_docker_engine.historian import NullHistorian
@@ -83,7 +83,7 @@ class Proxy():
         try:
             client = DockerClientWrapper()
             container_url = client.lookup_container_url(container_name)
-            view = HttpProxy.as_view(base_url=container_url)
+            view = ProxyView.as_view(upstream=container_url)
             return view(request, url=url)
         except (DockerEngineManagerError, NotFound, BadStatusLine) as e:
             # TODO: Should DockerEngineManagerError be sufficient by itself?
