@@ -48,15 +48,11 @@ class PathRoutingTests(unittest.TestCase):
         self.client.purge_by_label('subprocess-test-label')
 
     def test_please_wait(self):
-        self.client.run(
-            DockerContainerSpec(
-                image_name=NGINX_IMAGE,
-                container_name=self.container_name,
-                labels={'subprocess-test-label': 'True'}
-            )
-        )
+        # Do not launch a container: The point is that we
+        # get the please-wait if the container is not up,
+        # and the best way to insure that is just not to start it.
         r = requests.get(self.url)
-        self.assertIn('Please wait', r.content)
+        self.assert_in_html('Please wait', r.content)
 
     def assert_in_html(self, substring, html):
         # Looks for substring in the text content of html.
