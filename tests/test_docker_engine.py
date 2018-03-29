@@ -6,6 +6,7 @@ from django_docker_engine.container_managers.docker_engine import (DockerEngineM
                                                                    ExpectedPortMissing,
                                                                    MisconfiguredPort,
                                                                    NoPortLabel)
+from tests import alpine_image, nginx_image
 
 
 class DockerEngineManagerTests(unittest.TestCase):
@@ -35,31 +36,31 @@ class DockerEngineManagerTests(unittest.TestCase):
     def test_expected_errors(self):
         self.assert_add_kwarg_still_fails(
             'name', self.container_name,
-            'alpine:3.6',
+            alpine_image,
             NoPortLabel
         )
 
         self.assert_add_kwarg_still_fails(
             'labels', {self.root_label + '.port': '12345'},
-            'alpine:3.6',
+            alpine_image,
             ExpectedPortMissing
             # Had been 'NoPortsOpen': I'm not sure why behavior changed. :(
         )
 
         self.assert_add_kwarg_still_fails(
             'detach', True,
-            'nginx:1.10.3-alpine',
+            nginx_image,
             ExpectedPortMissing
         )
 
         self.assert_add_kwarg_still_fails(
             'labels', {self.root_label + '.port': '80'},
-            'nginx:1.10.3-alpine',
+            nginx_image,
             MisconfiguredPort
         )
 
         self.assert_add_kwarg_still_fails(
             'ports', {'80/tcp': None},
-            'nginx:1.10.3-alpine',
+            nginx_image,
             None
         )

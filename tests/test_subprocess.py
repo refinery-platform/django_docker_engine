@@ -11,6 +11,7 @@ from bs4 import BeautifulSoup
 from django_docker_engine.docker_utils import (DockerClientRunWrapper,
                                                DockerClientSpec,
                                                DockerContainerSpec)
+from tests import nginx_image
 
 
 class PathRoutingTests(unittest.TestCase):
@@ -63,7 +64,7 @@ class PathRoutingTests(unittest.TestCase):
     def test_container(self):
         self.client.run(
             DockerContainerSpec(
-                image_name='nginx:1.10.3-alpine',
+                image_name=nginx_image,
                 container_name=self.container_name,
                 labels={'subprocess-test-label': 'True'}
             )
