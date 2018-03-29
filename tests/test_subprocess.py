@@ -6,12 +6,11 @@ from os import mkdir
 from shutil import rmtree
 
 import requests
+from bs4 import BeautifulSoup
 
 from django_docker_engine.docker_utils import (DockerClientRunWrapper,
                                                DockerClientSpec,
                                                DockerContainerSpec)
-
-from bs4 import BeautifulSoup
 
 
 class PathRoutingTests(unittest.TestCase):
