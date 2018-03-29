@@ -42,4 +42,7 @@ setup(
         'Topic :: Internet :: WWW/HTTP',
         'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
     ],
+    zip_safe=False
+    # TODO: This fixes "ValueError: bad marshal data (unknown type code)"
+    # ... but I don't understand why it broke, or whether this is a good fix.
 )
