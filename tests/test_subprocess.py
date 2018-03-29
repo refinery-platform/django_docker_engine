@@ -48,13 +48,20 @@ class PathRoutingTests(unittest.TestCase):
         self.client.purge_by_label('subprocess-test-label')
 
     def test_please_wait(self):
+        self.client.run(
+            DockerContainerSpec(
+                image_name=NGINX_IMAGE,
+                container_name=self.container_name,
+                labels={'subprocess-test-label': 'True'}
+            )
+        )
         r = requests.get(self.url)
         self.assertIn('Please wait', r.content)
 
     def assert_in_html(self, substring, html):
         # Looks for substring in the text content of html.
         soup = BeautifulSoup(html, 'html.parser', from_encoding='latin-1')
-        # Document misencoded, I think...
+        # Python error page may be misencoded?
         # Pick "latin-1" because it's forgiving.
         text = soup.get_text()
         if substring not in text:
@@ -77,18 +84,34 @@ class PathRoutingTests(unittest.TestCase):
         self.assert_in_html('Not Found', r_bad.content)
         self.assertEqual(404, r_bad.status_code)
 
-    def test_http_echo_get(self):
+    def assert_http_verb(self, verb):
+        response = requests.__dict__[verb.lower()](self.url)
+        self.assert_in_html('HTTP/1.1 {} /'.format(verb), response.content)
+        # Response shouldn't be HTML, but if we get the Django error page,
+        # this will make it much more readable.
+
+    def test_http_echo_verbs(self):
         self.client.run(
             DockerContainerSpec(
                 image_name=ECHO_IMAGE,
                 container_port=8080,  # and/or set PORT envvar
-                container_name=self.container_name,
-                labels={'subprocess-test-label': 'True'}
+                container_name=self.container_name
             )
         )
         time.sleep(1)  # TODO: Race condition sensitivity?
-        response = requests.__dict__['get'](self.url)
-        self.assert_in_html('HTTP/1.1 GET /', response.content)
+        # https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods
+        self.assert_http_verb('GET')
+        # HEAD has no body, understandably
+        # self.assert_http_verb('HEAD')
+        self.assert_http_verb('POST')
+        self.assert_http_verb('PUT')
+        self.assert_http_verb('DELETE')
+        # CONNECT not supported by Requests
+        # self.assert_http_verb('CONNECT')
+        self.assert_http_verb('OPTIONS')
+        # TRACE not supported by Requests
+        # self.assert_http_verb('TRACE')
+        self.assert_http_verb('PATCH')
 
     def test_url(self):
         self.assertRegexpMatches(
