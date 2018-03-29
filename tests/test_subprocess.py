@@ -69,16 +69,12 @@ class PathRoutingTests(unittest.TestCase):
                 labels={'subprocess-test-label': 'True'}
             )
         )
-        time.sleep(1)
+        time.sleep(1)  # TODO: Race condition sensitivity?
         r_good = requests.get(self.url)
-
         self.assert_in_html('nginx', r_good.content)
 
         r_bad = requests.get(self.url + 'bad-path')
-        self.assertEqual(
-            '<h1>Not Found</h1>'
-            '<p>The requested URL /bad-path was not found on this server.</p>',
-            r_bad.content)
+        self.assert_in_html('Not Found', r_bad.content)
         self.assertEqual(404, r_bad.status_code)
 
     def test_url(self):
