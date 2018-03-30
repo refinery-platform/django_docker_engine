@@ -7,7 +7,12 @@ import unittest
 from distutils import dir_util
 from shutil import rmtree
 from time import sleep
-from urllib2 import URLError
+
+from sys import version_info
+if version_info >= (3,):
+    from urllib.error import URLError
+else:
+    from urllib2 import URLError
 
 import django
 from mock import patch
@@ -120,7 +125,7 @@ class LiveDockerTests(unittest.TestCase):
         container directly, rather than going through the proxy, so there
         is no corresponding "assert_loads_immediately".
         """
-        for i in xrange(100):
+        for i in range(100):
             try:
                 response = client.get(url)
                 if response.status_code == 200:
@@ -150,7 +155,7 @@ class LiveDockerTestsDirty(LiveDockerTests):
                 'extra_directories': ["/test", "coffee"]
             })
         self.assertEqual(
-            context.exception.message,
+            context.exception.args[0],
             "Specified path: `coffee` is not absolute"
         )
 

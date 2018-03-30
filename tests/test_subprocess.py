@@ -20,6 +20,12 @@ class PathRoutingTests(unittest.TestCase):
     starting the django server as you would from the command-line.
     """
 
+    try:
+        assertRegex
+    except NameError:  # Python 2 fallback
+        def assertRegex(self, s, re):
+            self.assertRegexpMatches(s, re)
+
     def free_port(self):
         s = socket.socket()
         s.bind(('', 0))
@@ -69,7 +75,7 @@ class PathRoutingTests(unittest.TestCase):
         # Pick "latin-1" because it's forgiving.
         text = soup.get_text()
         if substring not in text:
-            self.fail(u'"{}" not found in text of html:\n{}'
+            self.fail('"{}" not found in text of html:\n{}'
                       .format(substring, text))
 
     def test_nginx_container(self):
@@ -137,7 +143,7 @@ class PathRoutingTests(unittest.TestCase):
         self.assert_http_body('PUT')
 
     def test_url(self):
-        self.assertRegexpMatches(
+        self.assertRegex(
             self.url, r'http://localhost:\d+/docker/test-\d+/')
 
 
@@ -173,5 +179,5 @@ class HostRoutingTests(PathRoutingTests):
     # Tests from superclass are run
 
     def test_url(self):
-        self.assertRegexpMatches(
+        self.assertRegex(
             self.url, r'http://container-name.docker.localhost:\d+/')

@@ -1,13 +1,14 @@
 import os
 import re
 import subprocess
-from abc import ABCMeta, abstractmethod
+import sys
+import abc
 from datetime import datetime
 from distutils import dir_util
 
 import docker
 
-from base import BaseManager
+from .base import BaseManager
 
 
 class DockerEngineManagerError(Exception):
@@ -137,14 +138,17 @@ class DockerEngineManager(BaseManager):
         return tmp_dir
 
 
-class _HostFiles:
-    __metaclass__ = ABCMeta
+if sys.version_info >= (3, 4):
+    ABC = abc.ABC
+else:
+    ABC = abc.ABCMeta('ABC', (), {})
 
-    @abstractmethod
+class _HostFiles(ABC):
+    @abc.abstractmethod
     def write(self, path, content):
         raise NotImplementedError()
 
-    @abstractmethod
+    @abc.abstractmethod
     def mkdir_p(self, path):
         raise NotImplementedError()
 

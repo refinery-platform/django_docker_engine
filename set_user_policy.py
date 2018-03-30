@@ -69,7 +69,7 @@ class PolicySetter():
             }
             user_policy = self.__user.Policy(name)
             user_policy.put(PolicyDocument=json.dumps(full_doc))
-            print(actions[name])
+            print((actions[name]))
 
 
 if __name__ == '__main__':
@@ -77,5 +77,5 @@ if __name__ == '__main__':
     if len(sys.argv) == 2:
         PolicySetter(sys.argv[1]).set_policies()
     else:
-        print('USAGE: %s AWS_USERNAME' % sys.argv[0])
+        print(('USAGE: %s AWS_USERNAME' % sys.argv[0]))
         print('Grants to the specified user the privs necessary to run AWS-ECS tests')
