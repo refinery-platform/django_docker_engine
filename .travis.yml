@@ -11,14 +11,14 @@ env:
   matrix:
     - DJANGO_VERSION='1.8.19'  # LTS
     - DJANGO_VERSION='1.11.11'  # LTS
-    - DJANGO_VERSION='2.0.3'  # not LTS
-    # sync with setup.py
+    # - DJANGO_VERSION='2.0.3'  # not LTS; only python3
 matrix:
   fast_finish: true
-script:
+before_script:
 - set -o errexit
 - pip install django==$DJANGO_VERSION
 - sudo sh -c 'echo "127.0.0.1 container-name.docker.localhost" >> /etc/hosts'
+script:
 - ./test.sh
 deploy:
   # Defaults to only deploy on master;
