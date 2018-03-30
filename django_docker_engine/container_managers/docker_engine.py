@@ -143,6 +143,7 @@ if sys.version_info >= (3, 4):
 else:
     ABC = abc.ABCMeta('ABC', (), {})
 
+
 class _HostFiles(ABC):
     @abc.abstractmethod
     def write(self, path, content):
