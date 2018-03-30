@@ -1,5 +1,5 @@
-import sys
 import abc
+import sys
 
 """
 This provides an interface which satisfies both local and remote Docker use.

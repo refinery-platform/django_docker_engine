@@ -1,8 +1,8 @@
+import abc
 import os
 import re
 import subprocess
 import sys
-import abc
 from datetime import datetime
 from distutils import dir_util
 

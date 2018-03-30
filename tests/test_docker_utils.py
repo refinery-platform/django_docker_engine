@@ -6,13 +6,8 @@ import subprocess
 import unittest
 from distutils import dir_util
 from shutil import rmtree
-from time import sleep
-
 from sys import version_info
-if version_info >= (3,):
-    from urllib.error import URLError
-else:
-    from urllib2 import URLError
+from time import sleep
 
 import django
 from mock import patch
@@ -24,6 +19,11 @@ from django_docker_engine.docker_utils import (DockerClientRunWrapper,
                                                DockerClientSpec,
                                                DockerContainerSpec)
 from tests import NGINX_IMAGE
+
+if version_info >= (3,):
+    from urllib.error import URLError
+else:
+    from urllib2 import URLError
 
 logging.basicConfig()
 logger = logging.getLogger(__name__)

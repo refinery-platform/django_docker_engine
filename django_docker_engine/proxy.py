@@ -3,33 +3,29 @@ import logging
 import os
 import socket
 from collections import namedtuple
-
 from sys import version_info
-if version_info >= (3,):
-    from http.client import BadStatusLine
-else:
-    from httplib import BadStatusLine
 
 from django.conf.urls import url
 from django.http import HttpResponse
+from django.template.backends.django import DjangoTemplates
+from django.views import View
 from django.views.decorators.csrf import csrf_exempt as csrf_exempt_decorator
 from django.views.defaults import page_not_found
 from docker.errors import NotFound
 from revproxy.views import ProxyView
 from urllib3.exceptions import MaxRetryError
 
-from .container_managers.docker_engine import DockerEngineManagerError
 from django_docker_engine.historian import NullHistorian
+
+from .container_managers.docker_engine import DockerEngineManagerError
 from .docker_utils import DockerClientWrapper
 
-# TODO: Can these still be thrown?
 if version_info >= (3,):
+    from http.client import BadStatusLine
     from urllib.error import HTTPError
 else:
+    from httplib import BadStatusLine
     from urllib2 import HTTPError
-
-from django.views import View
-from django.template.backends.django import DjangoTemplates
 
 logging.basicConfig()
 logger = logging.getLogger(__name__)
