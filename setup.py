@@ -19,10 +19,9 @@ setup(
         # Latest django does not work with python2.
         'django' if sys.version_info[0] > 2 else 'django<2.0',
         'docker>=2.3.0',  # nano_cpus available with this release
-        'django-revproxy',
-        'requests'
+        'django-revproxy'
     ],
-    packages=find_packages(exclude=['demo_*']),
+    packages=find_packages(exclude=['demo_*', 'tests']),
     include_package_data=True,
     license='MIT License',
     description='Django app that manages the creation of, ' +
@@ -42,4 +41,7 @@ setup(
         'Topic :: Internet :: WWW/HTTP',
         'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
     ],
+    zip_safe=False
+    # TODO: This fixes "ValueError: bad marshal data (unknown type code)"
+    # ... but I don't understand why it broke, or whether this is a good fix.
 )

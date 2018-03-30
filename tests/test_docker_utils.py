@@ -18,6 +18,7 @@ from django_docker_engine.container_managers.docker_engine import \
 from django_docker_engine.docker_utils import (DockerClientRunWrapper,
                                                DockerClientSpec,
                                                DockerContainerSpec)
+from tests import NGINX_IMAGE
 
 logging.basicConfig()
 logger = logging.getLogger(__name__)
@@ -51,7 +52,7 @@ class LiveDockerTests(unittest.TestCase):
     def get_docker_url_timestamp(self, extra_kwargs={}):
         timestamp = self.timestamp()
         kwargs = {
-            'image_name': 'nginx:1.10.3-alpine',
+            'image_name': NGINX_IMAGE,
             'container_name': timestamp,
             'labels': {self.test_label: 'true'}
         }

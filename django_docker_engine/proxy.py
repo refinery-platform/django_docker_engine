@@ -11,12 +11,13 @@ from django.views.decorators.csrf import csrf_exempt as csrf_exempt_decorator
 from django.views.defaults import page_not_found
 from docker.errors import NotFound
 from revproxy.views import ProxyView
+from urllib3.exceptions import MaxRetryError
 
 from container_managers.docker_engine import DockerEngineManagerError
 from django_docker_engine.historian import NullHistorian
 from docker_utils import DockerClientWrapper
 
-try:
+try:  # TODO: Can these still be thrown?
     from urllib.error import HTTPError
 except ImportError:
     from urllib2 import HTTPError
@@ -78,19 +79,29 @@ class Proxy():
             )
         ]
 
+    def _internal_proxy_view(self, request, container_url, path_url):
+        # Any dependencies on the 3rd party proxy should be contained here.
+        try:
+            view = ProxyView.as_view(upstream=container_url)
+            return view(request, path=path_url)
+        except MaxRetryError as e:
+            logger.info('Normal transient error: %s', e)
+            view = self._please_wait_view_factory(e).as_view()
+            return view(request)
+
     def _proxy_view(self, request, container_name, url):
         self.historian.record(container_name, url)
         try:
             client = DockerClientWrapper()
             container_url = client.lookup_container_url(container_name)
-            view = ProxyView.as_view(upstream=container_url)
-            return view(request, path=url)
+            return self._internal_proxy_view(request, container_url, url)
         except (DockerEngineManagerError, NotFound, BadStatusLine) as e:
-            # TODO: Should DockerEngineManagerError be sufficient by itself?
+            # TODO: Can we reproduce any of these?
+            # Make tests if so, and move to _internal_proxy_view
             logger.info(
                 'Normal transient error. '
                 'Container: %s, Exception: %s', container_name, e)
-            view = self._please_wait_view_factory().as_view()
+            view = self._please_wait_view_factory(e).as_view()
             return view(request)
         except socket.error as e:
             if e.errno != errno.ECONNRESET:
@@ -98,7 +109,7 @@ class Proxy():
             logger.info(
                 'Container not yet listening. '
                 'Container: %s, Exception: %s', container_name, e)
-            view = self._please_wait_view_factory().as_view()
+            view = self._please_wait_view_factory(e).as_view()
             return view(request)
         except HTTPError as e:
             logger.warn(e)
@@ -106,14 +117,15 @@ class Proxy():
             # The underlying error is not necessarily a 404,
             # but this seems ok.
 
-    def _please_wait_view_factory(self):
+    def _please_wait_view_factory(self, message):
         class PleaseWaitView(View):
             def get(inner_self, request, *args, **kwargs):
                 response = HttpResponse(self.content)
                 response.status_code = 503
-                response.reason_phrase = 'Container not yet available'
-                # Non-standard, but more clear than default;
-                # Also, before 1.9, this is not set just by changing status code.
+                response.reason_phrase = \
+                    'Container not yet available: {}'.format(message)
+                # There are different failure modes, and including the message
+                # lets us make sure we're getting the one we expect.
                 return response
             http_method_named = ['get']
         return PleaseWaitView
