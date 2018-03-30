@@ -76,8 +76,9 @@ class PathRoutingTests(unittest.TestCase):
         # Pick "latin-1" because it's forgiving.
         text = soup.get_text()
         text = re.sub(
-            r'.*(Environment:.*)\s*Request information',
-            '$1 (more info available)', text)
+            r'.*(Environment:.*?)\s*Request information.*',
+            r'\1 (more info available)', text, flags=re.DOTALL)
+        # If it's the Django error page, try to just get the stack trace.
         if substring not in text:
             self.fail('"{}" not found in text of html:\n{}'
                       .format(substring, text))
