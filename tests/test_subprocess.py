@@ -3,6 +3,7 @@ import subprocess
 import time
 import unittest
 from os import mkdir
+import re
 from shutil import rmtree
 
 import requests
@@ -74,6 +75,9 @@ class PathRoutingTests(unittest.TestCase):
         # Python error page may be misencoded?
         # Pick "latin-1" because it's forgiving.
         text = soup.get_text()
+        text = re.sub(
+            r'.*(Environment:.*)\s*Request information',
+            '$1 (more info available)', text)
         if substring not in text:
             self.fail('"{}" not found in text of html:\n{}'
                       .format(substring, text))
