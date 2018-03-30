@@ -118,6 +118,24 @@ class PathRoutingTests(unittest.TestCase):
         # self.assert_http_verb('TRACE')
         self.assert_http_verb('PATCH')
 
+    def assert_http_body(self, verb):
+        body = verb + '/body'
+        response = requests.__dict__[verb.lower()](self.url, data=body)
+        self.assert_in_html('HTTP/1.1 {} /'.format(verb), response.content)
+        self.assert_in_html(body, response.content)
+
+    def test_http_echo_body(self):
+        self.client.run(
+            DockerContainerSpec(
+                image_name=ECHO_IMAGE,
+                container_port=8080,  # and/or set PORT envvar
+                container_name=self.container_name,
+                labels={'subprocess-test-label': 'True'}
+            )
+        )
+        self.assert_http_body('POST')
+        self.assert_http_body('PUT')
+
     def test_url(self):
         self.assertRegexpMatches(
             self.url, r'http://localhost:\d+/docker/test-\d+/')
