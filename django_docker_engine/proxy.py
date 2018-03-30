@@ -8,7 +8,7 @@ from sys import version_info
 from django.conf.urls import url
 from django.http import HttpResponse
 from django.template.backends.django import DjangoTemplates
-from django.views import View
+from django.views.generic.base import View
 from django.views.decorators.csrf import csrf_exempt as csrf_exempt_decorator
 from django.views.defaults import page_not_found
 from docker.errors import NotFound
