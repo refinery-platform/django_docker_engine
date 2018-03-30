@@ -14,7 +14,7 @@ os.chdir(normpath(join(abspath(__file__), os.pardir)))
 
 travis = yaml.load(open('.travis.yml').read())
 django_versions = [
-    re.search(r'DJANGO_VERION.*(\d+\.\d+)\.', v).group(1)
+    re.search(r'DJANGO_VERSION.*(\d+\.\d+)\.', v).group(1)
     for v in travis['env']['matrix']
 ]
 assert len(django_versions) > 0
