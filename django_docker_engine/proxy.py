@@ -8,9 +8,9 @@ from sys import version_info
 from django.conf.urls import url
 from django.http import HttpResponse
 from django.template.backends.django import DjangoTemplates
-from django.views.generic.base import View
 from django.views.decorators.csrf import csrf_exempt as csrf_exempt_decorator
 from django.views.defaults import page_not_found
+from django.views.generic.base import View
 from docker.errors import NotFound
 from revproxy.views import ProxyView
 from urllib3.exceptions import MaxRetryError

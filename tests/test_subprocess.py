@@ -1,9 +1,9 @@
+import re
 import socket
 import subprocess
 import time
 import unittest
 from os import mkdir
-import re
 from shutil import rmtree
 
 import requests
