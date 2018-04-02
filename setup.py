@@ -13,21 +13,19 @@ with open(join(dirname(__file__), 'README.rst')) as readme:
 os.chdir(normpath(join(abspath(__file__), os.pardir)))
 
 version = open(join('django_docker_engine', 'VERSION.txt')).read().strip()
-
 travis = yaml.load(open('.travis.yml').read())
 
-python_versions = travis['python']
-assert len(python_versions) > 0
-python_classifiers = ['Programming Language :: Python :: '
-                      + v for v in python_versions]
+python_classifiers = ['Programming Language :: Python :: {}'.format(v)
+                      for v in travis['python']]
+assert len(python_classifiers) > 0
 
 django_versions = [
     re.search(r'DJANGO_VERSION.*(\d+\.\d+)\.', v).group(1)
     for v in travis['env']['matrix']
 ]
-assert len(django_versions) > 0
-django_classifiers = ['Framework :: Django :: '
-                      + v for v in django_versions]
+django_classifiers = ['Framework :: Django :: {}'.format(v)
+                      for v in django_versions]
+assert len(django_classifiers) > 0
 
 setup(
     name='django_docker_engine',
