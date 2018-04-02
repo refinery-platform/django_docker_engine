@@ -17,7 +17,7 @@ flake8 --exclude build . || die "Run 'autopep8 --in-place -r .'"
 end format
 
 start isort
-isort --recursive . --verbose --check-only --skip utils || die "Run 'isort --recursive .'"
+isort --recursive . --verbose --check-only --skip aws_utils || die "Run 'isort --recursive .'"
 end isort
 
 start egg

@@ -3,34 +3,29 @@ import logging
 import os
 import socket
 from collections import namedtuple
-from httplib import BadStatusLine
+from sys import version_info
 
 from django.conf.urls import url
 from django.http import HttpResponse
+from django.template.backends.django import DjangoTemplates
 from django.views.decorators.csrf import csrf_exempt as csrf_exempt_decorator
 from django.views.defaults import page_not_found
+from django.views.generic.base import View
 from docker.errors import NotFound
 from revproxy.views import ProxyView
 from urllib3.exceptions import MaxRetryError
 
-from container_managers.docker_engine import DockerEngineManagerError
 from django_docker_engine.historian import NullHistorian
-from docker_utils import DockerClientWrapper
 
-try:  # TODO: Can these still be thrown?
+from .container_managers.docker_engine import DockerEngineManagerError
+from .docker_utils import DockerClientWrapper
+
+if version_info >= (3,):
+    from http.client import BadStatusLine
     from urllib.error import HTTPError
-except ImportError:
+else:
+    from httplib import BadStatusLine
     from urllib2 import HTTPError
-
-try:
-    from django.views import View
-except ImportError:  # Support Django 1.7
-    from django.views.generic import View
-
-try:
-    from django.template.backends.django import DjangoTemplates
-except ImportError:  # Support Django 1.7
-    from django.template import Context, Template
 
 logging.basicConfig()
 logger = logging.getLogger(__name__)
@@ -58,15 +53,11 @@ class Proxy():
 
         # Normally, we would use template loaders, but could there be
         # interactions between the configs necessary here and in the parent app?
-        try:  # 1.11
-            engine = DjangoTemplates({
-                'OPTIONS': {}, 'NAME': None, 'DIRS': [], 'APP_DIRS': []
-            })
-            # All the keys are required, but the values don't seem to matter.
-            template = engine.from_string(template_code)
-        except NameError:  # 1.7
-            template = Template(template_code)
-            context = Context(context)
+        engine = DjangoTemplates({
+            'OPTIONS': {}, 'NAME': None, 'DIRS': [], 'APP_DIRS': []
+        })
+        # All the keys are required, but the values don't seem to matter.
+        template = engine.from_string(template_code)
 
         return template.render(context)
 

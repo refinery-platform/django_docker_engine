@@ -1,5 +1,5 @@
-from abc import ABCMeta, abstractmethod
-
+import abc
+import sys
 
 """
 This provides an interface which satisfies both local and remote Docker use.
@@ -12,18 +12,22 @@ interface.
 """
 
 
-class BaseManager:
+if sys.version_info >= (3, 4):
+    ABC = abc.ABC
+else:
+    ABC = abc.ABCMeta('ABC', (), {})
 
-    __metaclass__ = ABCMeta
 
-    @abstractmethod
+class BaseManager(ABC):
+
+    @abc.abstractmethod
     def run(self, image_name, cmd, **kwargs):
         raise NotImplementedError()
 
-    @abstractmethod
+    @abc.abstractmethod
     def get_url(self, container_name):
         raise NotImplementedError()
 
-    @abstractmethod
+    @abc.abstractmethod
     def list(self, filters={}):
         raise NotImplementedError()

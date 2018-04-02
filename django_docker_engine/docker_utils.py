@@ -5,7 +5,7 @@ from datetime import datetime
 from shutil import rmtree
 from time import time
 
-from container_managers import docker_engine
+from django_docker_engine.container_managers import docker_engine
 
 logging.basicConfig()
 logger = logging.getLogger(__name__)
