@@ -12,15 +12,20 @@ with open(join(dirname(__file__), 'README.rst')) as readme:
 # allow setup.py to be run from any path
 os.chdir(normpath(join(abspath(__file__), os.pardir)))
 
+version = open(join('django_docker_engine', 'VERSION.txt')).read().strip()
 travis = yaml.load(open('.travis.yml').read())
+
+python_classifiers = ['Programming Language :: Python :: {}'.format(v)
+                      for v in travis['python']]
+assert len(python_classifiers) > 0
+
 django_versions = [
     re.search(r'DJANGO_VERSION.*(\d+\.\d+)\.', v).group(1)
     for v in travis['env']['matrix']
 ]
-assert len(django_versions) > 0
-django_classifiers = ['Framework :: Django :: ' + v for v in django_versions]
-
-version = open(join('django_docker_engine', 'VERSION.txt')).read().strip()
+django_classifiers = ['Framework :: Django :: {}'.format(v)
+                      for v in django_versions]
+assert len(django_classifiers) > 0
 
 setup(
     name='django_docker_engine',
@@ -43,8 +48,7 @@ setup(
         'Intended Audience :: Developers',
         'License :: OSI Approved :: MIT License',
         'Operating System :: OS Independent',
-        'Programming Language :: Python',
-        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python'] + python_classifiers + [
         'Topic :: Internet :: WWW/HTTP',
         'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
         'Framework :: Django'] + django_classifiers,
