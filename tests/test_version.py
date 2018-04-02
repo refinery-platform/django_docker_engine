@@ -13,13 +13,10 @@ class VersionTests(unittest.TestCase):
             self.assertRegexpMatches(s, re)
 
     def test_version_has_been_incremented(self):
-        if not hasattr(self, 'assertRegexp'):
-            self.assertRegexp = self.assertRegexpMatches
-
         version_re = r'^\d+\.\d+\.\d+$'
         r = requests.get(
             'https://pypi.python.org/pypi/django-docker-engine/json')
-        pypi_versions = list(r.json()['releases'].keys())
+        pypi_versions = r.json()['releases'].keys()
 
         for v in pypi_versions:
             self.assertRegex(v, version_re)
