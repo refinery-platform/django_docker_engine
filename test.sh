@@ -13,7 +13,7 @@ start test
 end test
 
 start doctest
-python -m doctest -v *.md
+python -m doctest *.md
 end doctest
 
 start format

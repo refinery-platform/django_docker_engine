@@ -77,9 +77,11 @@ TODO: AWS provides its own wrapper around Docker through ECS. We will need to ab
 Docker SDK provides so that we can use either interface, as needed.
 
 
-## Walk through
+## Walk-throughs
 
-Here's a basic demo of all functionality. (This script does start up a demo 
+### Basics
+
+Here's a basic demo. (This script does start up our demo 
 django instance: for that to work, you will need to checkout the repo and cd, 
 and not just have installed it via pip.)
 
@@ -94,9 +96,10 @@ and not just have installed it via pip.)
 []
 
 # Then start your own container:
->>> container_name = 'my-server'
+>>> container_name = 'basic-nginx'
+>>> from tests import NGINX_IMAGE
 >>> container_spec = DockerContainerSpec(
-...     image_name='nginx:1.10.3-alpine',
+...     image_name=NGINX_IMAGE,
 ...     container_name=container_name)
 >>> container_url = client.run(container_spec)
 >>> container_url  # doctest:+ELLIPSIS
@@ -124,7 +127,42 @@ and not just have installed it via pip.)
 # On that route, requests are proxied to containers by name:
 >>> proxy_url = django_url + '/docker/' + container_name + '/'
 >>> proxy_url
-'http://localhost:8000/docker/my-server/'
+'http://localhost:8000/docker/basic-nginx/'
 >>> assert 'Welcome to nginx' in requests.get(proxy_url).text
 
 ```
+
+### Input
+
+TODO
+
+### Please wait
+
+By default, if the container is not yet responding to
+requests, the proxy will return a "Please wait" page with both a 
+JS- and a meta-reload. You can customize the content of this page, 
+and the reload behavior.
+
+Note though, that there is no attempt to distinguish between a container
+that is taking its time, and one that may never start up: In either case,
+the user just gets the "Please wait" page by default.
+
+```
+# Make sure Django is still up:
+>>> response_text = requests.get(django_url).text
+>>> assert '^docker/' in response_text
+
+# Try to get a container that doesn't exist:
+>>> container_name = 'please-wait'
+>>> proxy_url = django_url + '/docker/' + container_name + '/'
+>>> proxy_url
+'http://localhost:8000/docker/please-wait/'
+>>> response_text = requests.get(proxy_url).text
+>>> assert 'Please wait' in response_text
+>>> assert 'http-equiv="refresh"' in response_text
+
+```
+
+### Historian
+
+TODO
