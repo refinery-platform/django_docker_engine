@@ -132,10 +132,6 @@ and not just have installed it via pip.)
 
 ```
 
-### Input
-
-TODO
-
 ### Please wait
 
 By default, if the container is not yet responding to
@@ -143,9 +139,10 @@ requests, the proxy will return a "Please wait" page with both a
 JS- and a meta-reload. You can customize the content of this page, 
 and the reload behavior.
 
-Note though, that there is no attempt to distinguish between a container
+Note, though, that there is no attempt to distinguish between a container
 that is taking its time, and one that may never start up: In either case,
-the user just gets the "Please wait" page by default.
+the user just gets the "Please wait" page by default, and it will continue
+to refresh indefinitely.
 
 ```
 # Make sure Django is still up:
@@ -165,4 +162,35 @@ the user just gets the "Please wait" page by default.
 
 ### Historian
 
-TODO
+The `Historian` provides access to a record of the requests that have been
+made through the Proxy. Its configuration, along with that for the "Please wait"
+page needs to be made as part of your django configuration. The example here
+shows how it can be configured:
+
+```
+>>> from os import environ
+>>> environ['DJANGO_SETTINGS_MODULE'] = 'demo_path_routing.settings'
+>>> from django_docker_engine.historian import FileHistorian
+>>> from django_docker_engine.proxy import Proxy
+>>> from django.test import RequestFactory
+
+>>> historian = FileHistorian('/tmp/readme-doc-text.txt')
+>>> title_text = 'test-title'
+>>> body_html = '<p>test-body</p>'
+>>> proxy = Proxy(
+...     historian=historian,
+...     please_wait_title='<test-title>',
+...     please_wait_body_html='<p>test-body</p>')
+>>> urlpatterns = proxy.url_patterns()
+
+# All of this would be handled by Django in practice:
+>>> response = urlpatterns[0].callback(
+...     request=RequestFactory().get('/fake-url'),
+...     container_name='fake-container',
+...     url='fake-url')
+>>> response.content.decode()  # doctest:+ELLIPSIS
+'<html>...<title>&lt;test-title&gt;</title>...<p>test-body</p>...</html>'
+>>> historian.list()[-1]  # doctest:+ELLIPSIS
+'...\tfake-container\tfake-url\n'
+
+```
