@@ -188,9 +188,9 @@ shows how it can be configured:
 ...     request=RequestFactory().get('/fake-url'),
 ...     container_name='fake-container',
 ...     url='fake-url')
->>> response.content.decode()  # doctest:+ELLIPSIS
-'<html>...<title>&lt;test-title&gt;</title>...<p>test-body</p>...</html>'
->>> historian.list()[-1]  # doctest:+ELLIPSIS
-'...\tfake-container\tfake-url\n'
+>>> html = response.content.decode()
+>>> assert '<title>&lt;test-title&gt;</title>' in html
+>>> assert '<p>test-body</p>' in html
+>>> assert 'fake-container\tfake-url' in historian.list()[-1] 
 
 ```
