@@ -174,6 +174,9 @@ shows how it can be configured:
 >>> from django_docker_engine.proxy import Proxy
 >>> from django.test import RequestFactory
 
+>>> import django
+>>> django.setup()
+
 >>> historian = FileHistorian('/tmp/readme-doc-text.txt')
 >>> title_text = 'test-title'
 >>> body_html = '<p>test-body</p>'
