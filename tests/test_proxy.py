@@ -1,5 +1,6 @@
 import re
 import unittest
+
 from datetime import datetime
 
 from django.test import RequestFactory
@@ -38,19 +39,22 @@ class CSRFTests(unittest.TestCase):
 
 class ProxyTests(unittest.TestCase):
 
-    def test_proxy_please_wait(self):
-        history_path = '/tmp/django-docker-history-{}'.format(
+    def setUp(self):
+        self.history_path = '/tmp/django-docker-history-{}'.format(
             re.sub(r'\D', '-', str(datetime.now()))
         )
-        historian = FileHistorian(history_path)
-        title_text = 'test-title'
-        body_html = '<p>test-body</p>'
-        proxy = Proxy(
-            historian=historian,
-            please_wait_title='<' + title_text + '>',
-            please_wait_body_html=body_html
+        self.historian = FileHistorian(self.history_path)
+        self.title_text = 'test-title'
+        self.body_html = '<p>test-body</p>'
+        self.proxy = Proxy(
+            historian=self.historian,
+            please_wait_title='<' + self.title_text + '>',
+            please_wait_body_html=self.body_html
         )
-        urlpatterns = proxy.url_patterns()
+
+    def test_proxy_please_wait(self):
+
+        urlpatterns = self.proxy.url_patterns()
         self.assertEqual(len(urlpatterns), 1)
 
         response = urlpatterns[0].callback(
@@ -67,14 +71,17 @@ class ProxyTests(unittest.TestCase):
         )
 
         # Title is escaped
-        self.assertIn('<title>&lt;' + title_text +
+        self.assertIn('<title>&lt;' + self.title_text +
                       '&gt;</title>', str(response.content))
         # Body is not escaped
-        self.assertIn(body_html, str(response.content))
+        self.assertIn(self.body_html, str(response.content))
 
         self.assertIn('http-equiv="refresh"', str(response.content))
 
         self.assertEqual(
-            [line.split('\t')[1:] for line in historian.list()],
+            [line.split('\t')[1:] for line in self.historian.list()],
             [['fake-container', 'fake-url\n']]
         )
+
+    def test_proxy_preserves_user_info(self):
+        self.assertTrue(self.proxy._get_proxy_view().add_remote_user)
