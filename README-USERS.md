@@ -79,31 +79,48 @@ Docker SDK provides so that we can use either interface, as needed.
 
 ## Walk through
 
-`django_docker_engine.docker_utils` exposes a subset of Docker functionality 
-so your application can launch containers as needed:
-
 ```
 >>> from django_docker_engine.docker_utils import (
 ...     DockerClientRunWrapper, DockerClientSpec, DockerContainerSpec)
 >>> client_spec = DockerClientSpec(None, do_input_json_envvar=True)
+>>> client = DockerClientRunWrapper(client_spec)
+
+# First, confirm no containers are already running:
+>>> client.list()
+[]
+
+# Then start your own container:
+>>> container_name = 'my-server'
 >>> container_spec = DockerContainerSpec(
 ...     image_name='nginx:1.10.3-alpine',
-...     container_name='my-server'
-... )
->>> DockerClientRunWrapper(client_spec).run(container_spec) # doctest:+ELLIPSIS
+...     container_name=container_name)
+>>> container_url = client.run(container_spec)
+>>> container_url  # doctest:+ELLIPSIS
 'http://localhost:...'
 
-```
+# The nginx container is responding to requests:
+>>> import requests
+>>> assert 'Welcome to nginx' in requests.get(container_url).text
 
-Note the URL that's returned: You'll get the Nginx welcome page if you visit it.
-You can run `docker ps` to see the container you've started.
+# Start Django as a subprocess, and give it a moment to start:
+>>> import subprocess
+>>> process = subprocess.Popen(
+...     ['./manage.py', 'runserver'],
+...     stdout=open('/dev/null', 'w'),
+...     stderr=open('/dev/null', 'w'))
+>>> django_url = 'http://localhost:8000'
+>>> from time import sleep
+>>> sleep(2)
 
-Now let's see how proxying works:
+# The demo doesn't define a route for '/', but there is one for the proxies:
+>>> response_text = requests.get(django_url).text
+>>> assert 'Django tried these URL patterns' in response_text
+>>> assert '^docker/' in response_text
+
+# On that route, requests are proxied to containers by name:
+>>> proxy_url = django_url + '/docker/' + container_name + '/'
+>>> proxy_url
+'http://localhost:8000/docker/my-server/'
+>>> assert 'Welcome to nginx' in requests.get(proxy_url).text
 
 ```
-$ python manage.py runserver &
-$ curl http://localhost:8000/docker/my-server/ | grep title
-<title>Welcome to nginx!</title>
-```
-Django receives the request, looks up the container from the name in the URL path,
-proxies the request, and returns the same Nginx welcome page.
