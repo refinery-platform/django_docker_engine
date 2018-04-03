@@ -79,6 +79,10 @@ Docker SDK provides so that we can use either interface, as needed.
 
 ## Walk through
 
+Here's a basic demo of all functionality. (This script does start up a demo 
+django instance: for that to work, you will need to checkout the repo and cd, 
+and not just have installed it via pip.)
+
 ```
 >>> from django_docker_engine.docker_utils import (
 ...     DockerClientRunWrapper, DockerClientSpec, DockerContainerSpec)
