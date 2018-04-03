@@ -20,6 +20,6 @@ start isort
 isort --recursive . --verbose --check-only --skip aws_utils || die "Run 'isort --recursive .'"
 end isort
 
-start egg
-python setup.py bdist_egg
-end egg
+start wheel
+python setup.py sdist bdist_wheel
+end wheel
