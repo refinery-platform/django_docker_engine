@@ -83,16 +83,18 @@ Docker SDK provides so that we can use either interface, as needed.
 so your application can launch containers as needed:
 
 ```
-$ python
 >>> from django_docker_engine.docker_utils import (
-      DockerClientRunWrapper, DockerClientSpec, DockerContainerSpec)
+...     DockerClientRunWrapper, DockerClientSpec, DockerContainerSpec)
 >>> client_spec = DockerClientSpec(None, do_input_json_envvar=True)
 >>> container_spec = DockerContainerSpec(
-        image_name='nginx:1.10.3-alpine',
-        container_name='my-server'
-      )
->>> DockerClientRunWrapper(client_spec).run(container_spec)
+...     image_name='nginx:1.10.3-alpine',
+...     container_name='my-server'
+... )
+>>> DockerClientRunWrapper(client_spec).run(container_spec) # doctest:+ELLIPSIS
+'http://localhost:...'
+
 ```
+
 Note the URL that's returned: You'll get the Nginx welcome page if you visit it.
 You can run `docker ps` to see the container you've started.
 
