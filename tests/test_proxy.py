@@ -84,4 +84,8 @@ class ProxyTests(unittest.TestCase):
         )
 
     def test_proxy_preserves_user_info(self):
-        self.assertTrue(self.proxy._get_proxy_view().add_remote_user)
+        self.assertTrue(
+            self.proxy._get_proxy_view(
+                'http://example.com'
+            ).view_initkwargs["add_remote_user"]
+        )
