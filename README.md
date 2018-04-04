@@ -22,6 +22,6 @@ The following Docker projects have been designed to work with `django_docker_eng
 - [heatmap-scatter-dash](https://github.com/refinery-platform/heatmap-scatter-dash)
 
 More information:
-- [for users of the library](README-USERS.md)
-- [for developers of the library](README-DEVS.md)
-- [background motivations and future directions](README-PROVENANCE.md)
+- [for users of the library](https://github.com/refinery-platform/django_docker_engine/blob/master/README-USERS.md)
+- [for developers of the library](https://github.com/refinery-platform/django_docker_engine/blob/master/README-DEVS.md)
+- [background motivations and future directions](https://github.com/refinery-platform/django_docker_engine/blob/master/README-PROVENANCE.md)
