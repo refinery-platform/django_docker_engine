@@ -2,8 +2,8 @@ import unittest
 
 from django.test import RequestFactory
 
-from django_docker_engine.middleware.hostname_routing import \
-    HostnameRoutingMiddleware
+from django_docker_engine.middleware.hostname_routing import HostnameRoutingMiddleware
+from tests import TestUser
 
 
 class HostnameRoutingTests(unittest.TestCase):
@@ -15,6 +15,7 @@ class HostnameRoutingTests(unittest.TestCase):
             path,
             HTTP_HOST='{}.docker.localhost'.format(name)
         )
+        request.user = TestUser()
         self.assertEqual(request.path, path)
         HostnameRoutingMiddleware().process_request(request)
         self.assertEqual(request.path, '/docker/{}{}'.format(name, path))
