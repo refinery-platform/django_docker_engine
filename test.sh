@@ -12,6 +12,10 @@ start test
 ./manage.py test --verbosity=2
 end test
 
+start doctest
+python -m doctest *.md
+end doctest
+
 start format
 flake8 --exclude build . || die "Run 'autopep8 --in-place -r .'"
 end format

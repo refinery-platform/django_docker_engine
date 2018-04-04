@@ -77,31 +77,121 @@ TODO: AWS provides its own wrapper around Docker through ECS. We will need to ab
 Docker SDK provides so that we can use either interface, as needed.
 
 
-## Walk through
+## Walk-throughs
 
-`django_docker_engine.docker_utils` exposes a subset of Docker functionality 
-so your application can launch containers as needed:
+### Basics
+
+Here's a basic demo. (This script does start up our demo 
+django instance: for that to work, you will need to checkout the repo and cd, 
+and not just have installed it via pip.)
 
 ```
-$ python
 >>> from django_docker_engine.docker_utils import (
-      DockerClientRunWrapper, DockerClientSpec, DockerContainerSpec)
+...     DockerClientRunWrapper, DockerClientSpec, DockerContainerSpec)
 >>> client_spec = DockerClientSpec(None, do_input_json_envvar=True)
+>>> client = DockerClientRunWrapper(client_spec)
+
+# First, confirm no containers are already running:
+>>> client.list()
+[]
+
+# Then start your own container:
+>>> container_name = 'basic-nginx'
+>>> from tests import NGINX_IMAGE
 >>> container_spec = DockerContainerSpec(
-        image_name='nginx:1.10.3-alpine',
-        container_name='my-server'
-      )
->>> DockerClientRunWrapper(client_spec).run(container_spec)
-```
-Note the URL that's returned: You'll get the Nginx welcome page if you visit it.
-You can run `docker ps` to see the container you've started.
+...     image_name=NGINX_IMAGE,
+...     container_name=container_name)
+>>> container_url = client.run(container_spec)
+>>> container_url  # doctest:+ELLIPSIS
+'http://localhost:...'
 
-Now let's see how proxying works:
+# The nginx container is responding to requests:
+>>> import requests
+>>> assert 'Welcome to nginx' in requests.get(container_url).text
+
+# Start Django as a subprocess, and give it a moment to start:
+>>> import subprocess
+>>> process = subprocess.Popen(
+...     ['./manage.py', 'runserver'],
+...     stdout=open('/dev/null', 'w'),
+...     stderr=open('/dev/null', 'w'))
+>>> django_url = 'http://localhost:8000'
+>>> from time import sleep
+>>> sleep(2)
+
+# The demo doesn't define a route for '/', but there is one for the proxies:
+>>> response_text = requests.get(django_url).text
+>>> assert 'Django tried these URL patterns' in response_text
+>>> assert '^docker/' in response_text
+
+# On that route, requests are proxied to containers by name:
+>>> proxy_url = django_url + '/docker/' + container_name + '/'
+>>> proxy_url
+'http://localhost:8000/docker/basic-nginx/'
+>>> assert 'Welcome to nginx' in requests.get(proxy_url).text
 
 ```
-$ python manage.py runserver &
-$ curl http://localhost:8000/docker/my-server/ | grep title
-<title>Welcome to nginx!</title>
+
+### Please wait
+
+By default, if the container is not yet responding to
+requests, the proxy will return a "Please wait" page with both a 
+JS- and a meta-reload. You can customize the content of this page, 
+and the reload behavior.
+
+Note, though, that there is no attempt to distinguish between a container
+that is taking its time, and one that may never start up: In either case,
+the user just gets the "Please wait" page by default, and it will continue
+to refresh indefinitely.
+
 ```
-Django receives the request, looks up the container from the name in the URL path,
-proxies the request, and returns the same Nginx welcome page.
+# Make sure Django is still up:
+>>> response_text = requests.get(django_url).text
+>>> assert '^docker/' in response_text
+
+# Try to get a container that doesn't exist:
+>>> container_name = 'please-wait'
+>>> proxy_url = django_url + '/docker/' + container_name + '/'
+>>> proxy_url
+'http://localhost:8000/docker/please-wait/'
+>>> response_text = requests.get(proxy_url).text
+>>> assert 'Please wait' in response_text
+>>> assert 'http-equiv="refresh"' in response_text
+
+```
+
+### Historian
+
+The `Historian` provides access to a record of the requests that have been
+made through the Proxy. Its configuration, along with that for the "Please wait"
+page needs to be made as part of your django configuration. The example here
+shows how it can be configured:
+
+```
+>>> from os import environ
+>>> environ['DJANGO_SETTINGS_MODULE'] = 'demo_path_routing.settings'
+>>> from django_docker_engine.historian import FileHistorian
+>>> from django_docker_engine.proxy import Proxy
+>>> from django.test import RequestFactory
+
+>>> import django
+>>> django.setup()
+
+>>> historian = FileHistorian('/tmp/readme-doc-text.txt')
+>>> proxy = Proxy(
+...     historian=historian,
+...     please_wait_title='<test-title>',
+...     please_wait_body_html='<p>test-body</p>')
+>>> urlpatterns = proxy.url_patterns()
+
+# All of this would be handled by Django in practice:
+>>> response = urlpatterns[0].callback(
+...     request=RequestFactory().get('/fake-url'),
+...     container_name='fake-container',
+...     url='fake-url')
+>>> html = response.content.decode()
+>>> assert '<title>&lt;test-title&gt;</title>' in html
+>>> assert '<p>test-body</p>' in html
+>>> assert 'fake-container\tfake-url' in historian.list()[-1] 
+
+```
