@@ -178,8 +178,6 @@ shows how it can be configured:
 >>> django.setup()
 
 >>> historian = FileHistorian('/tmp/readme-doc-text.txt')
->>> title_text = 'test-title'
->>> body_html = '<p>test-body</p>'
 >>> proxy = Proxy(
 ...     historian=historian,
 ...     please_wait_title='<test-title>',
