@@ -106,8 +106,13 @@ and not just have installed it via pip.)
 'http://localhost:...'
 
 # The nginx container is responding to requests:
->>> import requests
->>> assert 'Welcome to nginx' in requests.get(container_url).text
+>>> from django_docker_engine.proxy import Proxy
+>>> from django.test import RequestFactory
+>>> from tests import TestUser
+>>> request = RequestFactory().get(self.url)
+>>> request.user = TestUser()
+>>> response = Proxy()._proxy_view(request, container_name, "")
+>>> assert 'Welcome to nginx' in response.content
 
 # Start Django as a subprocess, and give it a moment to start:
 >>> import subprocess
