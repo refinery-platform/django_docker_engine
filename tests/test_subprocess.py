@@ -128,19 +128,21 @@ class PathRoutingTests(unittest.TestCase):
             )
         )
         time.sleep(1)  # TODO: Race condition sensitivity?
+
+        request_factory = RequestFactory()
         # https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods
-        self.assert_http_verb('GET')
+        self.assert_http_verb(request_factory.get, "GET")
         # HEAD has no body, understandably
         # self.assert_http_verb('HEAD')
-        self.assert_http_verb('POST')
-        self.assert_http_verb('PUT')
-        self.assert_http_verb('DELETE')
-        # CONNECT not supported by Requests
+        self.assert_http_verb(request_factory.post, "POST")
+        self.assert_http_verb(request_factory.put, "PUT")
+        self.assert_http_verb(request_factory.delete, "DELETE")
+        # CONNECT not supported by RequestFactory
         # self.assert_http_verb('CONNECT')
-        self.assert_http_verb('OPTIONS')
-        # TRACE not supported by Requests
-        # self.assert_http_verb('TRACE')
-        self.assert_http_verb('PATCH')
+        self.assert_http_verb(request_factory.options, "OPTIONS")
+        self.assert_http_verb(request_factory.trace, "TRACE")
+        # TRACE not supported by RequestFactory
+        # self.assert_http_verb(request_factory.patch)
 
     def assert_http_body(self, request_func, verb):
         body = verb + '/body'
@@ -159,8 +161,8 @@ class PathRoutingTests(unittest.TestCase):
                 labels={'subprocess-test-label': 'True'}
             )
         )
-        self.assert_http_body('POST')
-        self.assert_http_body('PUT')
+        self.assert_http_body(RequestFactory().post, 'POST')
+        self.assert_http_body(RequestFactory().put, 'PUT')
 
     def test_url(self):
         self.assertRegex(
