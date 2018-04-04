@@ -5,4 +5,5 @@ mock==2.0.0  # This is a builtin in Python 3.3 and above
 beautifulsoup4==4.6.0
 requests==2.18.4
 PyYAML==3.12
+wheel==0.30.0
 # paramiko==2.1.2  # Only needed if trying to run tests against remote docker engine

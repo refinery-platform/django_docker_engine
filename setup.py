@@ -6,8 +6,8 @@ from os.path import abspath, dirname, join, normpath
 import yaml
 from setuptools import find_packages, setup
 
-with open(join(dirname(__file__), 'README.rst')) as readme:
-    README = readme.read()
+with open(join(dirname(__file__), 'README.md')) as f:
+    readme_md = f.read()
 
 # allow setup.py to be run from any path
 os.chdir(normpath(join(abspath(__file__), os.pardir)))
@@ -41,6 +41,8 @@ setup(
     license='MIT License',
     description='Django app that manages the creation of, ' +
                 'and proxies requests to, Docker containers',
+    long_description=readme_md,
+    long_description_content_type='text/markdown',
     url='https://github.com/refinery-platform/django_docker_engine/',
     author='Chuck McCallum',
     classifiers=[

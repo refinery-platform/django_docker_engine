@@ -1,5 +1,6 @@
 # django_docker_engine 
 
+[![Build Status](https://travis-ci.org/refinery-platform/django_docker_engine.svg?branch=master)](https://travis-ci.org/refinery-platform/django_docker_engine)
 [![PyPI version](https://badge.fury.io/py/django-docker-engine.svg)](https://pypi.python.org/pypi/django-docker-engine)
 ![Python versions](https://img.shields.io/pypi/pyversions/django_docker_engine.svg)
 ![Django versions](https://img.shields.io/pypi/djversions/django_docker_engine.svg)
@@ -21,6 +22,6 @@ The following Docker projects have been designed to work with `django_docker_eng
 - [heatmap-scatter-dash](https://github.com/refinery-platform/heatmap-scatter-dash)
 
 More information:
-- [for users of the library](README-USERS.md)
-- [for developers of the library](README-DEVS.md)
-- [background motivations and future directions](README-PROVENANCE.md)
+- [for users of the library](https://github.com/refinery-platform/django_docker_engine/blob/master/README-USERS.md)
+- [for developers of the library](https://github.com/refinery-platform/django_docker_engine/blob/master/README-DEVS.md)
+- [background motivations and future directions](https://github.com/refinery-platform/django_docker_engine/blob/master/README-PROVENANCE.md)
