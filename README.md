@@ -1,5 +1,6 @@
 # django_docker_engine 
 
+[![Build Status](https://travis-ci.org/refinery-platform/django_docker_engine.svg?branch=master)](https://travis-ci.org/refinery-platform/django_docker_engine)
 [![PyPI version](https://badge.fury.io/py/django-docker-engine.svg)](https://pypi.python.org/pypi/django-docker-engine)
 ![Python versions](https://img.shields.io/pypi/pyversions/django_docker_engine.svg)
 ![Django versions](https://img.shields.io/pypi/djversions/django_docker_engine.svg)
