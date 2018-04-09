@@ -33,6 +33,16 @@ logger = logging.getLogger(__name__)
 UrlPatterns = namedtuple('UrlPatterns', ['urlpatterns'])
 
 
+class _AnonUser():
+    # TODO: This is a hack. Waiting for fix for
+    # https://github.com/TracyWebTech/django-revproxy/issues/86
+    def get_username(self):
+        return 'anonymous'
+
+    def is_active(self):
+        return True
+
+
 class Proxy():
     def __init__(self,
                  historian=NullHistorian(),
@@ -73,7 +83,11 @@ class Proxy():
     def _internal_proxy_view(self, request, container_url, path_url):
         # Any dependencies on the 3rd party proxy should be contained here.
         try:
-            view = ProxyView.as_view(upstream=container_url)
+            view = ProxyView.as_view(
+                upstream=container_url,
+                add_remote_user=True)
+            if not hasattr(request, 'user'):
+                request.user = _AnonUser()
             return view(request, path=path_url)
         except MaxRetryError as e:
             logger.info('Normal transient error: %s', e)
