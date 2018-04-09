@@ -70,10 +70,16 @@ class Proxy():
             )
         ]
 
+    def _get_proxy_view(self, container_url):
+        return ProxyView.as_view(
+            upstream=container_url,
+            add_remote_user=True
+        )
+
     def _internal_proxy_view(self, request, container_url, path_url):
         # Any dependencies on the 3rd party proxy should be contained here.
         try:
-            view = ProxyView.as_view(upstream=container_url)
+            view = self._get_proxy_view(container_url)
             return view(request, path=path_url)
         except MaxRetryError as e:
             logger.info('Normal transient error: %s', e)

@@ -9,10 +9,12 @@ from shutil import rmtree
 import requests
 from bs4 import BeautifulSoup
 
+from django.test import RequestFactory
 from django_docker_engine.docker_utils import (DockerClientRunWrapper,
                                                DockerClientSpec,
                                                DockerContainerSpec)
-from tests import ALPINE_IMAGE, ECHO_IMAGE, NGINX_IMAGE
+from tests import ALPINE_IMAGE, ECHO_IMAGE, NGINX_IMAGE, TestUser
+from django_docker_engine.proxy import Proxy
 
 
 class PathRoutingTests(unittest.TestCase):
@@ -62,9 +64,11 @@ class PathRoutingTests(unittest.TestCase):
                 labels={'subprocess-test-label': 'True'}
             )
         )
-        r = requests.get(self.url)
-        self.assert_in_html('Please wait', r.content)
-        self.assertIn('Container not yet available', r.reason)
+        request = RequestFactory().get(self.url)
+        request.user = TestUser()
+        response = Proxy()._proxy_view(request, self.container_name, self.url)
+        self.assert_in_html('Please wait', response.content)
+        # self.assertIn('Container not yet available', response.reason)
         # There is more, but it varies, depending on startup phase:
         # possibly: "Max retries exceeded"
         # or: "On container container-name, port 80 is not available"
@@ -81,7 +85,7 @@ class PathRoutingTests(unittest.TestCase):
             text, flags=re.DOTALL)
         # If it's the Django error page, try to just get the stack trace.
         if substring not in text:
-            self.fail('"{}" not found in text of html:\n{}'
+            self.fail('"{}" not found in text of html:\n`{}`'
                       .format(substring, text))
 
     def test_nginx_container(self):
@@ -93,15 +97,23 @@ class PathRoutingTests(unittest.TestCase):
             )
         )
         time.sleep(1)  # TODO: Race condition sensitivity?
-        r_good = requests.get(self.url)
-        self.assert_in_html('Welcome to nginx', r_good.content)
+        request = RequestFactory().get(self.url)
+        request.user = TestUser()
+        response = Proxy()._proxy_view(request, self.container_name, "")
+        self.assertEqual(200, response.status_code)
+        self.assert_in_html('Welcome to nginx', response.content)
 
-        r_bad = requests.get(self.url + 'bad-path')
-        self.assert_in_html('Not Found', r_bad.content)
-        self.assertEqual(404, r_bad.status_code)
+        request = RequestFactory().get(self.url + "bad-path")
+        request.user = TestUser()
+        response = Proxy()._proxy_view(request, self.container_name, "bad-path")
+        self.assert_in_html('Not Found', response.content)
+        self.assertEqual(404, response.status_code)
 
-    def assert_http_verb(self, verb):
-        response = requests.__dict__[verb.lower()](self.url)
+    def assert_http_verb(self, request_func, verb):
+        request = request_func(self.url)
+        request.user = TestUser()
+        response = Proxy()._proxy_view(request, self.container_name, self.url)
+        self.assertEqual(200, response.status_code)
         self.assert_in_html('HTTP/1.1 {} /'.format(verb), response.content)
         # Response shouldn't be HTML, but if we get the Django error page,
         # this will make it much more readable.
@@ -116,23 +128,27 @@ class PathRoutingTests(unittest.TestCase):
             )
         )
         time.sleep(1)  # TODO: Race condition sensitivity?
+
+        request_factory = RequestFactory()
         # https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods
-        self.assert_http_verb('GET')
+        self.assert_http_verb(request_factory.get, "GET")
         # HEAD has no body, understandably
         # self.assert_http_verb('HEAD')
-        self.assert_http_verb('POST')
-        self.assert_http_verb('PUT')
-        self.assert_http_verb('DELETE')
-        # CONNECT not supported by Requests
+        self.assert_http_verb(request_factory.post, "POST")
+        self.assert_http_verb(request_factory.put, "PUT")
+        self.assert_http_verb(request_factory.delete, "DELETE")
+        # CONNECT not supported by RequestFactory
         # self.assert_http_verb('CONNECT')
-        self.assert_http_verb('OPTIONS')
-        # TRACE not supported by Requests
-        # self.assert_http_verb('TRACE')
-        self.assert_http_verb('PATCH')
+        self.assert_http_verb(request_factory.options, "OPTIONS")
+        self.assert_http_verb(request_factory.trace, "TRACE")
+        # TRACE not supported by RequestFactory
+        # self.assert_http_verb(request_factory.patch)
 
-    def assert_http_body(self, verb):
+    def assert_http_body(self, request_func, verb):
         body = verb + '/body'
-        response = requests.__dict__[verb.lower()](self.url, data=body)
+        request = request_func(self.url, data={"body": body})
+        request.user = TestUser()
+        response = Proxy()._proxy_view(request, self.container_name, self.url)
         self.assert_in_html('HTTP/1.1 {} /'.format(verb), response.content)
         self.assert_in_html(body, response.content)
 
@@ -145,8 +161,8 @@ class PathRoutingTests(unittest.TestCase):
                 labels={'subprocess-test-label': 'True'}
             )
         )
-        self.assert_http_body('POST')
-        self.assert_http_body('PUT')
+        self.assert_http_body(RequestFactory().post, 'POST')
+        self.assert_http_body(RequestFactory().put, 'PUT')
 
     def test_url(self):
         self.assertRegex(
