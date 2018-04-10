@@ -5,7 +5,7 @@ from datetime import datetime
 from shutil import rmtree
 from time import time
 
-from container_managers import docker_engine
+from django_docker_engine.container_managers import docker_engine
 
 logging.basicConfig()
 logger = logging.getLogger(__name__)
@@ -150,7 +150,7 @@ class DockerClientRunWrapper(DockerClientWrapper):
 
     def _make_directory_on_host(self):
         # TODO: This should only be run locally, and even then...?
-        return self._containers_manager.mkdtemp()
+        return self._containers_manager._mkdtemp()
 
     def _make_volume_on_host(self):
         return self._containers_manager.create_volume().name

@@ -6,11 +6,10 @@ import subprocess
 import unittest
 from distutils import dir_util
 from shutil import rmtree
+from sys import version_info
 from time import sleep
-from urllib2 import URLError
 
 import django
-import paramiko
 from mock import patch
 from requests.exceptions import ConnectionError
 
@@ -19,6 +18,12 @@ from django_docker_engine.container_managers.docker_engine import \
 from django_docker_engine.docker_utils import (DockerClientRunWrapper,
                                                DockerClientSpec,
                                                DockerContainerSpec)
+from tests import NGINX_IMAGE
+
+if version_info >= (3,):
+    from urllib.error import URLError
+else:
+    from urllib2 import URLError
 
 logging.basicConfig()
 logger = logging.getLogger(__name__)
@@ -52,7 +57,7 @@ class LiveDockerTests(unittest.TestCase):
     def get_docker_url_timestamp(self, extra_kwargs={}):
         timestamp = self.timestamp()
         kwargs = {
-            'image_name': 'nginx:1.10.3-alpine',
+            'image_name': NGINX_IMAGE,
             'container_name': timestamp,
             'labels': {self.test_label: 'true'}
         }
@@ -73,6 +78,11 @@ class LiveDockerTests(unittest.TestCase):
         ).group(1)
 
     def remote_exec(self, command):
+        # TODO: If we target a remote dockerengine during tests,
+        # and we use input.json mounting, then this is necessary...
+        # but, we generally aren't doing that, and in any case
+        # we're moving towards the input modes that don't require SSH.
+        import paramiko
         host_ip = self.docker_host_ip()
         key = paramiko.RSAKey.from_private_key_file(LiveDockerTests.PEM)
         client = paramiko.SSHClient()
@@ -115,7 +125,7 @@ class LiveDockerTests(unittest.TestCase):
         container directly, rather than going through the proxy, so there
         is no corresponding "assert_loads_immediately".
         """
-        for i in xrange(100):
+        for i in range(100):
             try:
                 response = client.get(url)
                 if response.status_code == 200:
@@ -145,7 +155,7 @@ class LiveDockerTestsDirty(LiveDockerTests):
                 'extra_directories': ["/test", "coffee"]
             })
         self.assertEqual(
-            context.exception.message,
+            context.exception.args[0],
             "Specified path: `coffee` is not absolute"
         )
 

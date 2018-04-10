@@ -51,7 +51,7 @@ class ProxyTests(unittest.TestCase):
             please_wait_body_html=body_html
         )
         urlpatterns = proxy.url_patterns()
-        self.assertEquals(len(urlpatterns), 1)
+        self.assertEqual(len(urlpatterns), 1)
 
         response = urlpatterns[0].callback(
             request=RequestFactory().get('/fake-url'),
@@ -60,15 +60,19 @@ class ProxyTests(unittest.TestCase):
         )
 
         self.assertEqual(response.status_code, 503)
-        self.assertEqual(response.reason_phrase, 'Container not yet available')
+        self.assertIn('Container not yet available', response.reason_phrase)
+        self.assertIn(
+            '404 Client Error: Not Found ("No such container: fake-container")',
+            response.reason_phrase
+        )
 
         # Title is escaped
         self.assertIn('<title>&lt;' + title_text +
-                      '&gt;</title>', response.content)
+                      '&gt;</title>', str(response.content))
         # Body is not escaped
-        self.assertIn(body_html, response.content)
+        self.assertIn(body_html, str(response.content))
 
-        self.assertIn('http-equiv="refresh"', response.content)
+        self.assertIn('http-equiv="refresh"', str(response.content))
 
         self.assertEqual(
             [line.split('\t')[1:] for line in historian.list()],

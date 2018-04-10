@@ -3,38 +3,44 @@ import logging
 import os
 import socket
 from collections import namedtuple
-from httplib import BadStatusLine
+from sys import version_info
 
 from django.conf.urls import url
 from django.http import HttpResponse
+from django.template.backends.django import DjangoTemplates
 from django.views.decorators.csrf import csrf_exempt as csrf_exempt_decorator
 from django.views.defaults import page_not_found
+from django.views.generic.base import View
 from docker.errors import NotFound
-from httpproxy.views import HttpProxy
+from revproxy.views import ProxyView
+from urllib3.exceptions import MaxRetryError
 
-from container_managers.docker_engine import DockerEngineManagerError
 from django_docker_engine.historian import NullHistorian
-from docker_utils import DockerClientWrapper
 
-try:
+from .container_managers.docker_engine import DockerEngineManagerError
+from .docker_utils import DockerClientWrapper
+
+if version_info >= (3,):
+    from http.client import BadStatusLine
     from urllib.error import HTTPError
-except ImportError:
+else:
+    from httplib import BadStatusLine
     from urllib2 import HTTPError
-
-try:
-    from django.views import View
-except ImportError:  # Support Django 1.7
-    from django.views.generic import View
-
-try:
-    from django.template.backends.django import DjangoTemplates
-except ImportError:  # Support Django 1.7
-    from django.template import Context, Template
 
 logging.basicConfig()
 logger = logging.getLogger(__name__)
 
 UrlPatterns = namedtuple('UrlPatterns', ['urlpatterns'])
+
+
+class _AnonUser():
+    # TODO: This is a hack. Waiting for fix for
+    # https://github.com/TracyWebTech/django-revproxy/issues/86
+    def get_username(self):
+        return 'anonymous'
+
+    def is_active(self):
+        return True
 
 
 class Proxy():
@@ -57,15 +63,11 @@ class Proxy():
 
         # Normally, we would use template loaders, but could there be
         # interactions between the configs necessary here and in the parent app?
-        try:  # 1.11
-            engine = DjangoTemplates({
-                'OPTIONS': {}, 'NAME': None, 'DIRS': [], 'APP_DIRS': []
-            })
-            # All the keys are required, but the values don't seem to matter.
-            template = engine.from_string(template_code)
-        except NameError:  # 1.7
-            template = Template(template_code)
-            context = Context(context)
+        engine = DjangoTemplates({
+            'OPTIONS': {}, 'NAME': None, 'DIRS': [], 'APP_DIRS': []
+        })
+        # All the keys are required, but the values don't seem to matter.
+        template = engine.from_string(template_code)
 
         return template.render(context)
 
@@ -78,19 +80,33 @@ class Proxy():
             )
         ]
 
+    def _internal_proxy_view(self, request, container_url, path_url):
+        # Any dependencies on the 3rd party proxy should be contained here.
+        try:
+            view = ProxyView.as_view(
+                upstream=container_url,
+                add_remote_user=True)
+            if not hasattr(request, 'user'):
+                request.user = _AnonUser()
+            return view(request, path=path_url)
+        except MaxRetryError as e:
+            logger.info('Normal transient error: %s', e)
+            view = self._please_wait_view_factory(e).as_view()
+            return view(request)
+
     def _proxy_view(self, request, container_name, url):
         self.historian.record(container_name, url)
         try:
             client = DockerClientWrapper()
             container_url = client.lookup_container_url(container_name)
-            view = HttpProxy.as_view(base_url=container_url)
-            return view(request, url=url)
+            return self._internal_proxy_view(request, container_url, url)
         except (DockerEngineManagerError, NotFound, BadStatusLine) as e:
-            # TODO: Should DockerEngineManagerError be sufficient by itself?
+            # TODO: Can we reproduce any of these?
+            # Make tests if so, and move to _internal_proxy_view
             logger.info(
                 'Normal transient error. '
                 'Container: %s, Exception: %s', container_name, e)
-            view = self._please_wait_view_factory().as_view()
+            view = self._please_wait_view_factory(e).as_view()
             return view(request)
         except socket.error as e:
             if e.errno != errno.ECONNRESET:
@@ -98,7 +114,7 @@ class Proxy():
             logger.info(
                 'Container not yet listening. '
                 'Container: %s, Exception: %s', container_name, e)
-            view = self._please_wait_view_factory().as_view()
+            view = self._please_wait_view_factory(e).as_view()
             return view(request)
         except HTTPError as e:
             logger.warn(e)
@@ -106,14 +122,15 @@ class Proxy():
             # The underlying error is not necessarily a 404,
             # but this seems ok.
 
-    def _please_wait_view_factory(self):
+    def _please_wait_view_factory(self, message):
         class PleaseWaitView(View):
             def get(inner_self, request, *args, **kwargs):  # noqa: N805
                 response = HttpResponse(self.content)
                 response.status_code = 503
-                response.reason_phrase = 'Container not yet available'
-                # Non-standard, but more clear than default;
-                # Also, before 1.9, this is not set just by changing status code.
+                response.reason_phrase = \
+                    'Container not yet available: {}'.format(message)
+                # There are different failure modes, and including the message
+                # lets us make sure we're getting the one we expect.
                 return response
             http_method_named = ['get']
         return PleaseWaitView

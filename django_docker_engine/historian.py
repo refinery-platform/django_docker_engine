@@ -4,6 +4,9 @@ from datetime import datetime
 
 
 class NullHistorian():
+    """
+    Satisfies the Historian interface, but does nothing.
+    """
     def __init__(self):
         pass
 
@@ -12,7 +15,12 @@ class NullHistorian():
 
 
 class FileHistorian():
-    # This is not suitable for the long term, but it will help us understand our needs.
+    """
+    Records incoming requests to a file, and provides access to the records
+    in that file.
+
+    Not suitable for production use.
+    """
     def __init__(self, path):
         self.path = path
 

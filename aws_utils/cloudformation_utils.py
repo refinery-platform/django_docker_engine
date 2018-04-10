@@ -8,9 +8,10 @@ import sys
 import time
 from pprint import pformat
 
-import boto3
 import pytz
 import requests
+
+import boto3
 import troposphere
 from troposphere import Base64, Output, Ref, ec2
 
@@ -306,18 +307,18 @@ if __name__ == "__main__":
             'product': 'refinery'
         }
         info = build(host_cidr=host_cidr, tags=tags, enable_ssh=True)
-        print 'export DOCKER_HOST={} DOCKER_STACK_ID={}' \
-            .format(info.url, info.id)
+        print('export DOCKER_HOST={} DOCKER_STACK_ID={}'
+              .format(info.url, info.id))
     elif len(args) == 2 and args[0] == '--delete':
         stack_id = args[1]
         stack = boto3.resource('cloudformation').Stack(stack_id)
         stack.delete()
     else:
-        print 'Usage: $( {name} --create ) \n\tor\n\t{name} --delete STACK_ID' \
-              .format(name=sys.argv[0])
-        print '--create: Creates a CloudFormation stack. ' \
-              'A shell statement is returned on STDOUT with the connection information ' \
-              'for Docker Engine, and the ID of the stack.'
-        print '--delete: Deletes a stack, given its ID.'
+        print('Usage: $( {name} --create ) \n\tor\n\t{name} --delete STACK_ID'
+              .format(name=sys.argv[0]))
+        print('--create: Creates a CloudFormation stack. '
+              'A shell statement is returned on STDOUT with the connection information '
+              'for Docker Engine, and the ID of the stack.')
+        print('--delete: Deletes a stack, given its ID.')
 
         exit(1)

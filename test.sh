@@ -12,17 +12,18 @@ start test
 ./manage.py test --verbosity=2
 end test
 
+start doctest
+python -m doctest *.md
+end doctest
+
 start format
 flake8 --exclude build . || die "Run 'autopep8 --in-place -r .'"
 end format
 
 start isort
-isort --recursive . --verbose --check-only --skip django_docker_engine/cloudformation_utils.py || die "Run 'isort --recursive .'"
+isort --recursive . --verbose --check-only --skip aws_utils || die "Run 'isort --recursive .'"
 end isort
 
-start egg
-python setup.py bdist_egg
-end egg
-
-# TODO: No output on travis: Is pydoc installed?
-# start docs;        diff <(./docs.sh) docs.md; end docs
+start wheel
+python setup.py sdist bdist_wheel
+end wheel

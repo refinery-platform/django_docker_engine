@@ -1,13 +1,14 @@
+import abc
 import os
 import re
 import subprocess
-from abc import ABCMeta, abstractmethod
+import sys
 from datetime import datetime
 from distutils import dir_util
 
 import docker
 
-from base import BaseManager
+from .base import BaseManager
 
 
 class DockerEngineManagerError(Exception):
@@ -31,15 +32,31 @@ class MisconfiguredPort(DockerEngineManagerError):
 
 
 class DockerEngineManager(BaseManager):
+    """
+    Manages interactions with a Docker Engine, running locally, or on a remote
+    host.
+    """
 
     def __init__(
             self,
-            data_dir,
+            data_dir,  # TODO: Only needed if passing input.json as file?
             root_label,
             client=docker.from_env(),
             pem=None,
             ssh_username=None
     ):
+        """
+        :param string data_dir: Only needed if input is passed as file.
+        :param string root_label:
+        :param client: The default behavior matches that of the Docker CLI:
+        The DOCKER_HOST environment variable specifies where the Docker Engine
+        is. To override this, create a DockerClient with the correct base_url
+        and provide it here.
+        :param string pem: Only needed if input is passed as file, and
+        the Docker Engine is remote.
+        :param string ssh_username: Only needed if input is passed as file, and
+        the Docker Engine is remote.
+        """
         self._base_url = client.api.base_url
         self._containers_client = client.containers
         self._images_client = client.images
@@ -70,17 +87,30 @@ class DockerEngineManager(BaseManager):
         ]
 
     def run(self, image_name, cmd, **kwargs):
-        # In particular, passing "environment" as a kwarg
-        # will set environment variables.
+        """
+        :param image_name:
+        :param cmd:
+        :param kwargs:
+        :return:
+        """
         return self._containers_client.run(image_name, cmd, **kwargs)
 
     def pull(self, image_name, version="latest"):
+        """
+        :param image_name:
+        :param version:
+        :return:
+        """
         return self._images_client.pull("{}:{}".format(image_name, version))
 
     def create_volume(self):
         return self._volumes_client.create(driver='local')
 
     def get_url(self, container_name):
+        """
+        :param container_name:
+        :return:
+        """
         remote_host = self._get_base_url_remote_host()
         if remote_host:
             host = remote_host
@@ -132,23 +162,32 @@ class DockerEngineManager(BaseManager):
         return 'http://{}:{}'.format(host, port_number)
 
     def list(self, filters={}):
+        """
+        :param dict filters: Filters as described for the SDK:
+        https://docker-py.readthedocs.io/en/stable/containers.html#docker.models.containers.ContainerCollection.list
+        :return: List of Docker SDK Containers
+        """  # noqa
         return self._containers_client.list(all=True, filters=filters)
 
-    def mkdtemp(self):
+    def _mkdtemp(self):
         timestamp = re.sub(r'\W', '_', str(datetime.now()))
         tmp_dir = os.path.join(self._data_dir, timestamp)
         self.host_files.mkdir_p(tmp_dir)
         return tmp_dir
 
 
-class _HostFiles:
-    __metaclass__ = ABCMeta
+if sys.version_info >= (3, 4):
+    ABC = abc.ABC
+else:
+    ABC = abc.ABCMeta('ABC', (), {})
 
-    @abstractmethod
+
+class _HostFiles(ABC):
+    @abc.abstractmethod
     def write(self, path, content):
         raise NotImplementedError()
 
-    @abstractmethod
+    @abc.abstractmethod
     def mkdir_p(self, path):
         raise NotImplementedError()
 
