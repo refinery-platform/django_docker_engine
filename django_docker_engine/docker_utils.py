@@ -149,7 +149,11 @@ class DockerClientRunWrapper(DockerClientWrapper):
         self._input_json_url = docker_client_spec.input_json_url
 
     def _make_directory_on_host(self):
+        # TODO: This should only be run locally, and even then...?
         return self._containers_manager._mkdtemp()
+
+    def _make_volume_on_host(self):
+        return self._containers_manager.create_volume().name
 
     def _write_input_to_host(self, input):
         host_input_dir = self._make_directory_on_host()
@@ -184,18 +188,18 @@ class DockerClientRunWrapper(DockerClientWrapper):
         volumes = {}
         for volume in volume_spec:
             binding = volume.copy()
-            if binding.get('mode'):
-                raise RuntimeError(
-                    '"mode" should not be provided on {}'.format(volume))
+            assert not binding.get('mode'), \
+                '"mode" should not be provided on {}'.format(volume)
             host_directory = binding.pop('host', None)
             if host_directory:
-                binding['mode'] = 'ro'  # For now, this is true.
+                # Typically for mounting user input
+                binding['mode'] = 'ro'
+                volumes[host_directory] = binding
             else:
-                # In contrast, this will *always* be true.
+                # Typically for storing data produced by the app itself
                 binding['mode'] = 'rw'
-                host_directory = self._make_directory_on_host()
-
-            volumes[host_directory] = binding
+                volume_name = self._make_volume_on_host()
+                volumes[volume_name] = binding
 
         labels = container_spec.labels
         labels.update({

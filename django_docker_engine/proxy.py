@@ -124,7 +124,7 @@ class Proxy():
 
     def _please_wait_view_factory(self, message):
         class PleaseWaitView(View):
-            def get(inner_self, request, *args, **kwargs):
+            def get(inner_self, request, *args, **kwargs):  # noqa: N805
                 response = HttpResponse(self.content)
                 response.status_code = 503
                 response.reason_phrase = \
