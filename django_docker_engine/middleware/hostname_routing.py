@@ -4,6 +4,11 @@ from django.conf import settings
 
 
 class HostnameRoutingMiddleware():
+    """
+    When registered with Django, if an incoming request host ends with
+    DJANGO_DOCKER_HOST_SUFFIX, the subdomain is taken as the name of the
+    container to route to.
+    """
 
     def process_request(self, request):
         host_suffix = settings.DJANGO_DOCKER_HOST_SUFFIX

@@ -1,16 +1,6 @@
 import abc
 import sys
 
-"""
-This provides an interface which satisfies both local and remote Docker use.
-The methods are based on a subset of those provided by
-https://docker-py.readthedocs.io/en/stable/containers.html
-and implementers should return the same kind of results as the the SDK returns.
-
-The plan is to write a wrapper for AWS ECS which will conform to the same
-interface.
-"""
-
 
 if sys.version_info >= (3, 4):
     ABC = abc.ABC
@@ -19,6 +9,15 @@ else:
 
 
 class BaseManager(ABC):
+    """
+    This provides an interface which satisfies both local and remote Docker use.
+    The methods are based on a subset of those provided by
+    https://docker-py.readthedocs.io/en/stable/containers.html
+    and implementers should return the same kind of results as the the SDK returns.
+
+    The plan is to write a wrapper for AWS ECS which will conform to the same
+    interface.
+    """
 
     @abc.abstractmethod
     def run(self, image_name, cmd, **kwargs):

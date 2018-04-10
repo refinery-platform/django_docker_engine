@@ -149,7 +149,7 @@ class DockerClientRunWrapper(DockerClientWrapper):
         self._input_json_url = docker_client_spec.input_json_url
 
     def _make_directory_on_host(self):
-        return self._containers_manager.mkdtemp()
+        return self._containers_manager._mkdtemp()
 
     def _write_input_to_host(self, input):
         host_input_dir = self._make_directory_on_host()
