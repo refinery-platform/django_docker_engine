@@ -1,1 +1,0 @@
-See the README on `github <https://github.com/refinery-platform/django_docker_engine>`_ for more information.
