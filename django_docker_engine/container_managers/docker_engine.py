@@ -43,6 +43,7 @@ class DockerEngineManager(BaseManager):
         self._base_url = client.api.base_url
         self._containers_client = client.containers
         self._images_client = client.images
+        self._volumes_client = client.volumes
         self._data_dir = data_dir
         self._root_label = root_label
 
@@ -75,6 +76,9 @@ class DockerEngineManager(BaseManager):
 
     def pull(self, image_name, version="latest"):
         return self._images_client.pull("{}:{}".format(image_name, version))
+
+    def create_volume(self):
+        return self._volumes_client.create(driver='local')
 
     def get_url(self, container_name):
         remote_host = self._get_base_url_remote_host()

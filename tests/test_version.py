@@ -7,7 +7,7 @@ import requests
 class VersionTests(unittest.TestCase):
 
     def test_version_has_been_incremented(self):
-        version_re = r'^\d+\.\d+\.\d+$'
+        version_re = r'^\d+\.\d+\.\d+(\.\d+)?$'
         r = requests.get(
             'https://pypi.python.org/pypi/django-docker-engine/json')
         pypi_versions = r.json()['releases'].keys()
