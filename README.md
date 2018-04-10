@@ -15,11 +15,17 @@ In order for a Docker container to work with this package it must:
 - listen on some port for HTTP connections, and
 - accept a single JSON file as input.
 
-The following Docker projects have been designed to work with `django_docker_engine`:
+The Refinery team maintains a [registry](https://github.com/refinery-platform/visualization-tools)
+of Docker images which can be plugged in to this framework. It includes:
 
-- [docker_igv_js](https://github.com/refinery-platform/docker_igv_js)
-- [refinery-higlass-docker](https://github.com/scottx611x/refinery-higlass-docker)
-- [heatmap-scatter-dash](https://github.com/refinery-platform/heatmap-scatter-dash)
+- [refinery-higlass-docker](https://github.com/refinery-platform/refinery-higlass-docker):
+A wrapper for [HiGlass](http://higlass.io/), for exploring genomic contact 
+matrices and tracks.
+- [heatmap-scatter-dash](https://github.com/refinery-platform/heatmap-scatter-dash):
+A Plotly Dash app for understanding differential expression data.
+- [lineup-refinery-doker](https://github.com/refinery-platform/lineup-refinery-docker):
+A wrapper for [Caleydo LineUp](http://caleydo.org/tools/lineup/), for visualizing
+rankings based on heterogeneous attributes
 
 More information:
 - [for users of the library](https://github.com/refinery-platform/django_docker_engine/blob/master/README-USERS.md)
