@@ -159,9 +159,10 @@ class DockerEngineManager(BaseManager):
 
     def list(self, filters={}):
         """
-        :param dict filters: Filters as described for the SDK: https://docker-py.readthedocs.io/en/stable/containers.html#docker.models.containers.ContainerCollection.list
+        :param dict filters: Filters as described for the SDK:
+        https://docker-py.readthedocs.io/en/stable/containers.html#docker.models.containers.ContainerCollection.list
         :return: List of Docker SDK Containers
-        """
+        """  # noqa
         return self._containers_client.list(all=True, filters=filters)
 
     def _mkdtemp(self):
