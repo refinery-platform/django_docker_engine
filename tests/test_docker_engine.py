@@ -30,8 +30,10 @@ class DockerEngineManagerTests(unittest.TestCase):
         else:
             self.manager.get_url(self.container_name)
         # TODO: Why the '/'?
-        self.manager.list({'name': '/' + self.container_name}
-                          )[0].remove(force=True)
+        self.manager.list({'name': '/' + self.container_name})[0].remove(
+            force=True,
+            v=True  # Remove volumes associated with the container
+        )
 
     def test_errors(self):
         self.assert_add_kwarg_still_fails(
