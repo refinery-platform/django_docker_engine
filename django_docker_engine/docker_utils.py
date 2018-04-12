@@ -83,7 +83,10 @@ class DockerClientWrapper(object):
             if seconds and self._is_active(container, seconds):
                 continue
             mounts = container.attrs['Mounts']
-            container.remove(force=True)
+            container.remove(
+                force=True,
+                v=True  # Remove volumes associated with the container
+            )
             for mount in mounts:
                 source = mount['Source']
                 target = source if os.path.isdir(
