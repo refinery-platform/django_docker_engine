@@ -23,19 +23,25 @@ class DockerEngineManagerTests(unittest.TestCase):
             'cmd': None
         }
 
-    def assert_add_kwarg_still_fails(self, key, value, image, expected_error):
-        self.kwargs[key] = value
-        self.manager.run(image, **self.kwargs)
-        if expected_error:
-            with self.assertRaises(expected_error):
-                self.manager.get_url(self.container_name)
-        else:
-            self.manager.get_url(self.container_name)
+    def _cleanup_container(self):
         # TODO: Why the '/'?
         self.manager.list({'name': '/' + self.container_name})[0].remove(
             force=True,
             v=True  # Remove volumes associated with the container
         )
+
+    def assert_add_kwarg_still_fails(self, key, value, image, expected_error):
+        self.kwargs[key] = value
+        self.manager.run(image, **self.kwargs)
+        with self.assertRaises(expected_error):
+            self.manager.get_url(self.container_name)
+        self._cleanup_container()
+
+    def assert_add_kwarg_passes(self, key, value, image):
+        self.kwargs[key] = value
+        self.manager.run(image, **self.kwargs)
+        self.manager.get_url(self.container_name)
+        self._cleanup_container()
 
     def test_bad_image_pull(self):
         with self.assertRaises(PossiblyOutOfDiskSpace):
@@ -71,8 +77,7 @@ class DockerEngineManagerTests(unittest.TestCase):
             MisconfiguredPort
         )
 
-        self.assert_add_kwarg_still_fails(
+        self.assert_add_kwarg_passes(
             'ports', {'80/tcp': None},
-            NGINX_IMAGE,
-            None
+            NGINX_IMAGE
         )
