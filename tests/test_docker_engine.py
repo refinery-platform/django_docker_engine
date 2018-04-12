@@ -2,10 +2,12 @@ import re
 import unittest
 from datetime import datetime
 
+import docker
 from django_docker_engine.container_managers.docker_engine import (DockerEngineManager,
                                                                    ExpectedPortMissing,
                                                                    MisconfiguredPort,
-                                                                   NoPortLabel)
+                                                                   NoPortLabel,
+                                                                   PossiblyOutOfDiskSpace)
 from tests import ALPINE_IMAGE, NGINX_IMAGE
 
 
@@ -35,7 +37,15 @@ class DockerEngineManagerTests(unittest.TestCase):
             v=True  # Remove volumes associated with the container
         )
 
-    def test_errors(self):
+    def test_bad_image_pull(self):
+        with self.assertRaises(PossiblyOutOfDiskSpace):
+            self.manager.pull('no_such_image')
+
+    def test_bad_image_run(self):
+        with self.assertRaises(PossiblyOutOfDiskSpace):
+            self.manager.run('no_such_image', cmd='foo')
+
+    def test_minimum_kwargs_to_run(self):
         self.assert_add_kwarg_still_fails(
             'name', self.container_name,
             ALPINE_IMAGE,
