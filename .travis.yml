@@ -13,7 +13,7 @@ matrix:
   fast_finish: true
   exclude:
     - env: DJANGO_VERSION='2.0.3'
-    - python: 2.7  # only python3
+      python: 2.7  # only python3
 
 services:
 - docker
