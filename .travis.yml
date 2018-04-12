@@ -5,13 +5,15 @@ python:
 - 2.7
 - 3.6
 env:
-- DJANGO_VERSION='1.8.19'  # LTS
-- DJANGO_VERSION='1.11.11'  # LTS
+  matrix:
+    - DJANGO_VERSION='1.8.19'  # LTS
+    - DJANGO_VERSION='1.11.11'  # LTS
+    - DJANGO_VERSION='2.0.3'  # not LTS
 matrix:
-  include:
-    - python: 3.6
-    - env: DJANGO_VERSION='2.0.3'  # not LTS; only python3
   fast_finish: true
+  exclude:
+    - env: DJANGO_VERSION='2.0.3'
+    - python: 2.7  # only python3
 
 services:
 - docker
