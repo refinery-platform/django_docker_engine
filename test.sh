@@ -21,7 +21,8 @@ flake8 --exclude build . || die "Run 'autopep8 --in-place -r .'"
 end format
 
 start isort
-isort --recursive . --verbose --check-only --skip aws_utils || die "Run 'isort --recursive .'"
+ISORT_ERROR=`isort --recursive . --verbose --check-only --skip aws_utils | grep ERROR`
+[ -z "$ISORT_ERROR" ] ||  die "$ISORT_ERROR ... Run 'isort --recursive .'"
 end isort
 
 start wheel
