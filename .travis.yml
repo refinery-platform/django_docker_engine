@@ -10,10 +10,12 @@ install:
 # Load pinned versions first, and get dependencies for setup.py
 - pip install -r requirements.txt
 env:
-  matrix:
-    - DJANGO_VERSION='1.8.19'  # LTS
-    - DJANGO_VERSION='1.11.11'  # LTS
-    # - DJANGO_VERSION='2.0.3'  # not LTS; only python3
+- DJANGO_VERSION='1.8.19'  # LTS
+- DJANGO_VERSION='1.11.11'  # LTS
+matrix:
+  include:
+    - python: 3.6
+    - env: DJANGO_VERSION='2.0.3'  # not LTS; only python3
 matrix:
   fast_finish: true
 before_script:
