@@ -1,7 +1,6 @@
 import json
 import logging
 import os
-
 from datetime import datetime
 from shutil import rmtree
 from time import time
