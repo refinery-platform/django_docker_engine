@@ -23,7 +23,7 @@ A wrapper for [HiGlass](http://higlass.io/), for exploring genomic contact
 matrices and tracks.
 - [heatmap-scatter-dash](https://github.com/refinery-platform/heatmap-scatter-dash):
 A Plotly Dash app for understanding differential expression data.
-- [lineup-refinery-doker](https://github.com/refinery-platform/lineup-refinery-docker):
+- [lineup-refinery-docker](https://github.com/refinery-platform/lineup-refinery-docker):
 A wrapper for [Caleydo LineUp](http://caleydo.org/tools/lineup/), for visualizing
 rankings based on heterogeneous attributes
 
