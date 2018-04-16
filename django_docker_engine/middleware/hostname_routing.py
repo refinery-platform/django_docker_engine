@@ -3,6 +3,20 @@ import re
 from django.conf import settings
 
 
+class HostnameRoutingMiddlewareCallable():
+    def __init__(self, get_response):
+        self.get_response = get_response
+        self.middleware = HostnameRoutingMiddleware()
+
+    def __call__(self, request):
+        self.middleware.process_request(request)
+        response = self.get_response(request)
+
+        # Code to be executed for each request/response after
+        # the view is called.
+        return response
+
+
 class HostnameRoutingMiddleware():
     """
     When registered with Django, if an incoming request host ends with

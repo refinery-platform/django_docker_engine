@@ -21,9 +21,13 @@ INSTALLED_APPS = (
     'revproxy'
 )
 
-MIDDLEWARE_CLASSES = (
-    # REMEMBER to keep a trailing comma so this will be a tuple.
-    'django_docker_engine.middleware.hostname_routing.HostnameRoutingMiddleware',
+MIDDLEWARE = (  # Django 2
+    'django_docker_engine.middleware.hostname_routing.'
+    'HostnameRoutingMiddlewareCallable',
+)
+MIDDLEWARE_CLASSES = (  # Django < 2
+    'django_docker_engine.middleware.hostname_routing.'
+    'HostnameRoutingMiddleware',
 )
 
 ROOT_URLCONF = 'demo_host_routing.urls'
