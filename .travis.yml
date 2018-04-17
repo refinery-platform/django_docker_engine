@@ -15,8 +15,6 @@ matrix:
     - env: DJANGO_VERSION='2.0.3'
       python: 2.7  # only python3
 
-services:
-- docker
 install:
 - pip install -r requirements-dev.txt
 # Load pinned versions first, and get dependencies for setup.py
