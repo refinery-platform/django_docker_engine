@@ -31,6 +31,11 @@ class MisconfiguredPort(DockerEngineManagerError):
     pass
 
 
+class PossiblyOutOfDiskSpace(DockerEngineManagerError):
+    # TODO: Can we find a way to determine if disk space is really the problem?
+    pass
+
+
 class DockerEngineManager(BaseManager):
     """
     Manages interactions with a Docker Engine, running locally, or on a remote
@@ -93,7 +98,10 @@ class DockerEngineManager(BaseManager):
         :param kwargs:
         :return:
         """
-        return self._containers_client.run(image_name, cmd, **kwargs)
+        try:
+            return self._containers_client.run(image_name, cmd, **kwargs)
+        except docker.errors.ImageNotFound as e:
+            raise PossiblyOutOfDiskSpace(e)
 
     def pull(self, image_name, version="latest"):
         """
@@ -101,7 +109,11 @@ class DockerEngineManager(BaseManager):
         :param version:
         :return:
         """
-        return self._images_client.pull("{}:{}".format(image_name, version))
+        full_name = "{}:{}".format(image_name, version)
+        try:
+            return self._images_client.pull(full_name)
+        except docker.errors.ImageNotFound as e:
+            raise PossiblyOutOfDiskSpace(e)
 
     def create_volume(self):
         return self._volumes_client.create(driver='local')
