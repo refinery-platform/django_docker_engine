@@ -1,3 +1,4 @@
+import django
 import os
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
@@ -21,14 +22,16 @@ INSTALLED_APPS = (
     'revproxy'
 )
 
-MIDDLEWARE = (  # Django 2
-    'django_docker_engine.middleware.hostname_routing.'
-    'HostnameRoutingMiddlewareCallable',
-)
-MIDDLEWARE_CLASSES = (  # Django < 2
-    'django_docker_engine.middleware.hostname_routing.'
-    'HostnameRoutingMiddleware',
-)
+if django.VERSION >= (2, 0):
+    MIDDLEWARE = (
+        'django_docker_engine.middleware.hostname_routing.'
+        'HostnameRoutingMiddlewareCallable',
+    )
+else:
+    MIDDLEWARE_CLASSES = (
+        'django_docker_engine.middleware.hostname_routing.'
+        'HostnameRoutingMiddleware',
+    )
 
 ROOT_URLCONF = 'demo_host_routing.urls'
 WSGI_APPLICATION = 'demo_host_routing.wsgi.application'
