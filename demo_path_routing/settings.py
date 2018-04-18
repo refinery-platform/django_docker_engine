@@ -27,6 +27,14 @@ USE_I18N = True
 USE_L10N = True
 USE_TZ = True
 
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'APP_DIRS': False,
+        'DIRS': [__package__]
+    },
+]
+
 STATIC_URL = '/static/'
 
 if __package__ != 'demo_host_routing':
