@@ -1,1 +1,0 @@
-../demo_path_routing/proxy_url_patterns.py
