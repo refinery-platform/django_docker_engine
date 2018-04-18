@@ -9,6 +9,7 @@ from django.conf import settings
 
 from .forms import LaunchForm
 
+UPLOAD_DIR = os.path.join(os.path.dirname(__file__), 'upload')
 
 def index(request):
     if request.method == 'POST':
@@ -17,6 +18,7 @@ def index(request):
             return HttpResponseRedirect('/docker/container-id-goes-here/')
     else:
         context = {
+            'is_debug': settings.DEBUG,
             'package': __package__,
             'launch_form': LaunchForm()
         }
@@ -25,10 +27,11 @@ def index(request):
 def upload(request, name):
     assert settings.DEBUG, 'This should only be used for off-line demos'
     if request.method == 'POST':
+        # TODO
         pass
     else:
         assert re.match(r'^\w+(\.\w+)*$', name)
-        fullpath = os.path.join(os.path.dirname(__file__), 'upload', name)
+        fullpath = os.path.join(UPLOAD_DIR, name)
         if not os.path.isfile(fullpath):
             raise Http404()
         else:
