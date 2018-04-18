@@ -13,8 +13,17 @@
   <body>
     <div class="container-fluid">
       <h1>{{ package }}</h1>
-      <h2>Running Containers: TODO</h2>
-      <h2>Launch Container: TODO</h2>
+      <div>
+        <h2>Running Containers: TODO</h2>
+      </div>
+      <div>
+        <h2>Launch Container: TODO</h2>
+        <form action="/" method="post">
+          {% csrf_token %}
+          {{ launch_form.as_p }}
+          <input type="submit" value="Submit" />
+        </form>
+      </div>
     </div>
 
   </body>
