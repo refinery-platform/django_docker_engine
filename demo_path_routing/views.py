@@ -1,23 +1,28 @@
 import os
 import re
-from uuid import uuid1
 
-from django.conf import settings
 from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 
 from django_docker_engine.docker_utils import (
-     DockerClientRunWrapper, DockerClientSpec, DockerContainerSpec)
+    DockerClientRunWrapper, DockerClientSpec, DockerContainerSpec)
 
 from .forms import LaunchForm
 
 UPLOAD_DIR = os.path.join(os.path.dirname(__file__), 'upload')
+client_spec = DockerClientSpec(None, do_input_json_envvar=True)
+client = DockerClientRunWrapper(client_spec)
 
 
 def index(request):
-    client_spec = DockerClientSpec(None, do_input_json_envvar=True)
-    client = DockerClientRunWrapper(client_spec)
+    context = {
+        'container_names': [container.name for container in client.list()],
+        'launch_form': LaunchForm()
+    }
+    return render(request, 'index.html', context)
 
+
+def launch(request):
     if request.method == 'POST':
         form = LaunchForm(request.POST)
         if form.is_valid():
@@ -27,12 +32,16 @@ def index(request):
                 container_name=container_name)
             client.run(container_spec)
             return HttpResponseRedirect('/docker/{}/'.format(container_name))
-    else:
-        context = {
-            'container_names': [container.name for container in client.list()],
-            'launch_form': LaunchForm()
-        }
-        return render(request, 'index.html', context)
+
+
+def kill(request, name):
+    if request.method == 'POST':
+        container = client.list(filters={'name': name})[0]
+        container.remove(
+            force=True,
+            v=True  # Remove volumes associated with the container
+        )
+        return HttpResponseRedirect('/')
 
 
 def upload(request, name):

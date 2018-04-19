@@ -38,19 +38,25 @@
     <div class="border bg-light m-1 p-1">
       <div>
         <h2>Running containers</h2>
-        <ul>
+        <table>
           {% for container_name in container_names %}
-            <li><a href="/docker/{{ container_name }}/"
-                   target="_blank">{{ container_name }}</a></li>
+            <tr>
+              <td>
+                <form action="/kill/{{ container_name }}" method="post">
+                  <input type="submit" value="Kill"></form></td>
+              <td>
+                <a href="/docker/{{ container_name }}/"
+                     target="_blank">{{ container_name }}</a></td>
+            </tr>
           {% endfor %}
-        </ul>
+        </table>
       </div>
     </div>
 
     <div class="border bg-light m-1 p-1">
       <div>
         <h2>Launch new container</h2>
-        <form action="/" method="post" target="_blank">
+        <form action="/launch/" method="post" target="_blank">
           {% csrf_token %}
           {{ launch_form.as_p }}
           <input type="submit" value="Launch" />

@@ -17,7 +17,7 @@ class LaunchForm(forms.Form):
         )
     )
 
-    input = forms.ChoiceField(
+    input_file = forms.ChoiceField(
         widget=forms.Select,
         choices=((f, f) for f in os.listdir(UPLOAD_DIR))
     )

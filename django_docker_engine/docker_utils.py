@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 class DockerContainerSpec():
 
     def __init__(self, image_name, container_name,
-                 input={},
+                 input={},  # noqa: A002
                  container_input_path='/tmp/input.json',
                  extra_directories=[],
                  labels={},
@@ -166,7 +166,7 @@ class DockerClientRunWrapper(DockerClientWrapper):
     def _make_volume_on_host(self):
         return self._containers_manager.create_volume().name
 
-    def _write_input_to_host(self, input):
+    def _write_input_to_host(self, input):  # noqa: A002
         host_input_dir = self._make_directory_on_host()
         # The host filename "input.json" is arbitrary.
         host_input_path = os.path.join(host_input_dir, 'input.json')
