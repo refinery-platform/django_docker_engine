@@ -9,8 +9,8 @@ from shutil import rmtree
 from sys import version_info
 from time import sleep
 
-import django
 from mock import patch
+import requests
 from requests.exceptions import ConnectionError
 
 from django_docker_engine.container_managers.docker_engine import \
@@ -119,7 +119,7 @@ class LiveDockerTests(unittest.TestCase):
             filters={'label': self.test_label}
         ))
 
-    def assert_loads_eventually(self, url, content, client=django.test.Client()):
+    def assert_loads_eventually(self, url, text):
         """
         Retries until it gets a 200 response. Note that these tests hit the
         container directly, rather than going through the proxy, so there
@@ -127,9 +127,9 @@ class LiveDockerTests(unittest.TestCase):
         """
         for i in range(100):
             try:
-                response = client.get(url)
+                response = requests.get(url)
                 if response.status_code == 200:
-                    self.assertIn(content, response.content)
+                    self.assertIn(text, response.text)
                 return
             except (ConnectionError, URLError):
                 pass
