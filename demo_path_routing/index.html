@@ -4,20 +4,50 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <style>
+      .site-header {
+        background-color: rgba(0, 0, 0, .85);
+        -webkit-backdrop-filter: saturate(180%) blur(20px);
+        backdrop-filter: saturate(180%) blur(20px);
+      }
+      .site-header span {
+        color: #fff;
+      }
+      .site-header a {
+        color: #999;
+        transition: ease-in-out color .15s;
+      }
+      .site-header a:hover {
+        color: #fff;
+        text-decoration: none;
+      }
+    </style>
     <title>django_docker_engine demo</title>
   </head>
   <body>
-    <div class="container-fluid">
-      <h1>django_docker_engine demo</h1>
-      <div>
-        <h2>Running Containers: TODO</h2>
+
+    <nav class="site-header sticky-top py-1">
+      <div class="container d-flex flex-column flex-md-row justify-content-between">
+        <span class="py-2">
+          django_docker_engine demo
+        </span>
+        <a class="py-2 d-none d-md-inline-block" href="https://github.com/refinery-platform/django_docker_engine">on github</a>
       </div>
+    </nav>
+
+    <div class="border bg-light m-1 p-1">
       <div>
-        <h2>Launch Container: TODO</h2>
+        <h2>Running containers: TODO</h2>
+      </div>
+    </div>
+
+    <div class="border bg-light m-1 p-1">
+      <div>
+        <h2>Launch new container</h2>
         <form action="/" method="post">
           {% csrf_token %}
           {{ launch_form.as_p }}
-          <input type="submit" value="Submit" />
+          <input type="submit" value="Launch" />
         </form>
       </div>
     </div>
