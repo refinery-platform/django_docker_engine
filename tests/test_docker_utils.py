@@ -213,10 +213,6 @@ class LiveDockerTestsClean(LiveDockerTests):
             'extra_directories': ["/test", "/coffee"]
         })
 
-    def assert_correct_ls_tmp(self, ls_tmp_orig):
-        self.assertEqual(0, len(self.ls_tmp()))
-        self.assertEqual(0, len(ls_tmp_orig))
-
     def test_purge(self):
         """
         WARNING: I think this is prone to race conditions.
@@ -228,7 +224,6 @@ class LiveDockerTestsClean(LiveDockerTests):
         url = self.get_docker_url_timestamp()[0]
         self.assertEqual(1, self.count_containers())
         self.assert_loads_eventually(url, 'Welcome to nginx!')
-        self.assert_correct_ls_tmp(ls_tmp_orig)
 
         self.client_wrapper.purge_inactive(5)
         self.assertEqual(1, self.count_containers())
