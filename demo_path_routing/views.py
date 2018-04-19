@@ -21,7 +21,7 @@ def index(request):
     if request.method == 'POST':
         form = LaunchForm(request.POST)
         if form.is_valid():
-            container_name = str(uuid1())
+            container_name = form.cleaned_data['unique_name']
             container_spec = DockerContainerSpec(
                 image_name=form.cleaned_data['tool'],
                 container_name=container_name)
@@ -36,7 +36,8 @@ def index(request):
 
 
 def upload(request, name):
-    assert settings.DEBUG, 'This should only be used for off-line demos'
+    assert request.get_host() in ['localhost', '127.0.0.1'], \
+        'This should only be used for demos on localhost.'
     if request.method == 'POST':
         # TODO
         pass
