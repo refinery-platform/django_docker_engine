@@ -219,7 +219,6 @@ class LiveDockerTestsClean(LiveDockerTests):
         If you get an error, try just giving it more time.
         """
         self.assertEqual(0, self.count_containers())
-        ls_tmp_orig = self.ls_tmp()
 
         url = self.get_docker_url_timestamp()[0]
         self.assertEqual(1, self.count_containers())
