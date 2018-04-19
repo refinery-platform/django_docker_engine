@@ -1,6 +1,5 @@
 import os as _os  # So we can "import *" and not get extra junk.
 
-
 BASE_DIR = _os.path.dirname(_os.path.dirname(__file__))
 
 # SECURITY WARNING: keep the secret key used in production secret!

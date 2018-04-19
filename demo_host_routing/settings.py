@@ -2,7 +2,6 @@ import django
 
 from .settings_common import *  # noqa
 
-
 ALLOWED_HOSTS = [
     # This needs to allow the root server, and any
     # subdomains which are mapped to containers.
