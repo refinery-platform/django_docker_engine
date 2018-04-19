@@ -9,8 +9,8 @@ from shutil import rmtree
 from sys import version_info
 from time import sleep
 
-from mock import patch
 import requests
+from mock import patch
 from requests.exceptions import ConnectionError
 
 from django_docker_engine.container_managers.docker_engine import \
