@@ -1,9 +1,13 @@
 import os
 import re
+from uuid import uuid1
 
 from django.conf import settings
 from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
+
+from django_docker_engine.docker_utils import (
+     DockerClientRunWrapper, DockerClientSpec, DockerContainerSpec)
 
 from .forms import LaunchForm
 
@@ -14,7 +18,14 @@ def index(request):
     if request.method == 'POST':
         form = LaunchForm(request.POST)
         if form.is_valid():
-            return HttpResponseRedirect('/docker/container-id-goes-here/')
+            client_spec = DockerClientSpec(None, do_input_json_envvar=True)
+            client = DockerClientRunWrapper(client_spec)
+            container_name = str(uuid1())
+            container_spec = DockerContainerSpec(
+                image_name=form.cleaned_data['tool'],
+                container_name=container_name)
+            client.run(container_spec)
+            return HttpResponseRedirect('/docker/{}/'.format(container_name))
     else:
         context = {
             'is_debug': settings.DEBUG,
