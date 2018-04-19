@@ -29,6 +29,14 @@ class DockerContainerSpec():
         self.container_port = container_port
         self.cpus = cpus
 
+    def __repr__(self):
+        kwargs = ', '.join(
+            ['{}={}'.format(a, repr(getattr(self, a)))
+             for a in dir(self)
+             if not a.startswith('_')])
+        name = self.__class__.__name__
+        return '{}({})'.format(name, kwargs)
+
 
 class DockerClientSpec():
 

@@ -34,7 +34,8 @@ class LiveDockerTests(unittest.TestCase):
     @property
     def spec(self):
         return DockerClientSpec('/tmp/django-docker-engine-test',
-                                do_input_json_envvar=True)
+                                do_input_json_envvar=True,
+                                do_input_json_file=True)
 
     def setUp(self):
         # Docker Engine's clock stops when the computer goes to sleep,
