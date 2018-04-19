@@ -1,6 +1,6 @@
 import django
 
-from .settings_common import *
+from .settings_common import *  # noqa
 
 
 ALLOWED_HOSTS = [

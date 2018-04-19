@@ -4,6 +4,7 @@ from django import forms
 
 UPLOAD_DIR = os.path.join(os.path.dirname(__file__), 'upload')
 
+
 class LaunchForm(forms.Form):
     tool = forms.ChoiceField(
         widget=forms.Select,
@@ -16,5 +17,5 @@ class LaunchForm(forms.Form):
 
     input = forms.ChoiceField(
         widget=forms.Select,
-        choices=((f,f) for f in os.listdir(UPLOAD_DIR))
+        choices=((f, f) for f in os.listdir(UPLOAD_DIR))
     )

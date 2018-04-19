@@ -7,6 +7,7 @@ class NullHistorian():
     """
     Satisfies the Historian interface, but does nothing.
     """
+
     def __init__(self):
         pass
 
@@ -21,6 +22,7 @@ class FileHistorian():
 
     Not suitable for production use.
     """
+
     def __init__(self, path):
         self.path = path
 

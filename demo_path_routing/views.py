@@ -11,6 +11,7 @@ from .forms import LaunchForm
 
 UPLOAD_DIR = os.path.join(os.path.dirname(__file__), 'upload')
 
+
 def index(request):
     if request.method == 'POST':
         form = LaunchForm(request.POST)
@@ -23,6 +24,7 @@ def index(request):
             'launch_form': LaunchForm()
         }
         return render(request, 'index.html', context)
+
 
 def upload(request, name):
     assert settings.DEBUG, 'This should only be used for off-line demos'
@@ -37,6 +39,3 @@ def upload(request, name):
         else:
             with open(fullpath) as f:
                 return HttpResponse(f.read(), content_type='text/plain')
-
-
-
