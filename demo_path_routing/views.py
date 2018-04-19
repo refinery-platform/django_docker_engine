@@ -15,11 +15,12 @@ UPLOAD_DIR = os.path.join(os.path.dirname(__file__), 'upload')
 
 
 def index(request):
+    client_spec = DockerClientSpec(None, do_input_json_envvar=True)
+    client = DockerClientRunWrapper(client_spec)
+
     if request.method == 'POST':
         form = LaunchForm(request.POST)
         if form.is_valid():
-            client_spec = DockerClientSpec(None, do_input_json_envvar=True)
-            client = DockerClientRunWrapper(client_spec)
             container_name = str(uuid1())
             container_spec = DockerContainerSpec(
                 image_name=form.cleaned_data['tool'],
@@ -28,8 +29,7 @@ def index(request):
             return HttpResponseRedirect('/docker/{}/'.format(container_name))
     else:
         context = {
-            'is_debug': settings.DEBUG,
-            'package': __package__,
+            'container_names': [container.name for container in client.list()],
             'launch_form': LaunchForm()
         }
         return render(request, 'index.html', context)

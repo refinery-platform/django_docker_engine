@@ -37,14 +37,20 @@
 
     <div class="border bg-light m-1 p-1">
       <div>
-        <h2>Running containers: TODO</h2>
+        <h2>Running containers</h2>
+        <ul>
+          {% for container_name in container_names %}
+            <li><a href="/docker/{{ container_name }}/"
+                   target="_blank">{{ container_name }}</a></li>
+          {% endfor %}
+        </ul>
       </div>
     </div>
 
     <div class="border bg-light m-1 p-1">
       <div>
         <h2>Launch new container</h2>
-        <form action="/" method="post">
+        <form action="/" method="post" target="_blank">
           {% csrf_token %}
           {{ launch_form.as_p }}
           <input type="submit" value="Launch" />
