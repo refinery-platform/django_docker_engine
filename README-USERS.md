@@ -119,12 +119,11 @@ and not just have installed it via pip.)
 >>> from time import sleep
 >>> sleep(2)
 
-# The demo doesn't define a route for '/', but there is one for the proxies:
+# There is a homepage at '/':
 >>> response_text = requests.get(django_url).text
->>> assert 'Django tried these URL patterns' in response_text
->>> assert '^docker/' in response_text
+>>> assert 'django_docker_engine demo' in response_text
 
-# On that route, requests are proxied to containers by name:
+# Under '/docker/, requests are proxied to containers by name:
 >>> proxy_url = django_url + '/docker/' + container_name + '/'
 >>> proxy_url
 'http://localhost:8000/docker/basic-nginx/'
@@ -147,7 +146,7 @@ to refresh indefinitely.
 ```
 # Make sure Django is still up:
 >>> response_text = requests.get(django_url).text
->>> assert '^docker/' in response_text
+>>> assert 'django_docker_engine demo' in response_text
 
 # Try to get a container that doesn't exist:
 >>> container_name = 'please-wait'
