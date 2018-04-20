@@ -10,6 +10,7 @@ from django_docker_engine.docker_utils import (DockerClientRunWrapper,
                                                DockerContainerSpec)
 
 from .forms import LaunchForm
+from .tools import tools
 
 UPLOAD_DIR = os.path.join(os.path.dirname(__file__), 'upload')
 client_spec = DockerClientSpec(None, do_input_json_envvar=True)
@@ -54,17 +55,16 @@ def launch(request):
 
             input_url = 'http://{}:{}/upload/{}'.format(
                 HOSTNAME, request.get_port(), post['input_file'])
-            input_json = {
-                'file_relationships': [input_url]
-            }
+            tool_spec = tools[post['tool']]
 
             container_name = post['unique_name']
+            container_path = '/docker/{}/'.format(container_name)
             container_spec = DockerContainerSpec(
-                image_name=post['tool'],
                 container_name=container_name,
-                input=input_json)
+                image_name=tool_spec['image'],
+                input=tool_spec['input'](input_url, container_path))
             client.run(container_spec)
-            return HttpResponseRedirect('/docker/{}/'.format(container_name))
+            return HttpResponseRedirect(container_path)
 
 
 def kill(request, name):

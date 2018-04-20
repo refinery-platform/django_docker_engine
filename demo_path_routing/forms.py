@@ -2,6 +2,8 @@ import os
 
 from django import forms
 
+from .tools import tools
+
 UPLOAD_DIR = os.path.join(os.path.dirname(__file__), 'upload')
 
 
@@ -10,11 +12,7 @@ class LaunchForm(forms.Form):
 
     tool = forms.ChoiceField(
         widget=forms.Select,
-        choices=(
-            ('scottx611x/refinery-developer-vis-tool:v0.0.7', 'debugger'),
-            ('mccalluc/heatmap_scatter_dash:v0.1.8', 'heatmap'),
-            ('mccalluc/lineup_refinery:v0.0.8', 'tabular')
-        )
+        choices=tuple((k, k) for k in tools)
     )
 
     input_file = forms.ChoiceField(
