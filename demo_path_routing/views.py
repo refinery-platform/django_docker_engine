@@ -16,6 +16,7 @@ from .utils import hostname
 client = DockerClientRunWrapper(
     DockerClientSpec(None, do_input_json_envvar=True))
 
+
 def index(request):
     context = {
         'container_names': [container.name for container in client.list()],

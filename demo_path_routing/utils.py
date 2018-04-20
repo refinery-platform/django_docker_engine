@@ -1,5 +1,7 @@
-import docker
 import sys
+
+import docker
+
 
 def hostname():
     # 'localhost' will just point to the container, not to the host.
@@ -15,4 +17,6 @@ def hostname():
     elif docker_v >= [17, 6] and sys.platform == 'darwin':
         return 'docker.for.mac.localhost'
     else:
-        raise Exception('Not sure how to determine hostname')
+        raise Exception('Not sure of hostname for docker {} on {}'.format(
+            docker_v, sys.platform
+        ))
