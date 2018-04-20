@@ -18,6 +18,7 @@ client = DockerClientRunWrapper(
     DockerClientSpec(None, do_input_json_envvar=True))
 UPLOAD_DIR = os.path.join(os.path.dirname(__file__), 'upload')
 
+
 def index(request):
     launch_form = LaunchForm()
     # TODO: Pass this info through the constructor
