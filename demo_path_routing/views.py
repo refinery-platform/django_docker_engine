@@ -20,10 +20,11 @@ UPLOAD_DIR = os.path.join(os.path.dirname(__file__), 'upload')
 
 def index(request):
     launch_form = LaunchForm()
-    launch_form.fields['input_file'] = forms.ChoiceField(
+    launch_form.fields['data'] = forms.ChoiceField(
         widget=forms.Select,
-        choices=((f, f) for f in os.listdir(UPLOAD_DIR))
+        choices=((f, f) for f in os.listdir(UPLOAD_DIR) if f != '.gitignore')
     )
+
     context = {
         'container_names': [container.name for container in client.list()],
         'launch_form': launch_form,
@@ -39,10 +40,10 @@ def launch(request):
             post = form.cleaned_data
 
             input_url = 'http://{}:{}/upload/{}'.format(
-                hostname(), request.get_port(), post['input_file'])
+                hostname(), request.get_port(), post['data'])
             tool_spec = tools[post['tool']]
 
-            container_name = post['unique_name']
+            container_name = post['container_name']
             container_path = '/docker/{}/'.format(container_name)
             container_spec = DockerContainerSpec(
                 container_name=container_name,
@@ -76,7 +77,7 @@ def upload(request, name):
             with open(fullpath, 'wb+') as destination:
                 for chunk in file.chunks():
                     destination.write(chunk)
-            return HttpResponseRedirect('/')
+            return HttpResponseRedirect('/?uploaded={}'.format(file.name))
 
     else:
         assert re.match(valid_re, name)
