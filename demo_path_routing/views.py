@@ -3,7 +3,6 @@ import re
 
 from django.conf import settings
 from django.http import Http404, HttpResponse, HttpResponseRedirect
-from django.http.request import split_domain_port
 from django.shortcuts import render
 
 from django_docker_engine.docker_utils import (
@@ -14,6 +13,7 @@ from .forms import LaunchForm
 UPLOAD_DIR = os.path.join(os.path.dirname(__file__), 'upload')
 client_spec = DockerClientSpec(None, do_input_json_envvar=True)
 client = DockerClientRunWrapper(client_spec)
+
 
 def _hostname():
     # 'localhost' will just point to the container, not to the host.
@@ -32,6 +32,7 @@ def _hostname():
         return 'docker.for.mac.localhost'
     else:
         raise Exception('Not sure how to determine hostname')
+
 
 HOSTNAME = _hostname()
 
