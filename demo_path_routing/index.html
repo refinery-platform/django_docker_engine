@@ -27,7 +27,7 @@
   <body>
 
     <nav class="site-header sticky-top py-1">
-      <div class="container d-flex flex-column flex-md-row justify-content-between">
+      <div class="px-4 d-flex flex-column flex-md-row justify-content-between">
         <span class="py-2">
           django_docker_engine demo
         </span>
@@ -36,8 +36,8 @@
     </nav>
 
     <div class="border bg-light m-1 p-1">
-      <div>
-        <h2>Running containers</h2>
+      <h2>Running containers</h2>
+      {% if container_names %}
         <table>
           {% for container_name in container_names %}
             <tr>
@@ -50,7 +50,9 @@
             </tr>
           {% endfor %}
         </table>
-      </div>
+      {% else %}
+        There are no running containers.
+      {% endif %}
     </div>
 
     <div class="border bg-light m-1 p-1">
