@@ -15,7 +15,7 @@ tools = {
                 []  # Differential expression data
             ],
             'parameters': [],
-            'api_prefix': '/',
+            'api_prefix': prefix,
             'extra_directories': '/refinery-data/'
         }
     }
