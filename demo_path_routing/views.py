@@ -1,7 +1,9 @@
 import os
 import re
 
+from django.conf import settings
 from django.http import Http404, HttpResponse, HttpResponseRedirect
+from django.http.request import split_domain_port
 from django.shortcuts import render
 
 from django_docker_engine.docker_utils import (
@@ -12,6 +14,26 @@ from .forms import LaunchForm
 UPLOAD_DIR = os.path.join(os.path.dirname(__file__), 'upload')
 client_spec = DockerClientSpec(None, do_input_json_envvar=True)
 client = DockerClientRunWrapper(client_spec)
+
+def _hostname():
+    # 'localhost' will just point to the container, not to the host.
+    # The best way of doing this seems to have changed over time.
+    # In the future, I hope this will be simplified.
+    import docker
+    import sys
+    client = docker.from_env()
+    docker_v = [int(i) for i in client.info()['ServerVersion'].split('.')[:2]]
+    # Additions here must also be added to ALLOWED_HOSTS in settings.py.
+    # https://docs.docker.com/docker-for-mac/networking/
+    if docker_v >= [18, 3]:
+        return 'host.docker.internal'
+    # https://docs.docker.com/v17.06/docker-for-mac/networking/
+    elif docker_v >= [17, 6] and sys.platform == 'darwin':
+        return 'docker.for.mac.localhost'
+    else:
+        raise Exception('Not sure how to determine hostname')
+
+HOSTNAME = _hostname()
 
 
 def index(request):
@@ -26,10 +48,19 @@ def launch(request):
     if request.method == 'POST':
         form = LaunchForm(request.POST)
         if form.is_valid():
-            container_name = form.cleaned_data['unique_name']
+            post = form.cleaned_data
+
+            input_url = 'http://{}:{}/upload/{}'.format(
+                HOSTNAME, request.get_port(), post['input_file'])
+            input_json = {
+                'file_relationships': [input_url]
+            }
+
+            container_name = post['unique_name']
             container_spec = DockerContainerSpec(
-                image_name=form.cleaned_data['tool'],
-                container_name=container_name)
+                image_name=post['tool'],
+                container_name=container_name,
+                input=input_json)
             client.run(container_spec)
             return HttpResponseRedirect('/docker/{}/'.format(container_name))
 
@@ -45,8 +76,8 @@ def kill(request, name):
 
 
 def upload(request, name):
-    assert request.get_host() in ['localhost', '127.0.0.1'], \
-        'This should only be used for demos on localhost.'
+    if not settings.DEBUG:
+        raise Exception('Should only be used for local demos')
     if request.method == 'POST':
         # TODO
         pass

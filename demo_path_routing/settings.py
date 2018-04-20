@@ -10,5 +10,5 @@ TEMPLATES = [
 
 STATIC_URL = '/static/'
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['docker.for.mac.localhost', 'host.docker.internal']
 MIDDLEWARE_CLASSES = ()
