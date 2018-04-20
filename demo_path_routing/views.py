@@ -5,8 +5,9 @@ from django.conf import settings
 from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 
-from django_docker_engine.docker_utils import (
-    DockerClientRunWrapper, DockerClientSpec, DockerContainerSpec)
+from django_docker_engine.docker_utils import (DockerClientRunWrapper,
+                                               DockerClientSpec,
+                                               DockerContainerSpec)
 
 from .forms import LaunchForm
 
