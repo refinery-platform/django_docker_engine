@@ -11,33 +11,10 @@ from django_docker_engine.docker_utils import (DockerClientRunWrapper,
 
 from .forms import LaunchForm
 from .tools import tools
+from .utils import hostname
 
-UPLOAD_DIR = os.path.join(os.path.dirname(__file__), 'upload')
-client_spec = DockerClientSpec(None, do_input_json_envvar=True)
-client = DockerClientRunWrapper(client_spec)
-
-
-def _hostname():
-    # 'localhost' will just point to the container, not to the host.
-    # The best way of doing this seems to have changed over time.
-    # In the future, I hope this will be simplified.
-    import docker
-    import sys
-    client = docker.from_env()
-    docker_v = [int(i) for i in client.info()['ServerVersion'].split('.')[:2]]
-    # Additions here must also be added to ALLOWED_HOSTS in settings.py.
-    # https://docs.docker.com/docker-for-mac/networking/
-    if docker_v >= [18, 3]:
-        return 'host.docker.internal'
-    # https://docs.docker.com/v17.06/docker-for-mac/networking/
-    elif docker_v >= [17, 6] and sys.platform == 'darwin':
-        return 'docker.for.mac.localhost'
-    else:
-        raise Exception('Not sure how to determine hostname')
-
-
-HOSTNAME = _hostname()
-
+client = DockerClientRunWrapper(
+    DockerClientSpec(None, do_input_json_envvar=True))
 
 def index(request):
     context = {
@@ -54,7 +31,7 @@ def launch(request):
             post = form.cleaned_data
 
             input_url = 'http://{}:{}/upload/{}'.format(
-                HOSTNAME, request.get_port(), post['input_file'])
+                hostname(), request.get_port(), post['input_file'])
             tool_spec = tools[post['tool']]
 
             container_name = post['unique_name']
@@ -85,7 +62,8 @@ def upload(request, name):
         pass
     else:
         assert re.match(r'^\w+(\.\w+)*$', name)
-        fullpath = os.path.join(UPLOAD_DIR, name)
+        upload_dir = os.path.join(os.path.dirname(__file__), 'upload')
+        fullpath = os.path.join(upload_dir, name)
         if not os.path.isfile(fullpath):
             raise Http404()
         else:
