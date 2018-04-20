@@ -1,6 +1,7 @@
 import os
 import re
 
+from django import forms
 from django.conf import settings
 from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
@@ -9,18 +10,24 @@ from django_docker_engine.docker_utils import (DockerClientRunWrapper,
                                                DockerClientSpec,
                                                DockerContainerSpec)
 
-from .forms import LaunchForm
+from .forms import LaunchForm, UploadForm
 from .tools import tools
 from .utils import hostname
 
 client = DockerClientRunWrapper(
     DockerClientSpec(None, do_input_json_envvar=True))
-
+UPLOAD_DIR = os.path.join(os.path.dirname(__file__), 'upload')
 
 def index(request):
+    launch_form = LaunchForm()
+    launch_form.fields['input_file'] = forms.ChoiceField(
+        widget=forms.Select,
+        choices=((f, f) for f in os.listdir(UPLOAD_DIR))
+    )
     context = {
         'container_names': [container.name for container in client.list()],
-        'launch_form': LaunchForm()
+        'launch_form': launch_form,
+        'upload_form': UploadForm(),
     }
     return render(request, 'index.html', context)
 
@@ -58,13 +65,22 @@ def kill(request, name):
 def upload(request, name):
     if not settings.DEBUG:
         raise Exception('Should only be used for local demos')
+    valid_re = r'^\w+(\.\w+)*$'
+
     if request.method == 'POST':
-        # TODO
-        pass
+        form = UploadForm(request.POST, request.FILES)
+        if form.is_valid():
+            file = request.FILES['file']
+            assert re.match(valid_re, file.name)
+            fullpath = os.path.join(UPLOAD_DIR, file.name)
+            with open(fullpath, 'wb+') as destination:
+                for chunk in file.chunks():
+                    destination.write(chunk)
+            return HttpResponseRedirect('/')
+
     else:
-        assert re.match(r'^\w+(\.\w+)*$', name)
-        upload_dir = os.path.join(os.path.dirname(__file__), 'upload')
-        fullpath = os.path.join(upload_dir, name)
+        assert re.match(valid_re, name)
+        fullpath = os.path.join(UPLOAD_DIR, name)
         if not os.path.isfile(fullpath):
             raise Http404()
         else:

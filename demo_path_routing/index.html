@@ -56,12 +56,21 @@
     </div>
 
     <div class="border bg-light m-1 p-1">
+      <h2>Launch new container</h2>
+      <form action="/launch/" method="post" target="_blank">
+        {% csrf_token %}
+        {{ launch_form.as_p }}
+        <input type="submit" value="Launch" />
+      </form>
+    </div>
+
+    <div class="border bg-light m-1 p-1">
       <div>
-        <h2>Launch new container</h2>
-        <form action="/launch/" method="post" target="_blank">
+        <h2>Upload your own data</h2>
+        <form action="/upload/" method="post" enctype="multipart/form-data">
           {% csrf_token %}
-          {{ launch_form.as_p }}
-          <input type="submit" value="Launch" />
+          {{ upload_form.as_p }}
+          <input type="submit" value="Upload" />
         </form>
       </div>
     </div>
