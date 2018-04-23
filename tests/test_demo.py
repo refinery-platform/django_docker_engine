@@ -13,16 +13,18 @@ class DemoPathRoutingTests(unittest.TestCase):
         context = response.context
 
         fields = context['launch_form'].fields
-        self.assertEqual({'container_name', 'data', 'tool'}, fields.keys())
+        self.assertEqual(['container_name', 'data', 'tool'],
+                         sorted(set(fields.keys())))
+        # More wrapping for older pythons / older djangos.
 
         self.assertIn(('3x3.csv', '3x3.csv'), fields['data'].choices)
         # Locally, you may also have data choices which are not checked in.
 
         self.assertEquals(
             [('debugger', 'debugger'),
-             ('lineup', 'lineup'),
-             ('heatmap', 'heatmap')],
-            fields['tool'].choices)
+             ('heatmap', 'heatmap'),
+             ('lineup', 'lineup')],
+            sorted(fields['tool'].choices))
 
         self.assertEqual(
             context['launch_form'].initial,
