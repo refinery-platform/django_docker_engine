@@ -11,21 +11,17 @@ class DemoPathRoutingTests(unittest.TestCase):
         response = self.client.get('/?uploaded=3x3.csv')
         context = response.context
 
-        fields = context['launch_form'].fields.keys()
-        self.assertIn('container_name', fields)
-        self.assertIn('data', fields)
-        self.assertIn('tool', fields)
+        fields = context['launch_form'].fields
+        self.assertEqual({'container_name', 'data', 'tool'}, fields.keys())
 
-        self.assertIn(
-            ('3x3.csv', '3x3.csv'),
-            context['launch_form'].fields['data'].choices)
+        self.assertIn(('3x3.csv', '3x3.csv'), fields['data'].choices)
         # Locally, you may also have data choices which are not checked in.
 
         self.assertEquals(
             [('debugger', 'debugger'),
              ('lineup', 'lineup'),
              ('heatmap', 'heatmap')],
-            context['launch_form'].fields['tool'].choices)
+            fields['tool'].choices)
 
         self.assertEqual(
             context['launch_form'].initial,
