@@ -2,7 +2,6 @@ import os
 import re
 
 from django import forms
-from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django.shortcuts import render

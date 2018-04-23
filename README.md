@@ -24,6 +24,7 @@ run the demo server:
 ```
 $ git clone https://github.com/mccalluc/django_docker_engine.git
 $ cd django_docker_engine
+$ pip install -r requirements-dev.txt
 $ pip install -r requirements.txt
 $ ./manage.py runserver
 ```

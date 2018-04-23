@@ -1,7 +1,7 @@
 import unittest
-from io import StringIO
 
 from django.test import Client
+
 
 class DemoPathRoutingTests(unittest.TestCase):
 
@@ -32,7 +32,6 @@ class DemoPathRoutingTests(unittest.TestCase):
         self.assertIn('<option value="3x3.csv" selected>', content)
         self.assertIn('<option value="debugger">debugger</option>', content)
 
-
     def test_lauch(self):
         pass  # TODO
 
@@ -48,10 +47,10 @@ class DemoPathRoutingTests(unittest.TestCase):
         response = self.client.get('/upload/foobar.csv')
         self.assertEqual(404, response.status_code)
 
+    # TODO
     # def test_upload_post(self):
     #     file = StringIO('')
     #     response = self.client.post('/upload/',
-    #                                 {'name': 'empty.txt', 'file': file},
+    #                                 {'file': file},
     #                                 follow=True)
     #     response.redirect_chain = []
-
