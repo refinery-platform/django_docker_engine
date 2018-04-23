@@ -1,5 +1,6 @@
 import unittest
 
+from django.conf import settings
 from django.test import Client
 
 
@@ -52,10 +53,13 @@ class DemoPathRoutingTests(unittest.TestCase):
         response = self.client.get('/upload/foobar.csv')
         self.assertEqual(404, response.status_code)
 
-    # TODO
-    # def test_upload_post(self):
-    #     file = StringIO('')
-    #     response = self.client.post('/upload/',
-    #                                 {'file': file},
-    #                                 follow=True)
-    #     response.redirect_chain = []
+    def test_upload_post(self):
+        # Just load the fixture on top of itself.
+        # Using mocks would be an alternative.
+        path = settings.BASE_DIR + '/demo_path_routing/upload/3x3.csv'
+        with open(path) as handle:
+            response = self.client.post('/upload/',
+                                        {'file': handle},
+                                        follow=True)
+            self.assertEqual([('/?uploaded=3x3.csv', 302)],
+                             response.redirect_chain)
