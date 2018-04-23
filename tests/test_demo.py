@@ -31,8 +31,11 @@ class DemoPathRoutingTests(unittest.TestCase):
             {'data': '3x3.csv'})
 
         content = response.content.decode('utf-8')
-        self.assertIn('<option value="3x3.csv" selected>', content)
         self.assertIn('<option value="debugger">debugger</option>', content)
+        self.assertIn('<option value="3x3.csv" selected', content)
+        # For older django versions, it's
+        # > selected="selected"
+        # but in newer versions, there is no value for the attribute.
 
     def test_lauch(self):
         pass  # TODO
