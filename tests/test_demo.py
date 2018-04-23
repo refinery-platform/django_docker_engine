@@ -2,6 +2,11 @@ import unittest
 
 from django.conf import settings
 from django.test import Client
+from mock import patch
+
+from django_docker_engine.docker_utils import (DockerClientRunWrapper,
+                                               DockerClientSpec,
+                                               DockerContainerSpec)
 
 
 class DemoPathRoutingTests(unittest.TestCase):
@@ -38,10 +43,39 @@ class DemoPathRoutingTests(unittest.TestCase):
         # > selected="selected"
         # but in newer versions, there is no value for the attribute.
 
-    def test_lauch(self):
-        pass  # TODO
+    def test_lauch_get_405(self):
+        response = self.client.get('/launch/')
+        self.assertEqual(405, response.status_code)
 
-    def test_kill(self):
+    def test_lauch_post(self):
+        with patch.object(DockerClientRunWrapper,
+                          'run') as mock_run:
+            response = self.client.post('/launch/',
+                                        {'data': 'fake-data',
+                                         'tool': 'debugger',
+                                         'container_name': 'fake-name'},
+                                        follow=True)
+            self.assertEqual([('/docker/fake-name/', 302)],
+                             response.redirect_chain)
+            spec = mock_run.call_args[0][0]
+            self.assertEqual(spec.container_input_path, '/tmp/input.json')
+            self.assertEqual(spec.container_name, 'fake-name')
+            self.assertEqual(spec.container_port, 80)
+            self.assertEqual(spec.cpus, 0.5)
+            self.assertEqual(spec.extra_directories, [])
+            self.assertEqual(
+                spec.image_name,
+                'scottx611x/refinery-developer-vis-tool:v0.0.7')
+            self.assertRegexpMatches(
+                spec.input['file_relationships'][0],
+                r'^http://[^/]+/upload/fake-data')
+            self.assertEqual(spec.labels, {})
+
+    def test_kill_get_405(self):
+        response = self.client.get('/kill/foo')
+        self.assertEqual(405, response.status_code)
+
+    def test_kill_post(self):
         pass  # TODO
 
     def test_upload_get_200(self):

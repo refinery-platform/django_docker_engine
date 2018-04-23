@@ -41,7 +41,7 @@ def index(request):
 def launch(request):
     form = LaunchForm(request.POST)
     if not form.is_valid():
-        raise ValidationError('invalid form')
+        raise ValidationError(form.errors)
 
     post = form.cleaned_data
 
@@ -72,7 +72,7 @@ def upload(request, name):
     if request.method == 'POST':
         form = UploadForm(request.POST, request.FILES)
         if not form.is_valid():
-            raise ValidationError('invalid form')
+            raise ValidationError(form.errors)
         file = request.FILES['file']
         assert re.match(valid_re, file.name)
         fullpath = os.path.join(UPLOAD_DIR, file.name)
