@@ -5,8 +5,7 @@ from django.test import Client
 from mock import patch
 
 from django_docker_engine.docker_utils import (DockerClientRunWrapper,
-                                               DockerClientSpec,
-                                               DockerContainerSpec)
+                                               DockerClientWrapper)
 
 
 class DemoPathRoutingTests(unittest.TestCase):
@@ -76,7 +75,15 @@ class DemoPathRoutingTests(unittest.TestCase):
         self.assertEqual(405, response.status_code)
 
     def test_kill_post(self):
-        pass  # TODO
+        with patch.object(DockerClientWrapper,
+                          'list') as mock_list:
+            with patch.object(DockerClientWrapper,
+                              'kill') as mock_kill:
+                response = self.client.post('/kill/foo', follow=True)
+                self.assertEqual([('/', 302)],
+                                 response.redirect_chain)
+                mock_list.assert_called()
+                mock_kill.assert_called()
 
     def test_upload_get_200(self):
         response = self.client.get('/upload/3x3.csv')
