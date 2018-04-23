@@ -3,8 +3,10 @@ import re
 
 from django import forms
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
+from django.views.decorators.http import require_POST
 
 from django_docker_engine.docker_utils import (DockerClientRunWrapper,
                                                DockerClientSpec,
@@ -36,51 +38,52 @@ def index(request):
     return render(request, 'index.html', context)
 
 
+@require_POST
 def launch(request):
-    if request.method == 'POST':
-        form = LaunchForm(request.POST)
-        if form.is_valid():
-            post = form.cleaned_data
+    form = LaunchForm(request.POST)
+    if not form.is_valid():
+        raise ValidationError('invalid form')
 
-            input_url = 'http://{}:{}/upload/{}'.format(
-                hostname(), request.get_port(), post['data'])
-            tool_spec = tools[post['tool']]
+    post = form.cleaned_data
 
-            container_name = post['container_name']
-            container_path = '/docker/{}/'.format(container_name)
-            container_spec = DockerContainerSpec(
-                container_name=container_name,
-                image_name=tool_spec['image'],
-                input=tool_spec['input'](input_url, container_path))
-            client.run(container_spec)
-            return HttpResponseRedirect(container_path)
+    input_url = 'http://{}:{}/upload/{}'.format(
+        hostname(), request.get_port(), post['data'])
+    tool_spec = tools[post['tool']]
+
+    container_name = post['container_name']
+    container_path = '/docker/{}/'.format(container_name)
+    container_spec = DockerContainerSpec(
+        container_name=container_name,
+        image_name=tool_spec['image'],
+        input=tool_spec['input'](input_url, container_path))
+    client.run(container_spec)
+    return HttpResponseRedirect(container_path)
 
 
+@require_POST
 def kill(request, name):
-    if request.method == 'POST':
-        container = client.list(filters={'name': name})[0]
-        container.remove(
-            force=True,
-            v=True  # Remove volumes associated with the container
-        )
-        return HttpResponseRedirect('/')
+    container = client.list(filters={'name': name})[0]
+    container.remove(
+        force=True,
+        v=True  # Remove volumes associated with the container
+    )
+    return HttpResponseRedirect('/')
 
 
 def upload(request, name):
-    if not settings.DEBUG:
-        raise Exception('Should only be used for local demos')
     valid_re = r'^\w+(\.\w+)*$'
 
     if request.method == 'POST':
         form = UploadForm(request.POST, request.FILES)
-        if form.is_valid():
-            file = request.FILES['file']
-            assert re.match(valid_re, file.name)
-            fullpath = os.path.join(UPLOAD_DIR, file.name)
-            with open(fullpath, 'wb+') as destination:
-                for chunk in file.chunks():
-                    destination.write(chunk)
-            return HttpResponseRedirect('/?uploaded={}'.format(file.name))
+        if not form.is_valid():
+            raise ValidationError('invalid form')
+        file = request.FILES['file']
+        assert re.match(valid_re, file.name)
+        fullpath = os.path.join(UPLOAD_DIR, file.name)
+        with open(fullpath, 'wb+') as destination:
+            for chunk in file.chunks():
+                destination.write(chunk)
+        return HttpResponseRedirect('/?uploaded={}'.format(file.name))
 
     else:
         assert re.match(valid_re, name)

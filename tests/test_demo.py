@@ -1,4 +1,5 @@
 import unittest
+from io import StringIO
 
 from django.test import Client
 
@@ -33,13 +34,24 @@ class DemoPathRoutingTests(unittest.TestCase):
 
 
     def test_lauch(self):
-        pass
+        pass  # TODO
 
     def test_kill(self):
-        pass
+        pass  # TODO
 
-    def test_upload(self):
-        pass
+    def test_upload_get_200(self):
+        response = self.client.get('/upload/3x3.csv')
+        content = response.content.decode('utf-8')
+        self.assertIn(',a,b,c', content)
 
-    def test_docker(self):
-        pass
+    def test_upload_get_404(self):
+        response = self.client.get('/upload/foobar.csv')
+        self.assertEqual(404, response.status_code)
+
+    # def test_upload_post(self):
+    #     file = StringIO('')
+    #     response = self.client.post('/upload/',
+    #                                 {'name': 'empty.txt', 'file': file},
+    #                                 follow=True)
+    #     response.redirect_chain = []
+
