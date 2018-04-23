@@ -85,24 +85,27 @@ class DockerClientWrapper(object):
     def list(self, filters={}):
         return self._containers_manager.list(filters)
 
+    def kill(self, container):
+        mounts = container.attrs['Mounts']
+        container.remove(
+            force=True,
+            v=True  # Remove volumes associated with the container
+        )
+        for mount in mounts:
+            source = mount['Source']
+            target = source if os.path.isdir(
+                source) else os.path.dirname(source)
+            rmtree(
+                target,
+                ignore_errors=True
+            )
+
     def _purge(self, label=None, seconds=None):
         for container in self.list({'label': label} if label else {}):
             # TODO: Confirm that the container belongs to me
             if seconds and self._is_active(container, seconds):
                 continue
-            mounts = container.attrs['Mounts']
-            container.remove(
-                force=True,
-                v=True  # Remove volumes associated with the container
-            )
-            for mount in mounts:
-                source = mount['Source']
-                target = source if os.path.isdir(
-                    source) else os.path.dirname(source)
-                rmtree(
-                    target,
-                    ignore_errors=True
-                )
+            self.kill(container)
 
     def purge_by_label(self, label):
         """

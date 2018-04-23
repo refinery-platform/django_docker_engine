@@ -62,10 +62,7 @@ def launch(request):
 @require_POST
 def kill(request, name):
     container = client.list(filters={'name': name})[0]
-    container.remove(
-        force=True,
-        v=True  # Remove volumes associated with the container
-    )
+    client.kill(container)
     return HttpResponseRedirect('/')
 
 
