@@ -10,13 +10,13 @@ die() { set +v; echo "$*" 1>&2 ; sleep 1; exit 1; }
 ping -c1 container-name.docker.localhost > /dev/null  # Prereq for hostname-based dispatch.
 docker info | grep 'Operating System'  # Are we able to connect to Docker, and what OS is it?
 
-#start test
-#./manage.py test --verbosity=2
-#end test
-#
-#start doctest
-#python -m doctest *.md
-#end doctest
+start test
+./manage.py test --verbosity=2
+end test
+
+start doctest
+python -m doctest *.md
+end doctest
 
 start format
 flake8 --exclude build . || die "Run 'autopep8 --in-place -r .'"
