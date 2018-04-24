@@ -86,7 +86,7 @@ class DockerEngineManager(BaseManager):
                 'Unexpected client base_url: %s', self._base_url)
 
         # https://stackoverflow.com/a/166589
-        # Need to get IP of the host: There may be a better way.
+        # Need to get IP of the host: There may be a better way?
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.connect(("8.8.8.8", 80))
         self.host_ip = s.getsockname()[0]
