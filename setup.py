@@ -3,9 +3,9 @@ import re
 import sys
 from os.path import abspath, dirname, join, normpath
 
-import yaml
-
-from setuptools import find_packages, setup
+# isort has different behavior for different versions of python here.
+import yaml  # isort:skip
+from setuptools import find_packages, setup  # isort:skip
 
 with open(join(dirname(__file__), 'README.md')) as f:
     readme_md = f.read()
