@@ -60,15 +60,9 @@ and then [download](https://store.docker.com/search?offering=community&type=edit
 
 ### Docker Engine on AWS-EC2
 
-The Docker Engine can also be run on a remote machine. `cloudformation_util.py` can either be run
-on the command-line, or it can be imported and called within Python to set up a new EC2 with appropriate
-security. Once the EC2 is available, it can be provided when constructing `DockerEngineManager`,
-either implicitly as an envvar, or explicitly via an instance of the SDK client.
-
-If this will be done automatically, you can ensure that the user has the appropriate privs by running
-`set_user_policy.py`.
-
-[Notes on working with AWS](README-AWS.md) are available.
+In Refinery, the Docker Engine is running on on a separate EC2. You'll need to
+provision the server, using boto, cloudformation, terraform, or some other libary,
+and then set `DOCKER_HOST` to point at the EC2. 
 
 
 ### AWS-ECS
