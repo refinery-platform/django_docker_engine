@@ -18,7 +18,7 @@ class DemoPathRoutingTests(unittest.TestCase):
         # just the path and query; I think either is fine.
         self.assertIn(response.redirect_chain,
                       [[(expected_redirect, 302)],
-                       ('http://testserver' + expected_redirect, 302)])
+                       [('http://testserver' + expected_redirect, 302)]])
 
     def test_home(self):
         response = self.client.get('/?uploaded=3x3.csv')
