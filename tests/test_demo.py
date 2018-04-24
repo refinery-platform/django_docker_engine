@@ -13,6 +13,13 @@ class DemoPathRoutingTests(unittest.TestCase):
     def setUp(self):
         self.client = Client()
 
+    def assert_response_redirect(self, response, expected_redirect):
+        # In some environments, it's a complete URL, in others,
+        # just the path and query; I think either is fine.
+        self.assertIn(response.redirect_chain,
+                      [[(expected_redirect, 302)],
+                       ('http://testserver' + expected_redirect, 302)])
+
     def test_home(self):
         response = self.client.get('/?uploaded=3x3.csv')
         context = response.context
@@ -54,8 +61,8 @@ class DemoPathRoutingTests(unittest.TestCase):
                                          'tool': 'debugger',
                                          'container_name': 'fake-name'},
                                         follow=True)
-            self.assertEqual([('/docker/fake-name/', 302)],
-                             response.redirect_chain)
+            self.assert_response_redirect(response, '/docker/fake-name/')
+
             spec = mock_run.call_args[0][0]
             self.assertEqual(spec.container_input_path, '/tmp/input.json')
             self.assertEqual(spec.container_name, 'fake-name')
@@ -80,8 +87,7 @@ class DemoPathRoutingTests(unittest.TestCase):
             with patch.object(DockerClientWrapper,
                               'kill') as mock_kill:
                 response = self.client.post('/kill/foo', follow=True)
-                self.assertEqual([('/', 302)],
-                                 response.redirect_chain)
+                self.assert_response_redirect(response, '/')
                 mock_list.assert_called()
                 mock_kill.assert_called()
 
@@ -102,5 +108,4 @@ class DemoPathRoutingTests(unittest.TestCase):
             response = self.client.post('/upload/',
                                         {'file': handle},
                                         follow=True)
-            self.assertEqual([('/?uploaded=3x3.csv', 302)],
-                             response.redirect_chain)
+            self.assert_response_redirect(response, '/?uploaded=3x3.csv')
