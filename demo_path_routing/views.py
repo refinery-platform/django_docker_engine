@@ -48,7 +48,7 @@ def launch(request):
     try:
         port = request.get_port()
     except AttributeError:  # Django 1.8.19
-        port = request.get_host().replace('localhost:','')
+        port = request.get_host().replace('localhost:', '')
     input_url = 'http://{}:{}/upload/{}'.format(
         hostname(), port, post['data'])
     tool_spec = tools[post['tool']]
