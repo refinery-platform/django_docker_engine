@@ -1,6 +1,7 @@
 import abc
 import os
 import re
+import socket
 import subprocess
 import sys
 from datetime import datetime
@@ -82,6 +83,13 @@ class DockerEngineManager(BaseManager):
             raise RuntimeError(
                 'Unexpected client base_url: %s', self._base_url)
 
+        # https://stackoverflow.com/a/166589
+        # Need to get IP of the host: There may be a better way.
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        self.host_ip = s.getsockname()[0]
+        s.close()
+
     def _get_base_url_remote_host(self):
         remote_host_match = re.match(r'^http://([^:]+):\d+$', self._base_url)
         if remote_host_match:
@@ -115,6 +123,20 @@ class DockerEngineManager(BaseManager):
                     docker_v, sys.platform
                 ))
 
+    def _has_hostname(self):
+        # https://docs.docker.com/docker-for-mac/networking/
+        #
+        # In 18.03 on Mac, "host.docker.internal"
+        # resolves to the docker engine host.
+        # Hopefully in the future this will also work on linux.
+        #
+        # https://github.com/docker/for-linux/issues/264
+        # https://github.com/moby/moby/issues/23177
+        docker_v = [
+            int(i) for i in
+            self.info()['ServerVersion'].split('.')[:2]]
+        return docker_v >= [18, 3] and sys.platform == 'darwin'
+
     def run(self, image_name, cmd, **kwargs):
         """
         :param image_name:
@@ -122,6 +144,12 @@ class DockerEngineManager(BaseManager):
         :param kwargs:
         :return:
         """
+        if not self._has_hostname():
+            # SDK 'extra_hosts' == CLI '--add-host', I hope.
+            extra_hosts = kwargs.get('extra_hosts', {})
+            assert extra_hosts.get('host.docker.internal') is None
+            extra_hosts['host.docker.internal'] = self.host_ip
+            kwargs['extra_hosts'] = extra_hosts
         try:
             return self._containers_client.run(image_name, cmd, **kwargs)
         except docker.errors.ImageNotFound as e:
