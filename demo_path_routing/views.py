@@ -45,8 +45,12 @@ def launch(request):
 
     post = form.cleaned_data
 
-    input_url = request.build_absolute_uri('upload/' + post['data'])\
-        .replace('launch/', '', 1)  # TODO: Make less awkward
+    try:
+        port = request.get_port()
+    except AttributeError:  # Django 1.8.19
+        port = request.get_host().replace('localhost:','')
+    input_url = 'http://{}:{}/upload/{}'.format(
+        hostname(), port, post['data'])
     tool_spec = tools[post['tool']]
 
     container_name = post['container_name']
