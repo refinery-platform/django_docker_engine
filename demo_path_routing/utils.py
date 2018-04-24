@@ -1,11 +1,14 @@
 import socket
 
+
 def _get_socket():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     s.connect(("8.8.8.8", 80))
     return s.getsockname()[0]
 
+
 _HOSTNAME = _get_socket()
+
 
 def hostname():
     # 'localhost' will just point to the container, not to the host.
