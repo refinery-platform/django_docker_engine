@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <style>
+      .site-header {
+        background-color: rgba(0, 0, 0, .85);
+        -webkit-backdrop-filter: saturate(180%) blur(20px);
+        backdrop-filter: saturate(180%) blur(20px);
+      }
+      .site-header span {
+        color: #fff;
+      }
+      .site-header a {
+        color: #999;
+        transition: ease-in-out color .15s;
+      }
+      .site-header a:hover {
+        color: #fff;
+        text-decoration: none;
+      }
+    </style>
+    <title>django_docker_engine demo</title>
+  </head>
+  <body>
+
+    <nav class="site-header sticky-top py-1">
+      <div class="px-4 d-flex flex-column flex-md-row justify-content-between">
+        <span class="py-2">
+          django_docker_engine demo
+        </span>
+        <a class="py-2 d-none d-md-inline-block" href="https://github.com/refinery-platform/django_docker_engine">on github</a>
+      </div>
+    </nav>
+
+    <div class="border bg-light m-1 p-1">
+      <h2>Running containers</h2>
+      {% if container_names %}
+        <table>
+          {% for container_name in container_names %}
+            <tr>
+              <td>
+                <form action="/kill/{{ container_name }}" method="post">
+                  <input type="submit" value="Kill"></form></td>
+              <td>
+                <a href="/docker/{{ container_name }}/"
+                     target="_blank">{{ container_name }}</a></td>
+            </tr>
+          {% endfor %}
+        </table>
+      {% else %}
+        There are no running containers.
+      {% endif %}
+    </div>
+
+    <div class="border bg-light m-1 p-1">
+      <h2>Launch new container</h2>
+      <form action="/launch/" method="post" target="_blank">
+        {% csrf_token %}
+        {{ launch_form.as_p }}
+        <input type="submit" value="Launch" />
+      </form>
+    </div>
+
+    <div class="border bg-light m-1 p-1">
+      <div>
+        <h2>Upload your own data</h2>
+        <form action="/upload/" method="post" enctype="multipart/form-data">
+          {% csrf_token %}
+          {{ upload_form.as_p }}
+          <input type="submit" value="Upload" />
+        </form>
+      </div>
+    </div>
+
+  </body>
+</html>

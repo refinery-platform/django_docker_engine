@@ -1,6 +1,7 @@
 import abc
 import os
 import re
+import socket
 import subprocess
 import sys
 from datetime import datetime
@@ -36,6 +37,8 @@ class PossiblyOutOfDiskSpace(DockerEngineManagerError):
     pass
 
 
+HOSTNAME = 'host.docker.internal'
+
 class DockerEngineManager(BaseManager):
     """
     Manages interactions with a Docker Engine, running locally, or on a remote
@@ -66,6 +69,7 @@ class DockerEngineManager(BaseManager):
         self._containers_client = client.containers
         self._images_client = client.images
         self._volumes_client = client.volumes
+        self.info = client.info
         self._data_dir = data_dir
         self._root_label = root_label
 
@@ -81,6 +85,13 @@ class DockerEngineManager(BaseManager):
             raise RuntimeError(
                 'Unexpected client base_url: %s', self._base_url)
 
+        # https://stackoverflow.com/a/166589
+        # Need to get IP of the host: There may be a better way?
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        self.host_ip = s.getsockname()[0]
+        s.close()
+
     def _get_base_url_remote_host(self):
         remote_host_match = re.match(r'^http://([^:]+):\d+$', self._base_url)
         if remote_host_match:
@@ -91,6 +102,46 @@ class DockerEngineManager(BaseManager):
             'http+docker://' + host for host in ['localunixsocket', 'localhost']
         ]
 
+    def hostname(self):
+        '''
+        Inside a container, 'localhost' will just point to the container,
+        not to the host. When running Docker on Mac, fixed names are provided,
+        but in other environments determining the name is more of a hassle.
+        '''
+        return HOSTNAME
+
+        # TODO: Delete this old machinery if we're really done with it.
+        # docker_v = [
+        #     int(i) for i in
+        #     self.info()['ServerVersion'].split('.')[:2]]
+        # # Names added here must also be added to ALLOWED_HOSTS in settings.py.
+        # # https://docs.docker.com/docker-for-mac/networking/
+        # # TODO: With the next Docker release, add a version to the URL above.
+        # if docker_v >= [18, 3] and sys.platform == 'darwin':
+        #     return 'host.docker.internal'
+        # # https://docs.docker.com/v17.06/docker-for-mac/networking/
+        # elif docker_v >= [17, 6] and sys.platform == 'darwin':
+        #     return 'docker.for.mac.localhost'
+        # else:
+        #     raise Exception(
+        #         'Not sure of hostname for docker {} on {}'.format(
+        #             docker_v, sys.platform
+        #         ))
+
+    def _has_hostname(self):
+        # https://docs.docker.com/docker-for-mac/networking/
+        #
+        # In 18.03 on Mac, "host.docker.internal"
+        # resolves to the docker engine host.
+        # Hopefully in the future this will also work on linux.
+        #
+        # https://github.com/docker/for-linux/issues/264
+        # https://github.com/moby/moby/issues/23177
+        docker_v = [
+            int(i) for i in
+            self.info()['ServerVersion'].split('.')[:2]]
+        return docker_v >= [18, 3] and sys.platform == 'darwin'
+
     def run(self, image_name, cmd, **kwargs):
         """
         :param image_name:
@@ -98,6 +149,12 @@ class DockerEngineManager(BaseManager):
         :param kwargs:
         :return:
         """
+        if not self._has_hostname():
+            # SDK 'extra_hosts' == CLI '--add-host', I hope.
+            extra_hosts = kwargs.get('extra_hosts', {})
+            assert extra_hosts.get(HOSTNAME) is None
+            extra_hosts[HOSTNAME] = self.host_ip
+            kwargs['extra_hosts'] = extra_hosts
         try:
             return self._containers_client.run(image_name, cmd, **kwargs)
         except docker.errors.ImageNotFound as e:

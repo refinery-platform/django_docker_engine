@@ -1,36 +1,16 @@
-import os
+from .settings_common import *  # noqa
 
-BASE_DIR = os.path.dirname(os.path.dirname(__file__))
-
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'not-so-secret'
-
-DEBUG = True
-TEMPLATE_DEBUG = True
-
-ALLOWED_HOSTS = []
-
-INSTALLED_APPS = (
-    'django_docker_engine',
-    'revproxy'
-)
-
-MIDDLEWARE_CLASSES = ()
-
-ROOT_URLCONF = 'demo_path_routing.urls'
-WSGI_APPLICATION = 'demo_path_routing.wsgi.application'
-
-# These are only really needed for hostname-based routing,
-# but tests also use this settings.py, but this is untidy.
-DJANGO_DOCKER_HOST_SUFFIX = '.docker.localhost'
-DJANGO_DOCKER_PATH_PREFIX = '/docker/'
-
-DATABASES = {}
-
-LANGUAGE_CODE = 'en-us'
-TIME_ZONE = 'UTC'
-USE_I18N = True
-USE_L10N = True
-USE_TZ = True
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'APP_DIRS': False,
+        'DIRS': [__package__]
+    },
+]
 
 STATIC_URL = '/static/'
+
+# WARNING: Before running this on a public server,
+# you should harden or remove the upload machinery.
+ALLOWED_HOSTS = ['localhost', 'host.docker.internal']
+MIDDLEWARE_CLASSES = ()

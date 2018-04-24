@@ -9,7 +9,7 @@ from shutil import rmtree
 from sys import version_info
 from time import sleep
 
-import django
+import requests
 from mock import patch
 from requests.exceptions import ConnectionError
 
@@ -34,7 +34,8 @@ class LiveDockerTests(unittest.TestCase):
     @property
     def spec(self):
         return DockerClientSpec('/tmp/django-docker-engine-test',
-                                do_input_json_envvar=True)
+                                do_input_json_envvar=True,
+                                do_input_json_file=True)
 
     def setUp(self):
         # Docker Engine's clock stops when the computer goes to sleep,
@@ -119,7 +120,7 @@ class LiveDockerTests(unittest.TestCase):
             filters={'label': self.test_label}
         ))
 
-    def assert_loads_eventually(self, url, content, client=django.test.Client()):
+    def assert_loads_eventually(self, url, text):
         """
         Retries until it gets a 200 response. Note that these tests hit the
         container directly, rather than going through the proxy, so there
@@ -127,9 +128,9 @@ class LiveDockerTests(unittest.TestCase):
         """
         for i in range(100):
             try:
-                response = client.get(url)
+                response = requests.get(url)
                 if response.status_code == 200:
-                    self.assertIn(content, response.content)
+                    self.assertIn(text, response.text)
                 return
             except (ConnectionError, URLError):
                 pass
@@ -212,22 +213,16 @@ class LiveDockerTestsClean(LiveDockerTests):
             'extra_directories': ["/test", "/coffee"]
         })
 
-    def assert_correct_ls_tmp(self, ls_tmp_orig):
-        self.assertEqual(0, len(self.ls_tmp()))
-        self.assertEqual(0, len(ls_tmp_orig))
-
     def test_purge(self):
         """
         WARNING: I think this is prone to race conditions.
         If you get an error, try just giving it more time.
         """
         self.assertEqual(0, self.count_containers())
-        ls_tmp_orig = self.ls_tmp()
 
         url = self.get_docker_url_timestamp()[0]
         self.assertEqual(1, self.count_containers())
         self.assert_loads_eventually(url, 'Welcome to nginx!')
-        self.assert_correct_ls_tmp(ls_tmp_orig)
 
         self.client_wrapper.purge_inactive(5)
         self.assertEqual(1, self.count_containers())
