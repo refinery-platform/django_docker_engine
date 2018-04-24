@@ -76,6 +76,9 @@ class DockerClientWrapper(object):
         # Some methods of the manager will fail without a data_dir,
         # but they shouldn't be called from the read-only client in any event.
 
+    def hostname(self):
+        return self._containers_manager.hostname()
+
     def lookup_container_url(self, container_name):
         """
         Given the name of a container, returns the url mapped to the right port.

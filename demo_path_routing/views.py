@@ -13,7 +13,6 @@ from django_docker_engine.docker_utils import (DockerClientRunWrapper,
 
 from .forms import LaunchForm, UploadForm
 from .tools import tools
-from .utils import hostname
 
 client = DockerClientRunWrapper(
     DockerClientSpec(None, do_input_json_envvar=True))
@@ -46,7 +45,7 @@ def launch(request):
     post = form.cleaned_data
 
     input_url = 'http://{}:{}/upload/{}'.format(
-        hostname(), request.get_port(), post['data'])
+        client.hostname(), request.get_port(), post['data'])
     tool_spec = tools[post['tool']]
 
     container_name = post['container_name']

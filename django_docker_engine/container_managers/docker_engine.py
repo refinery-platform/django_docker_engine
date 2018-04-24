@@ -66,6 +66,7 @@ class DockerEngineManager(BaseManager):
         self._containers_client = client.containers
         self._images_client = client.images
         self._volumes_client = client.volumes
+        self.info = client.info
         self._data_dir = data_dir
         self._root_label = root_label
 
@@ -90,6 +91,29 @@ class DockerEngineManager(BaseManager):
         return self._base_url in [
             'http+docker://' + host for host in ['localunixsocket', 'localhost']
         ]
+
+    def hostname(self):
+        '''
+        Inside a container, 'localhost' will just point to the container,
+        not to the host. When running Docker on Mac, fixed names are provided,
+        but in other environments determining the name is more of a hassle.
+        '''
+        docker_v = [
+            int(i) for i in
+            self.info()['ServerVersion'].split('.')[:2]]
+        # Names added here must also be added to ALLOWED_HOSTS in settings.py.
+        # https://docs.docker.com/docker-for-mac/networking/
+        # TODO: With the next Docker release, add a version to the URL above.
+        if docker_v >= [18, 3] and sys.platform == 'darwin':
+            return 'host.docker.internal'
+        # https://docs.docker.com/v17.06/docker-for-mac/networking/
+        elif docker_v >= [17, 6] and sys.platform == 'darwin':
+            return 'docker.for.mac.localhost'
+        else:
+            raise Exception(
+                'Not sure of hostname for docker {} on {}'.format(
+                    docker_v, sys.platform
+                ))
 
     def run(self, image_name, cmd, **kwargs):
         """
