@@ -37,6 +37,8 @@ class PossiblyOutOfDiskSpace(DockerEngineManagerError):
     pass
 
 
+HOSTNAME = 'host.docker.internal'
+
 class DockerEngineManager(BaseManager):
     """
     Manages interactions with a Docker Engine, running locally, or on a remote
@@ -106,22 +108,25 @@ class DockerEngineManager(BaseManager):
         not to the host. When running Docker on Mac, fixed names are provided,
         but in other environments determining the name is more of a hassle.
         '''
-        docker_v = [
-            int(i) for i in
-            self.info()['ServerVersion'].split('.')[:2]]
-        # Names added here must also be added to ALLOWED_HOSTS in settings.py.
-        # https://docs.docker.com/docker-for-mac/networking/
-        # TODO: With the next Docker release, add a version to the URL above.
-        if docker_v >= [18, 3] and sys.platform == 'darwin':
-            return 'host.docker.internal'
-        # https://docs.docker.com/v17.06/docker-for-mac/networking/
-        elif docker_v >= [17, 6] and sys.platform == 'darwin':
-            return 'docker.for.mac.localhost'
-        else:
-            raise Exception(
-                'Not sure of hostname for docker {} on {}'.format(
-                    docker_v, sys.platform
-                ))
+        return HOSTNAME
+
+        # TODO: Delete this old machinery if we're really done with it.
+        # docker_v = [
+        #     int(i) for i in
+        #     self.info()['ServerVersion'].split('.')[:2]]
+        # # Names added here must also be added to ALLOWED_HOSTS in settings.py.
+        # # https://docs.docker.com/docker-for-mac/networking/
+        # # TODO: With the next Docker release, add a version to the URL above.
+        # if docker_v >= [18, 3] and sys.platform == 'darwin':
+        #     return 'host.docker.internal'
+        # # https://docs.docker.com/v17.06/docker-for-mac/networking/
+        # elif docker_v >= [17, 6] and sys.platform == 'darwin':
+        #     return 'docker.for.mac.localhost'
+        # else:
+        #     raise Exception(
+        #         'Not sure of hostname for docker {} on {}'.format(
+        #             docker_v, sys.platform
+        #         ))
 
     def _has_hostname(self):
         # https://docs.docker.com/docker-for-mac/networking/
@@ -147,8 +152,8 @@ class DockerEngineManager(BaseManager):
         if not self._has_hostname():
             # SDK 'extra_hosts' == CLI '--add-host', I hope.
             extra_hosts = kwargs.get('extra_hosts', {})
-            assert extra_hosts.get('host.docker.internal') is None
-            extra_hosts['host.docker.internal'] = self.host_ip
+            assert extra_hosts.get(HOSTNAME) is None
+            extra_hosts[HOSTNAME] = self.host_ip
             kwargs['extra_hosts'] = extra_hosts
         try:
             return self._containers_client.run(image_name, cmd, **kwargs)

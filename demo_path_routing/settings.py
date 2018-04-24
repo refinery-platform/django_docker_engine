@@ -12,6 +12,5 @@ STATIC_URL = '/static/'
 
 # WARNING: Before running this on a public server,
 # you should harden or remove the upload machinery.
-ALLOWED_HOSTS = ['localhost',
-                 'docker.for.mac.localhost', 'host.docker.internal']
+ALLOWED_HOSTS = ['localhost', 'host.docker.internal']
 MIDDLEWARE_CLASSES = ()
