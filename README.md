@@ -15,6 +15,26 @@ In order for a Docker container to work with this package it must:
 - listen on some port for HTTP connections, and
 - accept a single JSON file as input.
 
+## Quick Demo
+
+Install [Docker](https://store.docker.com/search?offering=community&type=edition)
+if you haven't already, then download the project, install dependencies, and
+run the demo server:
+
+```
+$ git clone https://github.com/mccalluc/django_docker_engine.git
+$ cd django_docker_engine
+$ pip install -r requirements-dev.txt
+$ pip install -r requirements.txt
+$ ./manage.py runserver
+```
+
+Visit the [demo server](http://localhost:8000/): From there you can pick a visualization
+tool and a data file to launch a container, see the requests made against
+each container, and kill the containers you've launched.
+
+## More information
+
 The Refinery team maintains a [registry](https://github.com/refinery-platform/visualization-tools)
 of Docker images which can be plugged in to this framework. It includes:
 

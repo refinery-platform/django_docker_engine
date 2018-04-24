@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 class DockerContainerSpec():
 
     def __init__(self, image_name, container_name,
-                 input={},
+                 input={},  # noqa: A002
                  container_input_path='/tmp/input.json',
                  extra_directories=[],
                  labels={},
@@ -28,6 +28,14 @@ class DockerContainerSpec():
         self.labels = labels
         self.container_port = container_port
         self.cpus = cpus
+
+    def __repr__(self):
+        kwargs = ', '.join(
+            ['{}={}'.format(a, repr(getattr(self, a)))
+             for a in dir(self)
+             if not a.startswith('_')])
+        name = self.__class__.__name__
+        return '{}({})'.format(name, kwargs)
 
 
 class DockerClientSpec():
@@ -77,24 +85,27 @@ class DockerClientWrapper(object):
     def list(self, filters={}):
         return self._containers_manager.list(filters)
 
+    def kill(self, container):
+        mounts = container.attrs['Mounts']
+        container.remove(
+            force=True,
+            v=True  # Remove volumes associated with the container
+        )
+        for mount in mounts:
+            source = mount['Source']
+            target = source if os.path.isdir(
+                source) else os.path.dirname(source)
+            rmtree(
+                target,
+                ignore_errors=True
+            )
+
     def _purge(self, label=None, seconds=None):
         for container in self.list({'label': label} if label else {}):
             # TODO: Confirm that the container belongs to me
             if seconds and self._is_active(container, seconds):
                 continue
-            mounts = container.attrs['Mounts']
-            container.remove(
-                force=True,
-                v=True  # Remove volumes associated with the container
-            )
-            for mount in mounts:
-                source = mount['Source']
-                target = source if os.path.isdir(
-                    source) else os.path.dirname(source)
-                rmtree(
-                    target,
-                    ignore_errors=True
-                )
+            self.kill(container)
 
     def purge_by_label(self, label):
         """
@@ -158,7 +169,7 @@ class DockerClientRunWrapper(DockerClientWrapper):
     def _make_volume_on_host(self):
         return self._containers_manager.create_volume().name
 
-    def _write_input_to_host(self, input):
+    def _write_input_to_host(self, input):  # noqa: A002
         host_input_dir = self._make_directory_on_host()
         # The host filename "input.json" is arbitrary.
         host_input_path = os.path.join(host_input_dir, 'input.json')

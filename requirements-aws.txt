@@ -1,3 +1,0 @@
-# TODO: Clarify what our direction with AWS is
-# boto3
-# troposphere
