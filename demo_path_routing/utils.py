@@ -11,7 +11,7 @@ def hostname():
     docker_v = [int(i) for i in client.info()['ServerVersion'].split('.')[:2]]
     # Additions here must also be added to ALLOWED_HOSTS in settings.py.
     # https://docs.docker.com/docker-for-mac/networking/
-    if docker_v >= [18, 3]:
+    if docker_v >= [18, 3] and sys.platform == 'darwin':
         return 'host.docker.internal'
     # https://docs.docker.com/v17.06/docker-for-mac/networking/
     elif docker_v >= [17, 6] and sys.platform == 'darwin':
