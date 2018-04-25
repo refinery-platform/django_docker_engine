@@ -1,7 +1,8 @@
-import docker
 import re
 import subprocess
 import sys
+
+import docker
 
 
 def _get_hostname():
@@ -29,6 +30,7 @@ def _get_hostname():
             host_lines[0], host_lines)
         return match.group(0)
 
+
 _HOSTNAME = _get_hostname()
 
 
@@ -38,5 +40,3 @@ def hostname():
     # In the future, I hope this will be simplified.
 
     return _HOSTNAME
-
-
