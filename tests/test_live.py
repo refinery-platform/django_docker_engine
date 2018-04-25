@@ -74,7 +74,7 @@ class PathRoutingMechanicalSoupTests(unittest.TestCase):
         self.assert_tool('debugger', 'Tool Launch Data')
 
     def testHeatmapLaunch(self):
-        self.assert_tool('heatmap', 'Heatmap?')
+        self.assert_tool('heatmap', 'Please wait')  # TODO
 
     # Might add other tools to this list, but since downloading images
     # can take a while, should focus on the ones with problems.
