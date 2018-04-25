@@ -57,7 +57,7 @@
 
     <div class="border bg-light m-1 p-1">
       <h2>Launch new container</h2>
-      <form action="/launch/" method="post" target="_blank">
+      <form action="/launch/" method="post" target="_blank" id="launch">
         {% csrf_token %}
         {{ launch_form.as_p }}
         <input type="submit" value="Launch" />
