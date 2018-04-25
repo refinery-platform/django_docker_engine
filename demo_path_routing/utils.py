@@ -15,20 +15,23 @@ def _get_hostname():
     # https://docs.docker.com/v17.06/docker-for-mac/networking/
     elif docker_v >= [17, 6] and sys.platform == 'darwin':
         return 'docker.for.mac.localhost'
-    elif sys.platform == 'darwin':
+    elif sys.platform in ['darwin', 'win32']:
         raise Exception('Not sure of hostname for docker {} on {}'.format(
             docker_v, sys.platform
         ))
     else:
-        # https://stackoverflow.com/a/31328031
+        # This wouldn't work on Mac because:
+        #  -- "ip" is not installed by default
+        #  -- The "docker0" bridge is in the VM, but not on the Mac itself.
         lines = subprocess.check_output(
-            ['ip', 'addr', 'show', 'docker0']).decode('utf-8').splitlines()
-        host_lines = [line for line in lines if line.endswith('docker0')]
-        assert len(host_lines) == 1, 'No docker0 line in {}'.format(lines)
-        match = re.search(r'\d+\.\d+\.\d+\.\d+', host_lines[0])
-        assert match, 'No IP in "{}", from: {}'.format(
-            host_lines[0], host_lines)
-        return match.group(0)
+            ['ip', 'route']).decode('utf-8').splitlines()
+        host_lines = [line for line in lines if 'docker0' in line]
+        assert len(host_lines) == 1,\
+            'Expected exactly 1 "docker0" line in {}'.format(lines)
+        ip = host_lines[0].strip().split(' ')[-1]
+        assert re.match(r'\d+\.\d+\.\d+\.\d+', ip),\
+            'Last element not ip: {}'.format(host_lines[0])
+        return ip
 
 
 _HOSTNAME = _get_hostname()
