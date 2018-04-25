@@ -42,24 +42,34 @@ class PathRoutingMechanicalSoupTests(unittest.TestCase):
     def tearDown(self):
         self.process.kill()
 
-    def testDebuggerLaunch(self):
+    def assert_tool(self, tool, expected_h1):
         browser = mechanicalsoup.StatefulBrowser()
         browser.open(self.home)
 
         browser.select_form('#launch')
-        container_name = 'test-debugger'
+        browser['tool'] = tool
+        container_name = 'test-' + tool
         browser['container_name'] = container_name
         browser.submit_selected()
 
-        self.assertEqual(browser.get_url(),
-                         '{}docker/{}/'.format(self.home, container_name))
         for i in range(5):
             response = browser.refresh()
             if response.status_code == 200:
-                continue
+                break
             else:
                 time.sleep(1)
-        self.assertIn('Tool Launch Data', browser.get_current_page().h1)
+        self.assertEqual(browser.get_url(),
+                         '{}docker/{}/'.format(self.home, container_name))
+        self.assertIn(expected_h1, browser.get_current_page().h1)
+
+        browser.open(self.home)
+        browser.select_form('#kill-' + container_name)
+        browser.submit_selected()
+
+        self.assertEqual(browser.get_url(), self.home)
+
+    def testDebuggerLaunch(self):
+        self.assert_tool('debugger', 'Tool Launch Data')
 
 
 class PathRoutingClientTests(unittest.TestCase):

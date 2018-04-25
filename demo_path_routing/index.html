@@ -42,7 +42,7 @@
           {% for container_name in container_names %}
             <tr>
               <td>
-                <form action="/kill/{{ container_name }}" method="post">
+                <form action="/kill/{{ container_name }}" method="post" id="kill-{{ container_name }}">
                   <input type="submit" value="Kill"></form></td>
               <td>
                 <a href="/docker/{{ container_name }}/"
