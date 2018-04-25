@@ -6,9 +6,9 @@ import unittest
 from os import mkdir
 from shutil import rmtree
 
+import mechanicalsoup
 import requests
 from bs4 import BeautifulSoup
-import mechanicalsoup
 
 from django_docker_engine.docker_utils import (DockerClientRunWrapper,
                                                DockerClientSpec,
@@ -21,6 +21,7 @@ def free_port():
     s.bind(('', 0))
     return str(s.getsockname()[1])
 
+
 def wait_for_server(url):
     for i in range(5):
         try:
@@ -29,6 +30,7 @@ def wait_for_server(url):
         except:
             time.sleep(1)
     raise Exception('{} never responded'.format(url))
+
 
 class PathRoutingMechanicalSoupTests(unittest.TestCase):
 
