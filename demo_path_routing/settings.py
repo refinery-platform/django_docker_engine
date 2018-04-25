@@ -1,6 +1,5 @@
-from utils import hostname
-
 from .settings_common import *  # noqa
+from .utils import hostname
 
 TEMPLATES = [
     {
