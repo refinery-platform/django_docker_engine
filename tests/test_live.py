@@ -35,10 +35,10 @@ def wait_for_server(url):
 class PathRoutingMechanicalSoupTests(unittest.TestCase):
 
     def setUp(self):
-        port = free_port()
+        self.port = free_port()
         self.process = subprocess.Popen(
-            ['./manage.py', 'runserver', port])
-        self.home = 'http://localhost:{}/'.format(port)
+            ['./manage.py', 'runserver', self.port])
+        self.home = 'http://localhost:{}/'.format(self.port)
         wait_for_server(self.home)
 
     def tearDown(self):
@@ -50,7 +50,7 @@ class PathRoutingMechanicalSoupTests(unittest.TestCase):
 
         browser.select_form('#launch')
         browser['tool'] = tool
-        container_name = 'test-' + tool
+        container_name = 'test-{}-{}'.format(tool, self.port)
         browser['container_name'] = container_name
         browser.submit_selected()
 
@@ -72,6 +72,12 @@ class PathRoutingMechanicalSoupTests(unittest.TestCase):
 
     def testDebuggerLaunch(self):
         self.assert_tool('debugger', 'Tool Launch Data')
+
+    def testHeatmapLaunch(self):
+        self.assert_tool('heatmap', 'Heatmap?')
+
+    # Might add other tools to this list, but since downloading images
+    # can take a while, should focus on the ones with problems.
 
 
 class PathRoutingClientTests(unittest.TestCase):
