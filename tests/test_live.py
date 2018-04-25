@@ -6,10 +6,10 @@ import unittest
 from os import mkdir
 from shutil import rmtree
 
-import mechanicalsoup
 import requests
 from bs4 import BeautifulSoup
 
+import mechanicalsoup
 from django_docker_engine.docker_utils import (DockerClientRunWrapper,
                                                DockerClientSpec,
                                                DockerContainerSpec)
