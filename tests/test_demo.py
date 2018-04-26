@@ -8,7 +8,7 @@ from django_docker_engine.docker_utils import (DockerClientRunWrapper,
                                                DockerClientWrapper)
 
 
-class DemoPathRoutingTests(unittest.TestCase):
+class PathRoutingTests(unittest.TestCase):
 
     def setUp(self):
         self.client = Client()

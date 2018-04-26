@@ -6,7 +6,7 @@ from django_docker_engine.middleware.hostname_routing import \
     HostnameRoutingMiddleware
 
 
-class HostnameRoutingTests(unittest.TestCase):
+class HostnameRoutingMiddlewareTests(unittest.TestCase):
 
     def test_hostname_routing(self):
         name = 'foobar'

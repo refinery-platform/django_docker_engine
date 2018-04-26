@@ -6,6 +6,7 @@ import unittest
 from os import mkdir
 from shutil import rmtree
 
+import mechanicalsoup
 import requests
 from bs4 import BeautifulSoup
 
@@ -15,7 +16,71 @@ from django_docker_engine.docker_utils import (DockerClientRunWrapper,
 from tests import ALPINE_IMAGE, ECHO_IMAGE, NGINX_IMAGE
 
 
-class PathRoutingTests(unittest.TestCase):
+def free_port():
+    s = socket.socket()
+    s.bind(('', 0))
+    return str(s.getsockname()[1])
+
+
+def wait_for_server(url):
+    for i in range(5):
+        try:
+            requests.get(url)
+            return
+        except:
+            time.sleep(1)
+    raise Exception('{} never responded'.format(url))
+
+
+class PathRoutingMechanicalSoupTests(unittest.TestCase):
+
+    def setUp(self):
+        self.port = free_port()
+        self.process = subprocess.Popen(
+            ['./manage.py', 'runserver', self.port])
+        self.home = 'http://localhost:{}/'.format(self.port)
+        wait_for_server(self.home)
+
+    def tearDown(self):
+        self.process.kill()
+
+    def assert_tool(self, tool, expected_h1):
+        browser = mechanicalsoup.StatefulBrowser()
+        browser.open(self.home)
+
+        browser.select_form('#launch')
+        browser['tool'] = tool
+        container_name = 'test-{}-{}'.format(tool, self.port)
+        browser['container_name'] = container_name
+        browser.submit_selected()
+
+        for i in range(5):
+            response = browser.refresh()
+            if response.status_code == 200:
+                break
+            else:
+                time.sleep(1)
+        self.assertEqual(browser.get_url(),
+                         '{}docker/{}/'.format(self.home, container_name))
+        self.assertIn(expected_h1, browser.get_current_page().h1)
+
+        browser.open(self.home)
+        browser.select_form('#kill-' + container_name)
+        browser.submit_selected()
+
+        self.assertEqual(browser.get_url(), self.home)
+
+    def testDebuggerLaunch(self):
+        self.assert_tool('debugger', 'Tool Launch Data')
+
+    def testHeatmapLaunch(self):
+        self.assert_tool('heatmap', 'Please wait')  # TODO
+
+    # Might add other tools to this list, but since downloading images
+    # can take a while, should focus on the ones with problems.
+
+
+class PathRoutingClientTests(unittest.TestCase):
     """
     Check that the basic functionality works from end-to-end,
     starting the django server as you would from the command-line.
@@ -27,19 +92,14 @@ class PathRoutingTests(unittest.TestCase):
         def assertRegex(self, s, re):
             self.assertRegexpMatches(s, re)
 
-    def free_port(self):
-        s = socket.socket()
-        s.bind(('', 0))
-        return str(s.getsockname()[1])
-
     def setUp(self):
-        self.port = self.free_port()
+        self.port = free_port()
         self.process = subprocess.Popen(
             ['./manage.py', 'runserver', self.port])
-        time.sleep(1)
+        home = 'http://localhost:' + self.port
+        wait_for_server(home)
         self.container_name = 'test-' + self.port
-        self.url = 'http://localhost:{}/docker/{}/'.format(
-            self.port, self.container_name)
+        self.url = '{}/docker/{}/'.format(home, self.container_name)
         self.tmp_dir = '/tmp/test-' + self.port
         mkdir(self.tmp_dir)
         # TODO: Might use mkdtemp, but Docker couldn't see the directory?
@@ -153,7 +213,7 @@ class PathRoutingTests(unittest.TestCase):
             self.url, r'http://localhost:\d+/docker/test-\d+/')
 
 
-class HostRoutingTests(PathRoutingTests):
+class HostRoutingClientTests(PathRoutingClientTests):
 
     def setUp(self):
         self.container_name = 'container-name'
@@ -166,7 +226,7 @@ class HostRoutingTests(PathRoutingTests):
                     hostname, etc_hosts
                 ))
 
-        self.port = self.free_port()
+        self.port = free_port()
         self.url = 'http://{}:{}/'.format(hostname, self.port)
         self.tmp_dir = '/tmp/test-' + self.port
         mkdir(self.tmp_dir)
@@ -177,7 +237,8 @@ class HostRoutingTests(PathRoutingTests):
             './manage.py', 'runserver', self.port,
             '--settings', 'demo_host_routing.settings'
         ])
-        time.sleep(1)
+        home = 'http://localhost:' + self.port
+        wait_for_server(home)
         spec = DockerClientSpec(self.tmp_dir,
                                 do_input_json_envvar=True)
         self.client = DockerClientRunWrapper(spec)
