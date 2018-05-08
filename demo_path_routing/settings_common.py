@@ -13,6 +13,11 @@ INSTALLED_APPS = (
     'revproxy'
 )
 
+shared_middleware = (
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    __package__ + '.auth.AuthMiddleware'
+)
+
 ROOT_URLCONF = __package__ + '.urls'
 WSGI_APPLICATION = __package__ + '.wsgi.application'
 

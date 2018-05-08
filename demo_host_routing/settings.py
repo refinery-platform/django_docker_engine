@@ -10,17 +10,18 @@ ALLOWED_HOSTS = [
     '*'
 ]
 
+_shared = (
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    __package__ + '.auth.AuthMiddleware',
+)
+
 if django.VERSION >= (2, 0):
-    MIDDLEWARE = (
-        'django.contrib.sessions.middleware.SessionMiddleware',
-        __package__ + '.auth.AuthMiddleware',
+    MIDDLEWARE = shared_middleware + (
         'django_docker_engine.middleware.hostname_routing.'
         'HostnameRoutingMiddlewareCallable',
     )
 else:
-    MIDDLEWARE_CLASSES = (
-        'django.contrib.sessions.middleware.SessionMiddleware',
-        __package__ + '.auth.AuthMiddleware',
+    MIDDLEWARE_CLASSES = shared_middleware + (
         'django_docker_engine.middleware.hostname_routing.'
         'HostnameRoutingMiddleware',
     )
