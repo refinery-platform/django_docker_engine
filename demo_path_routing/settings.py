@@ -20,6 +20,6 @@ ALLOWED_HOSTS = ['*', 'localhost', '127.0.0.1', hostname()]
 if django.VERSION >= (2, 0):
     MIDDLEWARE = shared_middleware  # noqa: F405
 else:
-    MIDDLEWARE_CLASSES = shared_middleware  # noqa: F405
+    MIDDLEWARE_CLASSES = shared_middleware_classes  # noqa: F405
 
 AUTHENTICATION_BACKENDS = (__package__ + '.auth.AuthBackend')

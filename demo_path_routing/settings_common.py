@@ -15,6 +15,11 @@ INSTALLED_APPS = (
 
 shared_middleware = (
     'django.contrib.sessions.middleware.SessionMiddleware',
+    __package__ + '.auth.AuthMiddlewareCallable'
+)
+
+shared_middleware_classes = (
+    'django.contrib.sessions.middleware.SessionMiddleware',
     __package__ + '.auth.AuthMiddleware'
 )
 
