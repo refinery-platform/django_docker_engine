@@ -1,12 +1,16 @@
-class AuthBackend(object):
+class AuthBackend():
     def authenticate(self, username=None, password=None):
         return 'fake-user'
-        # if username and password:
-        #    try:
-        #        response = my_auth_function(username, password)
-        #        if response.status_code == 200:
-        #            token = response.get('my_key')
-        #            user = MyUser()
-        #            return user
-        #     except MyCustomException:
-        #           return None
+
+
+class _User():
+    def __init__(self):
+        self.is_active = True
+
+    def get_username(self):
+        return 'fake-username'
+
+
+class AuthMiddleware():
+    def process_request(self, request):
+        request.user = _User()

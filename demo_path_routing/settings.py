@@ -17,6 +17,7 @@ ALLOWED_HOSTS = ['*', 'localhost', '127.0.0.1', hostname()]
 
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
+    __package__ + '.auth.AuthMiddleware'
 )
 
 AUTHENTICATION_BACKENDS = (__package__ + '.auth.AuthBackend')
