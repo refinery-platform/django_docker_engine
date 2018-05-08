@@ -18,8 +18,8 @@ ALLOWED_HOSTS = ['*', 'localhost', '127.0.0.1', hostname()]
 # get files from the upload directory on this server.
 
 if django.VERSION >= (2, 0):
-    MIDDLEWARE = shared_middleware
+    MIDDLEWARE = shared_middleware  # noqa: F405
 else:
-    MIDDLEWARE_CLASSES = shared_middleware
+    MIDDLEWARE_CLASSES = shared_middleware  # noqa: F405
 
 AUTHENTICATION_BACKENDS = (__package__ + '.auth.AuthBackend')

@@ -16,12 +16,12 @@ _shared = (
 )
 
 if django.VERSION >= (2, 0):
-    MIDDLEWARE = shared_middleware + (
+    MIDDLEWARE = shared_middleware + (  # noqa: F405
         'django_docker_engine.middleware.hostname_routing.'
         'HostnameRoutingMiddlewareCallable',
     )
 else:
-    MIDDLEWARE_CLASSES = shared_middleware + (
+    MIDDLEWARE_CLASSES = shared_middleware + (  # noqa: F405
         'django_docker_engine.middleware.hostname_routing.'
         'HostnameRoutingMiddleware',
     )
