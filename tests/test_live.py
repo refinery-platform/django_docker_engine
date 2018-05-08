@@ -3,7 +3,7 @@ import socket
 import subprocess
 import time
 import unittest
-from os import mkdir, environ
+from os import environ, mkdir
 from shutil import rmtree
 
 import mechanicalsoup
