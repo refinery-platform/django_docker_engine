@@ -1,3 +1,3 @@
-from django_docker_engine.proxy import Proxy
+from demo_path_routing.proxy import AuthProxy
 
-urlpatterns = Proxy().url_patterns()
+urlpatterns = AuthProxy().url_patterns()

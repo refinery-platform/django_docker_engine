@@ -15,6 +15,8 @@ ALLOWED_HOSTS = ['*', 'localhost', '127.0.0.1', hostname()]
 # hostname() allows the docker containers to
 # get files from the upload directory on this server.
 
-MIDDLEWARE_CLASSES = ()
+MIDDLEWARE_CLASSES = (
+    'django.contrib.sessions.middleware.SessionMiddleware',
+)
 
 AUTHENTICATION_BACKENDS = (__package__ + '.auth.AuthBackend')
