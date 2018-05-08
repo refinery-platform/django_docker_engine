@@ -16,3 +16,5 @@ ALLOWED_HOSTS = ['*', 'localhost', '127.0.0.1', hostname()]
 # get files from the upload directory on this server.
 
 MIDDLEWARE_CLASSES = ()
+
+AUTHENTICATION_BACKENDS = (__package__ + '.auth.AuthBackend')
