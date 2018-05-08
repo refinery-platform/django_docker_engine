@@ -10,18 +10,24 @@ TEMPLATE_DEBUG = True
 
 INSTALLED_APPS = (
     'django_docker_engine',
-    'revproxy'
+    'revproxy',
+    'django.contrib.auth',
+    'django.contrib.contenttypes'
 )
 
 shared_middleware = (
     'django.contrib.sessions.middleware.SessionMiddleware',
-    __package__ + '.auth.AuthMiddlewareCallable'
+    'django.contrib.auth.middleware.AuthenticationMiddleware'
+    # __package__ + '.auth.AuthMiddlewareCallable'
 )
 
 shared_middleware_classes = (
     'django.contrib.sessions.middleware.SessionMiddleware',
-    __package__ + '.auth.AuthMiddleware'
+    'django.contrib.auth.middleware.AuthenticationMiddleware'
+    # __package__ + '.auth.AuthMiddleware'
 )
+
+SESSION_ENGINE = 'django.contrib.sessions.backends.file'
 
 ROOT_URLCONF = __package__ + '.urls'
 WSGI_APPLICATION = __package__ + '.wsgi.application'
