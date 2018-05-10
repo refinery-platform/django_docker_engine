@@ -20,6 +20,18 @@ ALLOWED_HOSTS = ['*', 'localhost', '127.0.0.1', hostname()]
 if django.VERSION >= (2, 0):
     MIDDLEWARE = shared_middleware  # noqa: F405
 else:
-    MIDDLEWARE_CLASSES = shared_middleware_classes  # noqa: F405
+    MIDDLEWARE_CLASSES = shared_middleware  # noqa: F405
 
 AUTHENTICATION_BACKENDS = ('django.contrib.auth.backends.ModelBackend')
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': 'database.sqlite',
+    }
+}
+
+INSTALLED_APPS = INSTALLED_APPS + (
+    'django.contrib.auth',
+    'django.contrib.contenttypes'
+)

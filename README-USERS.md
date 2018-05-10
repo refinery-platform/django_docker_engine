@@ -35,7 +35,7 @@ There are two ways to map incoming requests to containers.
 The default is path-based routing, but domain-name routing
 can also be used.
 
-[Path-based routing](demo_path_routing):
+[Path-based routing](demo_path_routing_no_auth):
 - is simpler, but
 - it requires a prefix on every path passed to the containerized webapp.
 - ie: You may not use any paths starting with "/".
@@ -101,7 +101,8 @@ and not just have installed it via pip.)
 
 # The nginx container is responding to requests:
 >>> import requests
->>> assert 'Welcome to nginx' in requests.get(container_url).text
+>>> text = requests.get(container_url).text
+>>> assert 'Welcome to nginx' in text, 'unexpected: {}'.format(text)
 
 # Start Django as a subprocess, and give it a moment to start:
 >>> import subprocess
@@ -114,14 +115,15 @@ and not just have installed it via pip.)
 >>> sleep(2)
 
 # There is a homepage at '/':
->>> response_text = requests.get(django_url).text
->>> assert 'django_docker_engine demo' in response_text
+>>> text = requests.get(django_url).text
+>>> assert 'django_docker_engine demo' in text, 'unexpected: {}'.format(text)
 
 # Under '/docker/, requests are proxied to containers by name:
 >>> proxy_url = django_url + '/docker/' + container_name + '/'
 >>> proxy_url
 'http://localhost:8000/docker/basic-nginx/'
->>> assert 'Welcome to nginx' in requests.get(proxy_url).text
+>>> text = requests.get(proxy_url).text
+>>> assert 'Welcome to nginx' in text, 'unexpected: {}'.format(text)
 
 ```
 
@@ -139,17 +141,17 @@ to refresh indefinitely.
 
 ```
 # Make sure Django is still up:
->>> response_text = requests.get(django_url).text
->>> assert 'django_docker_engine demo' in response_text
+>>> text = requests.get(django_url).text
+>>> assert 'django_docker_engine demo' in text, 'unexpected: {}'.format(text)
 
 # Try to get a container that doesn't exist:
 >>> container_name = 'please-wait'
 >>> proxy_url = django_url + '/docker/' + container_name + '/'
 >>> proxy_url
 'http://localhost:8000/docker/please-wait/'
->>> response_text = requests.get(proxy_url).text
->>> assert 'Please wait' in response_text
->>> assert 'http-equiv="refresh"' in response_text
+>>> text = requests.get(proxy_url).text
+>>> assert 'Please wait' in text, 'unexpected: {}'.format(text)
+>>> assert 'http-equiv="refresh"' in text, 'unexpected: {}'.format(text)
 
 ```
 
@@ -162,7 +164,7 @@ shows how it can be configured:
 
 ```
 >>> from os import environ
->>> environ['DJANGO_SETTINGS_MODULE'] = 'demo_path_routing.settings'
+>>> environ['DJANGO_SETTINGS_MODULE'] = 'demo_path_routing_no_auth.settings'
 >>> from django_docker_engine.historian import FileHistorian
 >>> from django_docker_engine.proxy import Proxy
 >>> from django.test import RequestFactory

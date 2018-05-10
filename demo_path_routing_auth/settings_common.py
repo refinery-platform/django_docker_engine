@@ -11,8 +11,6 @@ TEMPLATE_DEBUG = True
 INSTALLED_APPS = (
     'django_docker_engine',
     'revproxy',
-    'django.contrib.auth',
-    'django.contrib.contenttypes'
 )
 
 shared_middleware = (
@@ -29,13 +27,6 @@ WSGI_APPLICATION = __package__ + '.wsgi.application'
 # TODO: These are not needed in demo_path_routing... except for tests?
 DJANGO_DOCKER_HOST_SUFFIX = '.docker.localhost'
 DJANGO_DOCKER_PATH_PREFIX = '/docker/'
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': 'database.sqlite',
-    }
-}
 
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'

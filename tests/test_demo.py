@@ -103,7 +103,7 @@ class PathRoutingTests(unittest.TestCase):
     def test_upload_post(self):
         # Just load the fixture on top of itself.
         # Using mocks would be an alternative.
-        path = settings.BASE_DIR + '/demo_path_routing/upload/3x3.csv'
+        path = settings.BASE_DIR + '/demo_path_routing_auth/upload/3x3.csv'
         with open(path) as handle:
             response = self.client.post('/upload/',
                                         {'file': handle},
