@@ -22,4 +22,4 @@ if django.VERSION >= (2, 0):
 else:
     MIDDLEWARE_CLASSES = shared_middleware_classes  # noqa: F405
 
-AUTHENTICATION_BACKENDS = (__package__ + '.auth.AuthBackend')
+AUTHENTICATION_BACKENDS = ('django.contrib.auth.backends.ModelBackend')

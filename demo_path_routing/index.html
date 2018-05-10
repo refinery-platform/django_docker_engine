@@ -36,6 +36,23 @@
     </nav>
 
     <div class="border bg-light m-1 p-1">
+      <h2>Fake login/logout</h2>
+      {% if user.is_authenticated %}
+        <form action="/logout/" method="post" id="logout">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="/">
+          <input type="submit" value="Logout"></form>
+      {% else %}
+        <form action="/login/" method="post" id="login">
+          {% csrf_token %}
+          <input type="hidden" name="username" value="UNUSED">
+          <input type="hidden" name="password" value="UNUSED">
+          <input type="hidden" name="next" value="/">
+          <input type="submit" value="Login"></form>
+      {% endif %}
+    </div>
+
+    <div class="border bg-light m-1 p-1">
       <h2>Running containers</h2>
       {% if container_names %}
         <table>
@@ -43,6 +60,7 @@
             <tr>
               <td>
                 <form action="/kill/{{ container_name }}" method="post" id="kill-{{ container_name }}">
+                  {% csrf_token %}
                   <input type="submit" value="Kill"></form></td>
               <td>
                 <a href="/docker/{{ container_name }}/"

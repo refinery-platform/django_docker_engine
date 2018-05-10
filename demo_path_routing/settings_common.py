@@ -16,15 +16,9 @@ INSTALLED_APPS = (
 )
 
 shared_middleware = (
+    'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware'
-    # __package__ + '.auth.AuthMiddlewareCallable'
-)
-
-shared_middleware_classes = (
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware'
-    # __package__ + '.auth.AuthMiddleware'
 )
 
 SESSION_ENGINE = 'django.contrib.sessions.backends.file'
@@ -36,7 +30,12 @@ WSGI_APPLICATION = __package__ + '.wsgi.application'
 DJANGO_DOCKER_HOST_SUFFIX = '.docker.localhost'
 DJANGO_DOCKER_PATH_PREFIX = '/docker/'
 
-DATABASES = {}
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': 'database.sqlite',
+    }
+}
 
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'

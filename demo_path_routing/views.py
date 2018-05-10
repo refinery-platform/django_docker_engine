@@ -2,6 +2,7 @@ import os
 import re
 
 from django import forms
+from django.contrib import auth
 from django.core.exceptions import ValidationError
 from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
@@ -22,9 +23,6 @@ UPLOAD_DIR = os.path.join(os.path.dirname(__file__), 'upload')
 
 def index(request):
     assert hasattr(request, 'user')
-    # TODO
-    # import pdb; pdb.set_trace()
-    # request.session.items()
     launch_form = LaunchForm()
     # TODO: Pass this info through the constructor
     launch_form.fields['data'] = forms.ChoiceField(
@@ -37,8 +35,24 @@ def index(request):
         'container_names': [container.name for container in client.list()],
         'launch_form': launch_form,
         'upload_form': UploadForm(),
+        'user': request.user  # TODO: necessary?
+        # Template worked without it, but user login status was wrong.
     }
     return render(request, 'index.html', context)
+
+
+@require_POST
+def login(request):
+    user = auth.authenticate(username='fake-username', password='fake-password')
+    if user is not None:
+        auth.login(request, user)
+        return HttpResponseRedirect('/')
+
+
+@require_POST
+def logout(request):
+    auth.logout(request)
+    return HttpResponseRedirect('/')
 
 
 @require_POST

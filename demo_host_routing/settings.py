@@ -16,7 +16,7 @@ if django.VERSION >= (2, 0):
         'HostnameRoutingMiddlewareCallable',
     )
 else:
-    MIDDLEWARE_CLASSES = shared_middleware_classes + (  # noqa: F405
+    MIDDLEWARE_CLASSES = shared_middleware + (  # noqa: F405
         'django_docker_engine.middleware.hostname_routing.'
         'HostnameRoutingMiddleware',
     )
