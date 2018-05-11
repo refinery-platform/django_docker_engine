@@ -34,9 +34,11 @@ def index(request):
         'container_names': [container.name for container in client.list()],
         'launch_form': launch_form,
         'upload_form': UploadForm(),
-        'user': request.user  # TODO: necessary?
-        # Template worked without it, but user login status was wrong.
     }
+    if hasattr(request, 'user'):
+        context['user'] = request.user
+        # TODO: Why is this needed?
+        # Template worked without it, but user login status was wrong.
     return render(request, 'index.html', context)
 
 
