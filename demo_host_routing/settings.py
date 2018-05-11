@@ -11,12 +11,12 @@ ALLOWED_HOSTS = [
 ]
 
 if django.VERSION >= (2, 0):
-    MIDDLEWARE = (
+    MIDDLEWARE = shared_middleware + (  # noqa: F405
         'django_docker_engine.middleware.hostname_routing.'
         'HostnameRoutingMiddlewareCallable',
     )
 else:
-    MIDDLEWARE_CLASSES = (
+    MIDDLEWARE_CLASSES = shared_middleware + (  # noqa: F405
         'django_docker_engine.middleware.hostname_routing.'
         'HostnameRoutingMiddleware',
     )

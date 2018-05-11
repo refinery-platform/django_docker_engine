@@ -3,7 +3,7 @@ import socket
 import subprocess
 import time
 import unittest
-from os import mkdir
+from os import environ, mkdir
 from shutil import rmtree
 
 import mechanicalsoup
@@ -44,7 +44,7 @@ class PathRoutingMechanicalSoupTests(unittest.TestCase):
     def tearDown(self):
         self.process.kill()
 
-    def assert_tool(self, tool, expected_h1):
+    def assert_tool(self, tool, expected):
         browser = mechanicalsoup.StatefulBrowser()
         browser.open(self.home)
 
@@ -62,7 +62,13 @@ class PathRoutingMechanicalSoupTests(unittest.TestCase):
                 time.sleep(1)
         self.assertEqual(browser.get_url(),
                          '{}docker/{}/'.format(self.home, container_name))
-        self.assertIn(expected_h1, browser.get_current_page().h1)
+        current_page = browser.get_current_page()
+        if current_page.h1:
+            self.assertIn(expected, current_page.h1)
+        elif current_page.title:
+            self.assertIn(expected, current_page.title)
+        else:
+            self.fail('No title or h1 in {}'.format(current_page))
 
         browser.open(self.home)
         browser.select_form('#kill-' + container_name)
@@ -73,8 +79,17 @@ class PathRoutingMechanicalSoupTests(unittest.TestCase):
     def testDebuggerLaunch(self):
         self.assert_tool('debugger', 'Tool Launch Data')
 
-    def testHeatmapLaunch(self):
-        self.assert_tool('heatmap', 'Please wait')  # TODO
+    @unittest.skipIf(
+        environ.get('TRAVIS'),
+        'https://github.com/refinery-platform/django_docker_engine/issues/143')
+    def testHeatmapLaunchLocal(self):
+        self.assert_tool('heatmap', 'Heatmap + Scatterplots')
+
+    @unittest.skipUnless(
+        environ.get('TRAVIS'),
+        'https://github.com/refinery-platform/django_docker_engine/issues/143')
+    def testHeatmapLaunchTravis(self):
+        self.assert_tool('heatmap', 'Please wait')
 
     # Might add other tools to this list, but since downloading images
     # can take a while, should focus on the ones with problems.
