@@ -17,10 +17,14 @@ ALLOWED_HOSTS = ['*', 'localhost', '127.0.0.1', hostname()]
 # hostname() allows the docker containers to
 # get files from the upload directory on this server.
 
+
+auth_middleware = shared_middleware + (    # noqa: F405
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware')
 if django.VERSION >= (2, 0):
-    MIDDLEWARE = shared_middleware  # noqa: F405
+    MIDDLEWARE = auth_middleware
 else:
-    MIDDLEWARE_CLASSES = shared_middleware  # noqa: F405
+    MIDDLEWARE_CLASSES = auth_middleware
 
 AUTHENTICATION_BACKENDS = ('django.contrib.auth.backends.ModelBackend')
 

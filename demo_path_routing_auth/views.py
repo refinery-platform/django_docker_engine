@@ -22,7 +22,6 @@ UPLOAD_DIR = os.path.join(os.path.dirname(__file__), 'upload')
 
 
 def index(request):
-    assert hasattr(request, 'user')
     launch_form = LaunchForm()
     # TODO: Pass this info through the constructor
     launch_form.fields['data'] = forms.ChoiceField(

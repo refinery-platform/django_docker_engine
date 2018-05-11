@@ -15,8 +15,6 @@ INSTALLED_APPS = (
 
 shared_middleware = (
     'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware'
 )
 
 SESSION_ENGINE = 'django.contrib.sessions.backends.file'
