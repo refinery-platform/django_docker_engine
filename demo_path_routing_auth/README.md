@@ -7,5 +7,5 @@ migrations and creates a test user.
 
 `django_docker_engine` itself has no
 functionality related to users, but if a proxy is incorrectly configured,
-sessions cookies can be lost: this demo gives us a place to make sure that
+sessions cookies can be lost: This demo gives us a place to make sure that
 does not happen.

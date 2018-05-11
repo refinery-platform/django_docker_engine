@@ -1,6 +1,6 @@
 import django
 
-from .settings_common import *  # noqa
+from .settings_common import *  # noqa: F403
 from .utils import hostname
 
 TEMPLATES = [
@@ -31,7 +31,7 @@ DATABASES = {
     }
 }
 
-INSTALLED_APPS = INSTALLED_APPS + (
+INSTALLED_APPS = INSTALLED_APPS + (  # noqa: F405
     'django.contrib.auth',
     'django.contrib.contenttypes'
 )

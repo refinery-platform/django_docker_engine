@@ -107,7 +107,7 @@ and not just have installed it via pip.)
 # Start Django as a subprocess, and give it a moment to start:
 >>> import subprocess
 >>> process = subprocess.Popen(
-...     ['./manage.py', 'runserver', '--settings=demo_path_routing_no_auth'],
+...     ['./manage.py', 'runserver'],
 ...     stdout=open('/dev/null', 'w'),
 ...     stderr=open('/dev/null', 'w'))
 >>> django_url = 'http://localhost:8000'

@@ -43,7 +43,8 @@ def index(request):
 
 @require_POST
 def login(request):
-    user = auth.authenticate(username='fake-username', password='fake-password')
+    user = auth.authenticate(username='fake-username',
+                             password='fake-password')
     if user is not None:
         auth.login(request, user)
         return HttpResponseRedirect('/')

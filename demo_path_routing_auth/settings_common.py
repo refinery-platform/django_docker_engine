@@ -24,7 +24,7 @@ SESSION_ENGINE = 'django.contrib.sessions.backends.file'
 ROOT_URLCONF = __package__ + '.urls'
 WSGI_APPLICATION = __package__ + '.wsgi.application'
 
-# TODO: These are not needed in demo_path_routing... except for tests?
+# TODO: These are not needed in demo_path_routing_* ... except for tests?
 DJANGO_DOCKER_HOST_SUFFIX = '.docker.localhost'
 DJANGO_DOCKER_PATH_PREFIX = '/docker/'
 
