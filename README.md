@@ -18,7 +18,10 @@ In order for a Docker container to work with this package it must:
 ## Quick Demo
 
 Install [Docker](https://store.docker.com/search?offering=community&type=edition)
-if you haven't already, then download the project, install dependencies, and
+and `python` and `pip`
+if you haven't already.
+
+Then download the project, install dependencies, and
 run the demo server:
 
 ```
