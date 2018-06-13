@@ -11,7 +11,7 @@ tools = {
         'image': 'scottx611x/refinery-higlass-docker:v0.3.2',
         'input': lambda url, prefix: {
             'node_info': {'fake-uuid': {'file_url': url}},
-            'extra_directories': '/refinery-data/'
+            'extra_directories': ['/refinery-data/']
         }
     },
     'heatmap': {
@@ -23,7 +23,7 @@ tools = {
             ],
             'parameters': [],
             'api_prefix': prefix,
-            'extra_directories': '/refinery-data/'
+            'extra_directories': ['/refinery-data/']
         }
     }
 }

@@ -84,7 +84,10 @@ def launch(request):
     container_spec = DockerContainerSpec(
         container_name=container_name,
         image_name=tool_spec['image'],
-        input=input)
+        input=input,
+        extra_directories=input.get('extra_directories') or [],
+        container_port=input.get('container_port') or 80,
+    )
     client.run(container_spec)
     return HttpResponseRedirect(container_path)
 
