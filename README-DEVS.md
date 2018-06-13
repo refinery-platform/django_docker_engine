@@ -47,11 +47,10 @@ but unless the version is new, the push will fail.)
   in meaning. It's better than the alternatives: calling
   the CLI commands as subprocesses, or hitting the socket API directly.
 
-- [boto](http://boto3.readthedocs.io/en/latest/): AWS Python SDK.
-
-- [django-http-proxy](https://github.com/yvandermeer/django-http-proxy):
-  Makes Django into a proxy server. It looks like this package has thought about
-  some of the edge cases, like rewriting absolute URLs in the body content.
+- [django-revproxy](https://github.com/TracyWebTech/django-revproxy):
+  Reverse proxy for Django.
+  There are [other options](https://djangopackages.org/grids/g/reverse-proxy/),
+  but this seems to be the most mature and active.
 
 
 ## Related projects

@@ -40,9 +40,9 @@ of Docker images which can be plugged in to this framework. It includes:
 
 - [refinery-higlass-docker](https://github.com/refinery-platform/refinery-higlass-docker):
 A wrapper for [HiGlass](http://higlass.io/), for exploring genomic contact 
-matrices and tracks.
+matrices and tracks
 - [heatmap-scatter-dash](https://github.com/refinery-platform/heatmap-scatter-dash):
-A Plotly Dash app for understanding differential expression data.
+A Plotly Dash app for understanding differential expression data
 - [lineup-refinery-docker](https://github.com/refinery-platform/lineup-refinery-docker):
 A wrapper for [Caleydo LineUp](http://caleydo.org/tools/lineup/), for visualizing
 rankings based on heterogeneous attributes
@@ -51,4 +51,4 @@ More information:
 - [for users of the library](https://github.com/refinery-platform/django_docker_engine/blob/master/README-USERS.md)
 - [for developers of the library](https://github.com/refinery-platform/django_docker_engine/blob/master/README-DEVS.md)
 - [background motivations and future directions](https://github.com/refinery-platform/django_docker_engine/blob/master/README-PROVENANCE.md)
-- [API documentation](https://www.pydoc.io/pypi/django-docker-engine-0.0.48/)
+- [API documentation](https://www.pydoc.io/pypi/django-docker-engine-0.0.57/)
