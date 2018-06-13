@@ -9,8 +9,10 @@ tools = {
     },
     'higlass': {
         'image': 'scottx611x/refinery-higlass-docker:v0.3.2',
-        'input': lambda url,
-                        prefix: {'node_info': {'fake-uuid': {'file_url': url}}}
+        'input': lambda url, prefix: {
+            'node_info': {'fake-uuid': {'file_url': url}},
+            'extra_directories': '/refinery-data/'
+        }
     },
     'heatmap': {
         'image': 'mccalluc/heatmap_scatter_dash:v0.1.8',

@@ -118,5 +118,5 @@ def upload(request, name):
         if not os.path.isfile(fullpath):
             raise Http404()
         else:
-            with open(fullpath) as f:
+            with open(fullpath, 'rb') as f:
                 return HttpResponse(f.read(), content_type='text/plain')
