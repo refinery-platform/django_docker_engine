@@ -22,7 +22,7 @@ if you haven't already, then download the project, install dependencies, and
 run the demo server:
 
 ```
-$ git clone https://github.com/mccalluc/django_docker_engine.git
+$ git clone https://github.com/refinery-platform/django_docker_engine.git
 $ cd django_docker_engine
 $ pip install -r requirements-dev.txt
 $ pip install -r requirements.txt

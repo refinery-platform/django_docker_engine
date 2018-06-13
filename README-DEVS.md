@@ -5,7 +5,7 @@
 Install [Docker](https://store.docker.com/search?offering=community&type=edition)
 if you haven't already, and then get the Python dependencies:
 ```
-$ git clone https://github.com/mccalluc/django_docker_engine.git
+$ git clone https://github.com/refinery-platform/django_docker_engine.git
 $ cd django_docker_engine
 $ pip install -r requirements.txt
 $ pip install -r requirements-dev.txt
