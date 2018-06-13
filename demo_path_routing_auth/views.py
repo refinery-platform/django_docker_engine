@@ -1,3 +1,4 @@
+import json
 import os
 import re
 
@@ -75,10 +76,15 @@ def launch(request):
 
     container_name = post['container_name']
     container_path = '/docker/{}/'.format(container_name)
+    input = tool_spec['input'](input_url, container_path)
+
+    if post.get('show_input'):
+        return HttpResponse(json.dumps(input), content_type='application/json')
+
     container_spec = DockerContainerSpec(
         container_name=container_name,
         image_name=tool_spec['image'],
-        input=tool_spec['input'](input_url, container_path))
+        input=input)
     client.run(container_spec)
     return HttpResponseRedirect(container_path)
 
@@ -91,14 +97,15 @@ def kill(request, name):
 
 
 def upload(request, name):
-    valid_re = r'^\w+(\.\w+)*$'
+    valid_re = r'^[a-zA-Z0-9_.-]+$'
 
     if request.method == 'POST':
         form = UploadForm(request.POST, request.FILES)
         if not form.is_valid():
             raise ValidationError(form.errors)
         file = request.FILES['file']
-        assert re.match(valid_re, file.name)
+        assert re.match(valid_re, file.name),\
+            'Name must match {}'.format(valid_re)
         fullpath = os.path.join(UPLOAD_DIR, file.name)
         with open(fullpath, 'wb+') as destination:
             for chunk in file.chunks():

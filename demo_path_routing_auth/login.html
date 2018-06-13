@@ -1,5 +1,9 @@
 <div class="border bg-light m-1 p-1">
   <h2>Fake login/logout</h2>
+  <p>
+    (If not logged in, you will receive an 403 Access Denied error
+      if you try to view a container.)
+  </p>
   {% if user.is_authenticated %}
     <form action="/logout/" method="post" id="logout">
       {% csrf_token %}
