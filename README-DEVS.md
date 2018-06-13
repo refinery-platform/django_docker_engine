@@ -32,6 +32,18 @@ For tests to pass, you'll need to add one entry to your `/etc/hosts`:
 in that file, you might try running DNS locally with
 [dnsmasq](http://www.thekelleys.org.uk/dnsmasq/doc.html).
 
+### Other demos
+
+Two other demos are provided, primarily as targets for automated tests.
+To the extent possible, all three use the same configuration with symlinks,
+and each just adds a few differences to the base.
+
+- [demo_host_routing](https://github.com/refinery-platform/django_docker_engine/tree/master/demo_host_routing):
+Checks that hostname-based routing works.
+- [demo_path_routing_auth](https://github.com/refinery-platform/django_docker_engine/tree/master/demo_path_routing_auth):
+Checks that user authentication in the parent application doesn't
+interfere with authentication in the container.
+
 ## Release Process
 
 To make a new release, branch, increment the version number in `VERSION.txt`, and make a PR on github.
