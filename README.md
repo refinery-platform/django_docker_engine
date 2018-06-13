@@ -52,3 +52,4 @@ More information:
 - [for developers of the library](https://github.com/refinery-platform/django_docker_engine/blob/master/README-DEVS.md)
 - [background motivations and future directions](https://github.com/refinery-platform/django_docker_engine/blob/master/README-PROVENANCE.md)
 - [API documentation](https://www.pydoc.io/pypi/django-docker-engine-0.0.57/)
+- [slides for BOSC 2018](https://docs.google.com/presentation/d/1Cc6XwVE5DhbnKRa07g7X1YkFihCzJn8j45LzhygDimY)
