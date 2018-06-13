@@ -8,4 +8,4 @@ the default, [path-based routing](../demo_path_routing_no_auth) because
 - but the webapp can use paths starting with "/".
 
 Because of the dependency on DNS, this demo will not work out-of-the-box,
-and does not have a UI.
+and it does not have a UI, but it is used by the tests.

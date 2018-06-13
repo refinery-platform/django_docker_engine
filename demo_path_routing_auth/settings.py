@@ -26,7 +26,7 @@ if django.VERSION >= (2, 0):
 else:
     MIDDLEWARE_CLASSES = auth_middleware
 
-AUTHENTICATION_BACKENDS = ('django.contrib.auth.backends.ModelBackend')
+AUTHENTICATION_BACKENDS = ('django.contrib.auth.backends.ModelBackend',)
 
 DATABASES = {
     'default': {
