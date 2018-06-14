@@ -2,12 +2,13 @@ import re
 import unittest
 from datetime import datetime
 
+import requests
+
 from django_docker_engine.container_managers.docker_engine import (DockerEngineManager,
                                                                    ExpectedPortMissing,
                                                                    MisconfiguredPort,
                                                                    NoPortLabel,
                                                                    PossiblyOutOfDiskSpace)
-import requests
 from tests import ALPINE_IMAGE, NGINX_IMAGE
 
 
