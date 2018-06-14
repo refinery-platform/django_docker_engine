@@ -35,6 +35,7 @@ class PathRoutingTests(unittest.TestCase):
         self.assertEquals(
             [('debugger', 'debugger'),
              ('heatmap', 'heatmap'),
+             ('higlass', 'higlass'),
              ('lineup', 'lineup')],
             sorted(fields['tool'].choices))
 
