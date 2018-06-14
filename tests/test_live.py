@@ -175,6 +175,9 @@ class PathRoutingClientTests(unittest.TestCase):
         self.assert_in_html('Not Found', r_bad.content)
         self.assertEqual(404, r_bad.status_code)
 
+        logs = self.client.logs(self.container_name).decode('utf-8')
+        self.assertIn('"GET / HTTP/1.1" 200', logs)
+
     def assert_http_verb(self, verb):
         response = requests.__dict__[verb.lower()](self.url)
         self.assert_in_html('HTTP/1.1 {} /'.format(verb), response.content)

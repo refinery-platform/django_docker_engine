@@ -136,6 +136,10 @@ and not just have installed it via pip.)
 >>> text = requests.get(proxy_url).text
 >>> assert 'Welcome to nginx' in text, 'unexpected: {}'.format(text)
 
+# Logs from each container are available:
+>>> logs = client.logs(container_name)
+>>> assert b'"GET / HTTP/1.1" 200' in logs, 'unexpected: {}'.format(logs)
+
 ```
 
 ### Please wait
