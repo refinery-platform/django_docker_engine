@@ -18,6 +18,8 @@ shared_middleware = (
 )
 
 SESSION_ENGINE = 'django.contrib.sessions.backends.file'
+SESSION_COOKIE_NAME = 'renamed_sessionid_to_avoid_collisions'
+# Only necessary if containerized application is also Django.
 
 ROOT_URLCONF = __package__ + '.urls'
 WSGI_APPLICATION = __package__ + '.wsgi.application'

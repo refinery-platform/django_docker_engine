@@ -10,7 +10,7 @@ The primary goal has been to provide a visualization framework for the
 [Refinery Project](https://github.com/refinery-platform/refinery-platform),
 but nothing should prevent its use in other contexts, as well.
 
-In order for a Docker container to work with this package it must:
+In order for a Docker container to work with this package it must at a minimum:
 
 - listen on some port for HTTP connections, and
 - accept a single JSON file as input.
