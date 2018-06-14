@@ -25,7 +25,7 @@ class PathRoutingTests(unittest.TestCase):
         context = response.context
 
         fields = context['launch_form'].fields
-        self.assertEqual(['container_name', 'data', 'tool'],
+        self.assertEqual(['container_name', 'data', 'show_input', 'tool'],
                          sorted(set(fields.keys())))
         # More wrapping for older pythons / older djangos.
 
@@ -35,6 +35,7 @@ class PathRoutingTests(unittest.TestCase):
         self.assertEquals(
             [('debugger', 'debugger'),
              ('heatmap', 'heatmap'),
+             ('higlass', 'higlass'),
              ('lineup', 'lineup')],
             sorted(fields['tool'].choices))
 

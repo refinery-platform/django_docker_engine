@@ -7,6 +7,13 @@ tools = {
         'image': 'mccalluc/lineup_refinery:v0.0.8',
         'input': lambda url, prefix: {'file_relationships': [url]}
     },
+    'higlass': {
+        'image': 'scottx611x/refinery-higlass-docker:v0.3.2',
+        'input': lambda url, prefix: {
+            'node_info': {'fake-uuid': {'file_url': url}},
+            'extra_directories': ['/refinery-data/']
+        }
+    },
     'heatmap': {
         'image': 'mccalluc/heatmap_scatter_dash:v0.1.8',
         'input': lambda url, prefix: {
@@ -16,7 +23,7 @@ tools = {
             ],
             'parameters': [],
             'api_prefix': prefix,
-            'extra_directories': '/refinery-data/'
+            'extra_directories': ['/refinery-data/']
         }
     }
 }

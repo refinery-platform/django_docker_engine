@@ -21,6 +21,12 @@
         color: #fff;
         text-decoration: none;
       }
+      th {
+        font-weight: 400;
+      }
+      td {
+        vertical-align: top;
+      }
     </style>
     <title>django_docker_engine demo</title>
   </head>
@@ -62,7 +68,7 @@
       <h2>Launch new container</h2>
       <form action="/launch/" method="post" target="_blank" id="launch">
         {% csrf_token %}
-        {{ launch_form.as_p }}
+        <table>{{ launch_form.as_table }}</table>
         <input type="submit" value="Launch" />
       </form>
     </div>
@@ -72,7 +78,7 @@
         <h2>Upload your own data</h2>
         <form action="/upload/" method="post" enctype="multipart/form-data">
           {% csrf_token %}
-          {{ upload_form.as_p }}
+          <table>{{ upload_form.as_table }}</table>
           <input type="submit" value="Upload" />
         </form>
       </div>

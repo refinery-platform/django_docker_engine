@@ -10,6 +10,7 @@ class LaunchForm(forms.Form):
         widget=forms.Select,
         choices=tuple((k, k) for k in tools)
     )
+    show_input = forms.BooleanField(required=False)
 
 
 class UploadForm(forms.Form):

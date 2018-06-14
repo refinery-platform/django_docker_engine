@@ -22,7 +22,7 @@ if you haven't already, then download the project, install dependencies, and
 run the demo server:
 
 ```
-$ git clone https://github.com/mccalluc/django_docker_engine.git
+$ git clone https://github.com/refinery-platform/django_docker_engine.git
 $ cd django_docker_engine
 $ pip install -r requirements-dev.txt
 $ pip install -r requirements.txt
@@ -40,9 +40,9 @@ of Docker images which can be plugged in to this framework. It includes:
 
 - [refinery-higlass-docker](https://github.com/refinery-platform/refinery-higlass-docker):
 A wrapper for [HiGlass](http://higlass.io/), for exploring genomic contact 
-matrices and tracks.
+matrices and tracks
 - [heatmap-scatter-dash](https://github.com/refinery-platform/heatmap-scatter-dash):
-A Plotly Dash app for understanding differential expression data.
+A Plotly Dash app for understanding differential expression data
 - [lineup-refinery-docker](https://github.com/refinery-platform/lineup-refinery-docker):
 A wrapper for [Caleydo LineUp](http://caleydo.org/tools/lineup/), for visualizing
 rankings based on heterogeneous attributes
@@ -51,4 +51,5 @@ More information:
 - [for users of the library](https://github.com/refinery-platform/django_docker_engine/blob/master/README-USERS.md)
 - [for developers of the library](https://github.com/refinery-platform/django_docker_engine/blob/master/README-DEVS.md)
 - [background motivations and future directions](https://github.com/refinery-platform/django_docker_engine/blob/master/README-PROVENANCE.md)
-- [API documentation](https://www.pydoc.io/pypi/django-docker-engine-0.0.48/)
+- [API documentation](https://www.pydoc.io/pypi/django-docker-engine-0.0.57/)
+- [slides for BOSC 2018](https://docs.google.com/presentation/d/1Cc6XwVE5DhbnKRa07g7X1YkFihCzJn8j45LzhygDimY)
