@@ -7,6 +7,7 @@ from django_docker_engine.container_managers.docker_engine import (DockerEngineM
                                                                    MisconfiguredPort,
                                                                    NoPortLabel,
                                                                    PossiblyOutOfDiskSpace)
+import requests
 from tests import ALPINE_IMAGE, NGINX_IMAGE
 
 
@@ -36,10 +37,20 @@ class DockerEngineManagerTests(unittest.TestCase):
             self.manager.get_url(self.container_name)
         self._cleanup_container()
 
-    def assert_add_kwarg_passes(self, key, value, image):
+    try:
+        assertRegex
+    except NameError:  # Python 2 fallback
+        def assertRegex(self, s, re):
+            self.assertRegexpMatches(s, re)
+
+    def assert_add_kwarg_passes(self, key, value, image, expected_logs_re):
         self.kwargs[key] = value
         self.manager.run(image, **self.kwargs)
-        self.manager.get_url(self.container_name)
+        url = self.manager.get_url(self.container_name)
+        response = requests.get(url)
+        self.assertIn(b'Welcome to nginx', response.content)
+        logs = self.manager.logs(self.container_name).decode('utf-8')
+        self.assertRegex(logs, expected_logs_re)
         self._cleanup_container()
 
     def test_bad_image_pull(self):
@@ -77,6 +88,7 @@ class DockerEngineManagerTests(unittest.TestCase):
         )
 
         self.assert_add_kwarg_passes(
-            'ports', {'80/tcp': None},
-            NGINX_IMAGE
+            'ports', {'80/tcp': None}, NGINX_IMAGE,
+            expected_logs_re=r'\S+Z \S+ - - \[.+\] '
+            r'"GET / HTTP/1.1" 200 \d+ "-" "python-requests/.+" "-"'
         )
