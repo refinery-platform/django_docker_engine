@@ -181,6 +181,14 @@ class DockerEngineManager(BaseManager):
         """  # noqa
         return self._containers_client.list(all=True, filters=filters)
 
+    def logs(self, container_name):
+        """
+        :param container_name:
+        :return: STDOUT and STDERR from the Docker container
+        """
+        container = self._containers_client.get(container_name)
+        return container.logs(timestamps=True)
+
     def _mkdtemp(self):
         timestamp = re.sub(r'\W', '_', str(datetime.now()))
         tmp_dir = os.path.join(self._data_dir, timestamp)

@@ -85,6 +85,9 @@ class DockerClientWrapper(object):
     def list(self, filters={}):
         return self._containers_manager.list(filters)
 
+    def logs(self, container_name):
+        return self._containers_manager.logs(container_name)
+
     def kill(self, container):
         mounts = container.attrs['Mounts']
         container.remove(

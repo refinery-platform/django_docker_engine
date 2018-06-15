@@ -8,7 +8,19 @@ or on the commandline:
 $ pip install django_docker_engine
 ```
 
-## Choices you need to make
+## Responsibilities
+
+If the parent Django application has user sessions:
+- Containers need to make sure that any AJAX requests back to the host
+preserve session cookies. Any
+[`fetch`](https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/fetch#Parameters)
+or [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request/Request#Parameters)
+needs to include `credentials: "same-origin"`
+- If the container is itself a Django application, either the container application
+or the parent application needs to change `SESSION_COOKIE_NAME` to a non-default value
+to avoid a collision.
+
+## Choices
 
 ### `input.json`: mounted file vs. envvar vs. envvar url
 
@@ -45,27 +57,26 @@ can also be used.
 - and you will need to set up a wildcard entry in DNS to capture all subdomains.
 - but the webapp can use paths starting with "/".
 
-
-## Docker
+### Local host vs. remote host
 
 `django_docker_engine` tries to abstract away the differences between different ways of running Docker.
 
+#### Local Docker Engine
 
-### Local Docker Engine
-
-Typically, Docker Engine will be installed and running on the same machine as Django:
+Typically for development, Docker Engine will be installed and running on the same machine as Django:
 Review their [docs](https://docs.docker.com/engine/installation/) for the best information,
 and then [download](https://store.docker.com/search?offering=community&type=edition) and install.
 
+But with more load, you'll probably want the containers on a separate machine
+to avoid resource contention...
 
-### Docker Engine on AWS-EC2
+#### Docker Engine on AWS-EC2
 
 In Refinery, the Docker Engine is running on on a separate EC2. You'll need to
 provision the server, using boto, cloudformation, terraform, or some other libary,
 and then set `DOCKER_HOST` to point at the EC2. 
 
-
-### AWS-ECS
+#### AWS-ECS
 
 TODO: AWS provides its own wrapper around Docker through ECS. We will need to abstract away what the
 Docker SDK provides so that we can use either interface, as needed.
@@ -124,6 +135,10 @@ and not just have installed it via pip.)
 'http://localhost:8000/docker/basic-nginx/'
 >>> text = requests.get(proxy_url).text
 >>> assert 'Welcome to nginx' in text, 'unexpected: {}'.format(text)
+
+# Logs from each container are available:
+>>> logs = client.logs(container_name)
+>>> assert b'"GET / HTTP/1.1" 200' in logs, 'unexpected: {}'.format(logs)
 
 ```
 
