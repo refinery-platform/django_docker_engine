@@ -48,7 +48,8 @@ class Proxy():
     def __init__(self,
                  historian=NullHistorian(),
                  please_wait_title='Please wait',
-                 please_wait_body_html='<h1>Please wait</h1>',
+                 please_wait_body_html='<h1>Please wait</h1>'
+                 '<a href="docker-logs">View logs</a>',
                  csrf_exempt=True):
         self.historian = historian
         self.csrf_exempt = csrf_exempt
