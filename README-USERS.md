@@ -127,21 +127,26 @@ True
 >>> sleep(2)
 
 # There is a homepage at '/':
->>> text = requests.get(django_url).text
->>> ('django_docker_engine demo' in text) or text
+>>> demo_home = requests.get(django_url).text
+>>> ('django_docker_engine demo' in demo_home) or demo_home
 True
 
 # Under '/docker/, requests are proxied to containers by name:
 >>> proxy_url = django_url + '/docker/' + container_name + '/'
 >>> proxy_url
 'http://localhost:8000/docker/basic-nginx/'
->>> text = requests.get(proxy_url).text
->>> ('Welcome to nginx' in text) or text
+>>> nginx_welcome = requests.get(proxy_url).text
+>>> ('Welcome to nginx' in nginx_welcome) or nginx_welcome
 True
 
-# Logs from each container are available:
->>> logs = client.logs(container_name)
->>> (b'"GET / HTTP/1.1" 200' in logs) or logs
+# Logs from each container are available from the API:
+>>> api_logs = client.logs(container_name)
+>>> (b'"GET / HTTP/1.1" 200' in api_logs) or api_logs
+True
+
+# ... or from the UI:
+>>> ui_logs = requests.get(proxy_url + 'docker-logs').text
+>>> ('"GET / HTTP/1.1" 200' in ui_logs) or ui_logs
 True
 
 ```
