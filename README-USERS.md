@@ -204,7 +204,7 @@ shows how it can be configured:
 >>> urlpatterns = proxy.url_patterns()
 
 # All of this would be handled by Django in practice:
->>> response = urlpatterns[0].callback(
+>>> response = urlpatterns[-1].callback(
 ...     request=RequestFactory().get('/fake-url'),
 ...     container_name='fake-container',
 ...     url='fake-url')
