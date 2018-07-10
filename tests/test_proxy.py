@@ -51,9 +51,9 @@ class ProxyTests(unittest.TestCase):
             please_wait_body_html=body_html
         )
         urlpatterns = proxy.url_patterns()
-        self.assertEqual(len(urlpatterns), 1)
+        self.assertEqual(len(urlpatterns), 2)
 
-        response = urlpatterns[0].callback(
+        response = urlpatterns[-1].callback(
             request=RequestFactory().get('/fake-url'),
             container_name='fake-container',
             url='fake-url'
@@ -66,15 +66,22 @@ class ProxyTests(unittest.TestCase):
             response.reason_phrase
         )
 
-        # Title is escaped
         self.assertIn('<title>&lt;' + title_text +
-                      '&gt;</title>', str(response.content))
-        # Body is not escaped
-        self.assertIn(body_html, str(response.content))
-
+                      '&gt;</title>', str(response.content))  # Title escaped
+        self.assertIn(body_html, str(response.content))  # Body not escaped
         self.assertIn('http-equiv="refresh"', str(response.content))
 
         self.assertEqual(
             [line.split('\t')[1:] for line in historian.list()],
             [['fake-container', 'fake-url\n']]
         )
+
+        # The doctests handle the case where a container has been started.
+        logs_response = urlpatterns[0].callback(
+            request=RequestFactory().get('/fake-url'),
+            container_name='fake-container'
+        )
+        self.assertIn('Traceback (most recent call last)',
+                      str(logs_response.content))
+        self.assertIn('No such container: fake-container',
+                      str(logs_response.content))
