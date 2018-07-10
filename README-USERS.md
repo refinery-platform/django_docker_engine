@@ -113,7 +113,8 @@ and not just have installed it via pip.)
 # The nginx container is responding to requests:
 >>> import requests
 >>> text = requests.get(container_url).text
->>> assert 'Welcome to nginx' in text, 'unexpected: {}'.format(text)
+>>> ('Welcome to nginx' in text) or text
+True
 
 # Start Django as a subprocess, and give it a moment to start:
 >>> import subprocess
@@ -126,19 +127,27 @@ and not just have installed it via pip.)
 >>> sleep(2)
 
 # There is a homepage at '/':
->>> text = requests.get(django_url).text
->>> assert 'django_docker_engine demo' in text, 'unexpected: {}'.format(text)
+>>> demo_home = requests.get(django_url).text
+>>> ('django_docker_engine demo' in demo_home) or demo_home
+True
 
 # Under '/docker/, requests are proxied to containers by name:
 >>> proxy_url = django_url + '/docker/' + container_name + '/'
 >>> proxy_url
 'http://localhost:8000/docker/basic-nginx/'
->>> text = requests.get(proxy_url).text
->>> assert 'Welcome to nginx' in text, 'unexpected: {}'.format(text)
+>>> nginx_welcome = requests.get(proxy_url).text
+>>> ('Welcome to nginx' in nginx_welcome) or nginx_welcome
+True
 
-# Logs from each container are available:
->>> logs = client.logs(container_name)
->>> assert b'"GET / HTTP/1.1" 200' in logs, 'unexpected: {}'.format(logs)
+# Logs from each container are available from the API:
+>>> api_logs = client.logs(container_name)
+>>> (b'"GET / HTTP/1.1" 200' in api_logs) or api_logs
+True
+
+# ... or from the UI:
+>>> ui_logs = requests.get(proxy_url + 'docker-logs').text
+>>> ('"GET / HTTP/1.1" 200' in ui_logs) or ui_logs
+True
 
 ```
 
@@ -195,7 +204,7 @@ shows how it can be configured:
 >>> urlpatterns = proxy.url_patterns()
 
 # All of this would be handled by Django in practice:
->>> response = urlpatterns[0].callback(
+>>> response = urlpatterns[-1].callback(
 ...     request=RequestFactory().get('/fake-url'),
 ...     container_name='fake-container',
 ...     url='fake-url')

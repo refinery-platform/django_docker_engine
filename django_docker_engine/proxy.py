@@ -2,6 +2,7 @@ import errno
 import logging
 import os
 import socket
+import traceback
 from collections import namedtuple
 from sys import version_info
 
@@ -47,7 +48,8 @@ class Proxy():
     def __init__(self,
                  historian=NullHistorian(),
                  please_wait_title='Please wait',
-                 please_wait_body_html='<h1>Please wait</h1>',
+                 please_wait_body_html='<h1>Please wait</h1>'
+                 '<a href="docker-logs">View logs</a>',
                  csrf_exempt=True):
         self.historian = historian
         self.csrf_exempt = csrf_exempt
@@ -73,6 +75,11 @@ class Proxy():
 
     def url_patterns(self):
         return [
+            url(
+                r'^(?P<container_name>[^/]*)/docker-logs$',
+                csrf_exempt_decorator(self._logs_view) if self.csrf_exempt
+                else self._logs_view
+            ),
             url(
                 r'^(?P<container_name>[^/]*)/(?P<url>.*)$',
                 csrf_exempt_decorator(self._proxy_view) if self.csrf_exempt
@@ -134,3 +141,10 @@ class Proxy():
                 return response
             http_method_named = ['get']
         return PleaseWaitView
+
+    def _logs_view(self, request, container_name):
+        try:
+            logs = DockerClientWrapper().logs(container_name)
+        except:
+            logs = traceback.format_exc()
+        return HttpResponse(logs, content_type='text/plain')
