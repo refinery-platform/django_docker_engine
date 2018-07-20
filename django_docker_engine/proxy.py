@@ -48,15 +48,16 @@ class Proxy():
     def __init__(self,
                  historian=NullHistorian(),
                  please_wait_title='Please wait',
-                 please_wait_body_html='<h1>Please wait</h1>'
-                 '<a href="docker-logs">View logs</a>',
-                 csrf_exempt=True):
+                 please_wait_body_html='<h1>Please wait</h1>',
+                 csrf_exempt=True,
+                 logs_path=None):
         self.historian = historian
         self.csrf_exempt = csrf_exempt
         self.content = self._render({
             'title': please_wait_title,
             'body_html': please_wait_body_html
         })
+        self.logs_path = logs_path
 
     def _render(self, context):
         template_path = os.path.join(
@@ -74,18 +75,21 @@ class Proxy():
         return template.render(context)
 
     def url_patterns(self):
-        return [
-            url(
-                r'^(?P<container_name>[^/]*)/docker-logs$',
-                csrf_exempt_decorator(self._logs_view) if self.csrf_exempt
-                else self._logs_view
-            ),
-            url(
-                r'^(?P<container_name>[^/]*)/(?P<url>.*)$',
-                csrf_exempt_decorator(self._proxy_view) if self.csrf_exempt
-                else self._proxy_view
-            )
-        ]
+        proxy_url = url(
+            r'^(?P<container_name>[^/]*)/(?P<url>.*)$',
+            csrf_exempt_decorator(self._proxy_view) if self.csrf_exempt
+            else self._proxy_view
+        )
+        if self.logs_path:
+            return [
+                url(
+                    r'^(?P<container_name>[^/]*)/{}$'.format(self.logs_path),
+                    csrf_exempt_decorator(self._logs_view) if self.csrf_exempt
+                    else self._logs_view
+                ),
+                proxy_url
+            ]
+        return [proxy_url]
 
     def _internal_proxy_view(self, request, container_url, path_url):
         # Any dependencies on the 3rd party proxy should be contained here.

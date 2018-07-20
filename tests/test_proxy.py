@@ -48,7 +48,8 @@ class ProxyTests(unittest.TestCase):
         proxy = Proxy(
             historian=historian,
             please_wait_title='<' + title_text + '>',
-            please_wait_body_html=body_html
+            please_wait_body_html=body_html,
+            logs_path='docker-logs'
         )
         urlpatterns = proxy.url_patterns()
         self.assertEqual(len(urlpatterns), 2)
