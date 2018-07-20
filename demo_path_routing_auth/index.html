@@ -69,7 +69,10 @@
       <form action="/launch/" method="post" target="_blank" id="launch">
         {% csrf_token %}
         <table>{{ launch_form.as_table }}</table>
-        <input type="submit" value="Launch" />
+        <input type="submit"
+               value="Launch"
+               onclick="setTimeout(function(){location.reload()}, 500);"/>
+        {# Reload original page to get updated containers list. A bit ugly. #}
       </form>
     </div>
 
