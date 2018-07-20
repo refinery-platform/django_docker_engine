@@ -50,6 +50,6 @@ rankings based on heterogeneous attributes
 More information:
 - [for users of the library](https://github.com/refinery-platform/django_docker_engine/blob/master/README-USERS.md)
 - [for developers of the library](https://github.com/refinery-platform/django_docker_engine/blob/master/README-DEVS.md)
-- [background motivations and future directions](https://github.com/refinery-platform/django_docker_engine/blob/master/README-PROVENANCE.md)
+- [background reading](https://github.com/refinery-platform/django_docker_engine/blob/master/notes)
 - [API documentation](https://www.pydoc.io/pypi/django-docker-engine-0.0.57/)
-- [slides for BOSC 2018](https://docs.google.com/presentation/d/1Cc6XwVE5DhbnKRa07g7X1YkFihCzJn8j45LzhygDimY)
+- [BOSC 2018 poster](https://f1000research.com/posters/7-1078)
