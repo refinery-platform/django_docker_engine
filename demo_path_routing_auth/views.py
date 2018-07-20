@@ -25,11 +25,11 @@ UPLOAD_DIR = os.path.join(os.path.dirname(__file__), 'upload')
 def index(request):
     launch_form = LaunchForm()
     # TODO: Pass this info through the constructor
-    launch_form.fields['data'] = forms.ChoiceField(
+    launch_form.fields['files'] = forms.ChoiceField(
         widget=forms.SelectMultiple,
         choices=((f, f) for f in os.listdir(UPLOAD_DIR) if f != '.gitignore')
     )
-    launch_form.initial['data'] = request.GET.get('uploaded')
+    launch_form.initial['files'] = [request.GET.get('uploaded')]
 
     context = {
         'container_names': [container.name for container in client.list()],
@@ -71,8 +71,8 @@ def launch(request):
     except AttributeError:  # Django 1.8.19
         port = request.get_host().replace('localhost:', '')
     input_urls = [
-        'http://{}:{}/upload/{}'.format(hostname(), port, datum)
-        for datum in post['data']
+        'http://{}:{}/upload/{}'.format(hostname(), port, file)
+        for file in post['files']
     ]
     tool_spec = tools[post['tool']]
 
