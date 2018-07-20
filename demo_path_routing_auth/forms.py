@@ -1,9 +1,8 @@
+import os
+
 from django import forms
 
 from .tools import tools
-import os
-
-UPLOAD_DIR = os.path.join(os.path.dirname(__file__), 'upload')
 
 
 class UnvalidatedMultipleChoiceField(forms.MultipleChoiceField):
