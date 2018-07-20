@@ -26,7 +26,7 @@ def index(request):
     launch_form = LaunchForm()
     # TODO: Pass this info through the constructor
     launch_form.fields['data'] = forms.ChoiceField(
-        widget=forms.Select,
+        widget=forms.SelectMultiple,
         choices=((f, f) for f in os.listdir(UPLOAD_DIR) if f != '.gitignore')
     )
     launch_form.initial['data'] = request.GET.get('uploaded')
@@ -70,13 +70,15 @@ def launch(request):
         port = request.get_port()
     except AttributeError:  # Django 1.8.19
         port = request.get_host().replace('localhost:', '')
-    input_url = 'http://{}:{}/upload/{}'.format(
-        hostname(), port, post['data'])
+    input_urls = [
+        'http://{}:{}/upload/{}'.format(hostname(), port, datum)
+        for datum in post['data']
+    ]
     tool_spec = tools[post['tool']]
 
     container_name = post['container_name']
     container_path = '/docker/{}/'.format(container_name)
-    input_data = tool_spec['input'](input_url, container_path)
+    input_data = tool_spec['input'](input_urls, container_path)
 
     if post.get('show_input'):
         return HttpResponse(json.dumps(input_data), content_type='application/json')
