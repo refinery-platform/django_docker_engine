@@ -1,5 +1,10 @@
 # Change Log
 
+## [v0.0.60](https://pypi.org/project/django-docker-engine/0.0.60/) (Jul 23, 2018)
+
+* Make log exposure optional.
+* In the demo, allow containers to be launched with multiple input files.
+
 ## [v0.0.59](https://pypi.org/project/django-docker-engine/0.0.59/) (Jul 10, 2018)
 
 * Expose logs in UI.
