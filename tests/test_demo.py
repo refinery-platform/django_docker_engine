@@ -25,11 +25,11 @@ class PathRoutingTests(unittest.TestCase):
         context = response.context
 
         fields = context['launch_form'].fields
-        self.assertEqual(['container_name', 'data', 'show_input', 'tool'],
+        self.assertEqual(['container_name', 'files', 'show_input', 'tool'],
                          sorted(set(fields.keys())))
         # More wrapping for older pythons / older djangos.
 
-        self.assertIn(('3x3.csv', '3x3.csv'), fields['data'].choices)
+        self.assertIn(('3x3.csv', '3x3.csv'), fields['files'].choices)
         # Locally, you may also have data choices which are not checked in.
 
         self.assertEquals(
@@ -41,7 +41,7 @@ class PathRoutingTests(unittest.TestCase):
 
         self.assertEqual(
             context['launch_form'].initial,
-            {'data': '3x3.csv'})
+            {'files': ['3x3.csv']})
 
         content = response.content.decode('utf-8')
         self.assertIn('<option value="debugger">debugger</option>', content)
@@ -58,7 +58,7 @@ class PathRoutingTests(unittest.TestCase):
         with patch.object(DockerClientRunWrapper,
                           'run') as mock_run:
             response = self.client.post('/launch/',
-                                        {'data': 'fake-data',
+                                        {'files': ['fake-data'],
                                          'tool': 'debugger',
                                          'container_name': 'fake-name'},
                                         follow=True)

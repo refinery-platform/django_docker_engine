@@ -144,7 +144,7 @@ True
 >>> (b'"GET / HTTP/1.1" 200' in api_logs) or api_logs
 True
 
-# ... or from the UI:
+# ... or from the UI, if `logs_path` was provided as a kwarg to Proxy:
 >>> ui_logs = requests.get(proxy_url + 'docker-logs').text
 >>> ('"GET / HTTP/1.1" 200' in ui_logs) or ui_logs
 True
