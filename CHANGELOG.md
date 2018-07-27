@@ -1,5 +1,9 @@
 # Change Log
 
+## [v0.0.61](https://pypi.org/project/django-docker-engine/0.0.61/) (???)
+
+* Improved tool selection UI in demo
+
 ## [v0.0.60](https://pypi.org/project/django-docker-engine/0.0.60/) (Jul 23, 2018)
 
 * Make log exposure optional.

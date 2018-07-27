@@ -15,7 +15,9 @@ class LaunchForm(forms.Form):
     files = UnvalidatedMultipleChoiceField()
     tool = forms.ChoiceField(
         widget=forms.Select,
-        choices=tuple((k, k) for k in tools)
+        choices=tuple(
+            (k, '{}: {}'.format(k, v['description']))
+            for k, v in tools.items())
     )
     show_input = forms.BooleanField(required=False)
 
