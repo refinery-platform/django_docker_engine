@@ -87,6 +87,7 @@ def launch(request):
     container_name = post['container_name']
     container_path = '/docker/{}/'.format(container_name)
     input_data = tool_spec['input'](input_urls, container_path)
+    input_data['parameters'] = json.loads(post['parameters_json'])
 
     if post.get('show_input'):
         return HttpResponse(json.dumps(input_data), content_type='application/json')
