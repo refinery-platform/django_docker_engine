@@ -51,6 +51,7 @@ class PathRoutingMechanicalSoupTests(unittest.TestCase):
         browser.select_form('#launch')
         browser['tool'] = tool
         container_name = 'test-{}-{}'.format(tool, self.port)
+        browser['parameters_json'] = '[]'
         browser['container_name'] = container_name
         browser.submit_selected()
 
@@ -83,13 +84,13 @@ class PathRoutingMechanicalSoupTests(unittest.TestCase):
         environ.get('TRAVIS'),
         'https://github.com/refinery-platform/django_docker_engine/issues/143')
     def testHeatmapLaunchLocal(self):
-        self.assert_tool('heatmap', 'Heatmap + Scatterplots')
+        self.assert_tool('rna-seq', 'Heatmap + Scatterplots')
 
     @unittest.skipUnless(
         environ.get('TRAVIS'),
         'https://github.com/refinery-platform/django_docker_engine/issues/143')
     def testHeatmapLaunchTravis(self):
-        self.assert_tool('heatmap', 'Please wait')
+        self.assert_tool('rna-seq', 'Please wait')
 
     # Might add other tools to this list, but since downloading images
     # can take a while, should focus on the ones with problems.
