@@ -17,15 +17,16 @@ tools = {
         'default_parameters': [],
         'input': lambda urls, prefix: {'file_relationships': urls}
     },
-    'igv-js': {
-        'image': 'gehlenborglab/docker_igv_js:v0.0.7',
-        'description': 'Our wrapper for IGV.js',
-        'default_parameters': [
-            {'name': 'Genome Build',
-             'value': 'hg19'}
-        ],
-        'input': lambda urls, prefix: {'file_relationships': urls}
-    },
+    # TODO: docker_igv_js only accepts INPUT_JSON_URL right now.
+    # 'igv-js': {
+    #     'image': 'gehlenborglab/docker_igv_js:v0.0.7',
+    #     'description': 'Our wrapper for IGV.js',
+    #     'default_parameters': [
+    #         {'name': 'Genome Build',
+    #          'value': 'hg19'}
+    #     ],
+    #     'input': lambda urls, prefix: {'file_relationships': urls}
+    # },
     'higlass': {
         'image': 'scottx611x/refinery-higlass-docker:v0.3.2',
         'description': '1-D and 2-D genomic data browser',
