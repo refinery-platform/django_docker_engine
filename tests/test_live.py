@@ -83,14 +83,14 @@ class PathRoutingMechanicalSoupTests(unittest.TestCase):
     @unittest.skipIf(
         environ.get('TRAVIS'),
         'https://github.com/refinery-platform/django_docker_engine/issues/143')
-    def testHeatmapLaunchLocal(self):
-        self.assert_tool('rna-seq', 'Heatmap + Scatterplots')
+    def testLineupLaunchLocal(self):
+        self.assert_tool('lineup', 'LineUp')
 
     @unittest.skipUnless(
         environ.get('TRAVIS'),
         'https://github.com/refinery-platform/django_docker_engine/issues/143')
-    def testHeatmapLaunchTravis(self):
-        self.assert_tool('rna-seq', 'Please wait')
+    def testLineupLaunchTravis(self):
+        self.assert_tool('lineup', 'Please wait')
 
     # Might add other tools to this list, but since downloading images
     # can take a while, should focus on the ones with problems.
