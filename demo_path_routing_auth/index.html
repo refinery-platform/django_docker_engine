@@ -87,5 +87,19 @@
       </div>
     </div>
 
+    <script>
+      (function() {
+        var default_parameters = {{ default_parameters_json | safe }};
+        function set_parameters_to_default(tool_name) {
+          document.getElementById('id_parameters_json').value =
+                  JSON.stringify(default_parameters[tool_name]);
+        }
+        set_parameters_to_default(document.getElementById('id_tool').value);
+        document.getElementById('id_tool').onchange = function(e) {
+          set_parameters_to_default(e.target.value);
+        }
+      })();
+    </script>
+
   </body>
 </html>

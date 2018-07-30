@@ -35,6 +35,10 @@ def index(request):
         'container_names': [container.name for container in client.list()],
         'launch_form': launch_form,
         'upload_form': UploadForm(),
+        'default_parameters_json': json.dumps({
+              k: v['default_parameters']
+              for k, v in tools.items()
+        })
     }
     if hasattr(request, 'user'):
         context['user'] = request.user
