@@ -1,7 +1,7 @@
 tools = {
     'debugger': {
         'image': 'scottx611x/refinery-developer-vis-tool:v0.0.7',
-        'description': 'Echos the user input',
+        'description': 'Echo the user input',
         'default_parameters': [],
         'default_files': ['3x3.csv'],
         'input': lambda urls, prefix: {'file_relationships': urls}
@@ -15,7 +15,7 @@ tools = {
     },
     'intervene': {
         'image': 'mccalluc/intervene:v0.0.4',
-        'description': 'Variety of set intersection visualizations',
+        'description': 'Set intersection visualizations',
         'default_parameters': [],
         'default_files': ['fruit.txt', 'green.txt', 'sweet.txt', 'vegetable.txt'],
         'input': lambda urls, prefix: {'file_relationships': urls}
@@ -46,7 +46,7 @@ tools = {
     },
     'rna-seq': {
         'image': 'mccalluc/heatmap_scatter_dash:v0.1.8',
-        'description': 'Heatmap and scatterplots for gene expression data',
+        'description': 'Linked visualization for gene expression',
         'default_parameters': [],
         'default_files': ['3x3.csv'],
         'input': lambda urls, prefix: {

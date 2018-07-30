@@ -25,7 +25,8 @@ class PathRoutingTests(unittest.TestCase):
         context = response.context
 
         fields = context['launch_form'].fields
-        self.assertEqual(['container_name', 'files', 'show_input', 'tool'],
+        self.assertEqual(['container_name', 'files', 'parameters_json',
+                          'show_input', 'tool'],
                          sorted(set(fields.keys())))
         # More wrapping for older pythons / older djangos.
 
@@ -33,10 +34,11 @@ class PathRoutingTests(unittest.TestCase):
         # Locally, you may also have data choices which are not checked in.
 
         self.assertEquals(
-            [('debugger', 'debugger'),
-             ('heatmap', 'heatmap'),
-             ('higlass', 'higlass'),
-             ('lineup', 'lineup')],
+            [('debugger', 'debugger: Echo the user input'),
+             ('higlass', 'higlass: 1-D and 2-D genomic data browser'),
+             ('intervene', 'intervene: Set intersection visualizations'),
+             ('lineup', 'lineup: Aggregate and sort heterogeneous data'),
+             ('rna-seq', 'rna-seq: Linked visualization for gene expression')],
             sorted(fields['tool'].choices))
 
         self.assertEqual(
@@ -44,7 +46,7 @@ class PathRoutingTests(unittest.TestCase):
             {'files': ['3x3.csv']})
 
         content = response.content.decode('utf-8')
-        self.assertIn('<option value="debugger">debugger</option>', content)
+        self.assertIn('<option value="debugger">debugger:', content)
         self.assertIn('<option value="3x3.csv" selected', content)
         # For older django versions, it's
         # > selected="selected"
@@ -60,7 +62,8 @@ class PathRoutingTests(unittest.TestCase):
             response = self.client.post('/launch/',
                                         {'files': ['fake-data'],
                                          'tool': 'debugger',
-                                         'container_name': 'fake-name'},
+                                         'container_name': 'fake-name',
+                                         'parameters_json': '[]'},
                                         follow=True)
             self.assert_response_redirect(response, '/docker/fake-name/')
 
