@@ -89,26 +89,35 @@
 
     <script>
       (function() {
-        var default_parameters = {{ default_parameters_json | safe }};
         function set_parameters_to_default(tool_name) {
+          var default_parameters = {{ default_parameters_json | safe }};
           var params_json = JSON.stringify(default_parameters[tool_name]);
           document.getElementById('id_parameters_json').value = params_json;
         }
-        set_parameters_to_default(document.getElementById('id_tool').value);
 
-        var default_files = {{ default_files_json | safe }};
         function set_files_to_default(tool_name) {
+          var default_files = {{ default_files_json | safe }};
           var my_default_files = default_files[tool_name];
           for (option of document.getElementById('id_files')) {
             option.selected = my_default_files.includes(option.value);
           }
         }
-        set_files_to_default(document.getElementById('id_tool').value);
+
+        function set_container_name_to_default(tool_name) {
+          document.getElementById('id_container_name').value = tool_name;
+        }
+
+        function set_all_to_default(tool_name) {
+          set_parameters_to_default(tool_name);
+          set_files_to_default(tool_name);
+          set_container_name_to_default(tool_name);
+        }
+        
+        set_all_to_default(document.getElementById('id_tool').value);
 
         document.getElementById('id_tool').onchange = function(event) {
           var tool_name = event.target.value;
-          set_parameters_to_default(tool_name);
-          set_files_to_default(tool_name);
+          set_all_to_default(tool_name);
         };
       })();
     </script>
