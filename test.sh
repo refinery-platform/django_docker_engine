@@ -14,6 +14,11 @@ start test
 ./manage.py test --verbosity=2
 end test
 
+start docker
+docker system df
+# TODO: Make assertions about the disk usage we would expect to see.
+end docker
+
 start doctest
 python -m doctest *.md
 end doctest
