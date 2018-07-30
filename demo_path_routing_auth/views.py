@@ -36,8 +36,12 @@ def index(request):
         'launch_form': launch_form,
         'upload_form': UploadForm(),
         'default_parameters_json': json.dumps({
-              k: v['default_parameters']
-              for k, v in tools.items()
+            k: v['default_parameters']
+            for k, v in tools.items()
+        }),
+        'default_files_json': json.dumps({
+            k: v['default_files']
+            for k, v in tools.items()
         })
     }
     if hasattr(request, 'user'):
