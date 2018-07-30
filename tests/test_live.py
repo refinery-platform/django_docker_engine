@@ -3,7 +3,7 @@ import socket
 import subprocess
 import time
 import unittest
-from os import environ, mkdir
+from os import mkdir
 from shutil import rmtree
 
 import mechanicalsoup
@@ -80,20 +80,10 @@ class PathRoutingMechanicalSoupTests(unittest.TestCase):
     def testDebuggerLaunch(self):
         self.assert_tool('debugger', 'Tool Launch Data')
 
-    @unittest.skipIf(
-        environ.get('TRAVIS'),
-        'https://github.com/refinery-platform/django_docker_engine/issues/143')
-    def testLineupLaunchLocal(self):
+    def testLineupLaunch(self):
+        # TODO: Works on Travis, but that surprises me... What changed?
+        # https://github.com/refinery-platform/django_docker_engine/issues/143
         self.assert_tool('lineup', 'LineUp')
-
-    @unittest.skipUnless(
-        environ.get('TRAVIS'),
-        'https://github.com/refinery-platform/django_docker_engine/issues/143')
-    def testLineupLaunchTravis(self):
-        self.assert_tool('lineup', 'Please wait')
-
-    # Might add other tools to this list, but since downloading images
-    # can take a while, should focus on the ones with problems.
 
 
 class PathRoutingClientTests(unittest.TestCase):
