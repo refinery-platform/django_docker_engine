@@ -89,35 +89,34 @@
 
     <script>
       (function() {
-        function set_parameters_to_default(tool_name) {
-          var default_parameters = {{ default_parameters_json | safe }};
-          var params_json = JSON.stringify(default_parameters[tool_name]);
-          document.getElementById('id_parameters_json').value = params_json;
+        function setParametersToDefault(toolName) {
+          var defaultParameters = {{ default_parameters_json | safe }};
+          var paramsJson = JSON.stringify(defaultParameters[toolName]);
+          document.getElementById('id_parameters_json').value = paramsJson;
         }
 
-        function set_files_to_default(tool_name) {
-          var default_files = {{ default_files_json | safe }};
-          var my_default_files = default_files[tool_name];
+        function setFilesToDefault(toolName) {
+          var defaultFiles = {{ default_files_json | safe }};
+          var myDefaultFiles = defaultFiles[toolName];
           for (option of document.getElementById('id_files')) {
-            option.selected = my_default_files.includes(option.value);
+            option.selected = myDefaultFiles.includes(option.value);
           }
         }
-
-        function set_container_name_to_default(tool_name) {
-          document.getElementById('id_container_name').value = tool_name;
+        
+        function setContainerNameToDefault(toolName) {
+          document.getElementById('id_container_name').value = toolName;
         }
 
-        function set_all_to_default(tool_name) {
-          set_parameters_to_default(tool_name);
-          set_files_to_default(tool_name);
-          set_container_name_to_default(tool_name);
+        function setAllToDefault(toolName) {
+          setParametersToDefault(toolName);
+          setFilesToDefault(toolName);
+          setContainerNameToDefault(toolName);
         }
-
-        set_all_to_default(document.getElementById('id_tool').value);
+        setAllToDefault(document.getElementById('id_tool').value);
 
         document.getElementById('id_tool').onchange = function(event) {
-          var tool_name = event.target.value;
-          set_all_to_default(tool_name);
+          var toolName = event.target.value;
+          setAllToDefault(toolName);
         };
       })();
     </script>
