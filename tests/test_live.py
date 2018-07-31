@@ -81,8 +81,6 @@ class PathRoutingMechanicalSoupTests(unittest.TestCase):
         self.assert_tool('debugger', 'Tool Launch Data')
 
     def testLineupLaunch(self):
-        # TODO: Works on Travis, but that surprises me... What changed?
-        # https://github.com/refinery-platform/django_docker_engine/issues/143
         self.assert_tool('lineup', 'LineUp')
 
 
