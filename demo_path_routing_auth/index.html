@@ -87,5 +87,39 @@
       </div>
     </div>
 
+    <script>
+      (function() {
+        function setParametersToDefault(toolName) {
+          var defaultParameters = {{ default_parameters_json | safe }};
+          var paramsJson = JSON.stringify(defaultParameters[toolName]);
+          document.getElementById('id_parameters_json').value = paramsJson;
+        }
+
+        function setFilesToDefault(toolName) {
+          var defaultFiles = {{ default_files_json | safe }};
+          var myDefaultFiles = defaultFiles[toolName];
+          for (option of document.getElementById('id_files')) {
+            option.selected = myDefaultFiles.includes(option.value);
+          }
+        }
+        
+        function setContainerNameToDefault(toolName) {
+          document.getElementById('id_container_name').value = toolName;
+        }
+
+        function setAllToDefault(toolName) {
+          setParametersToDefault(toolName);
+          setFilesToDefault(toolName);
+          setContainerNameToDefault(toolName);
+        }
+        setAllToDefault(document.getElementById('id_tool').value);
+
+        document.getElementById('id_tool').onchange = function(event) {
+          var toolName = event.target.value;
+          setAllToDefault(toolName);
+        };
+      })();
+    </script>
+
   </body>
 </html>

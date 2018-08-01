@@ -3,7 +3,7 @@ import socket
 import subprocess
 import time
 import unittest
-from os import environ, mkdir
+from os import mkdir
 from shutil import rmtree
 
 import mechanicalsoup
@@ -51,6 +51,7 @@ class PathRoutingMechanicalSoupTests(unittest.TestCase):
         browser.select_form('#launch')
         browser['tool'] = tool
         container_name = 'test-{}-{}'.format(tool, self.port)
+        browser['parameters_json'] = '[]'
         browser['container_name'] = container_name
         browser.submit_selected()
 
@@ -79,20 +80,8 @@ class PathRoutingMechanicalSoupTests(unittest.TestCase):
     def testDebuggerLaunch(self):
         self.assert_tool('debugger', 'Tool Launch Data')
 
-    @unittest.skipIf(
-        environ.get('TRAVIS'),
-        'https://github.com/refinery-platform/django_docker_engine/issues/143')
-    def testHeatmapLaunchLocal(self):
-        self.assert_tool('heatmap', 'Heatmap + Scatterplots')
-
-    @unittest.skipUnless(
-        environ.get('TRAVIS'),
-        'https://github.com/refinery-platform/django_docker_engine/issues/143')
-    def testHeatmapLaunchTravis(self):
-        self.assert_tool('heatmap', 'Please wait')
-
-    # Might add other tools to this list, but since downloading images
-    # can take a while, should focus on the ones with problems.
+    def testLineupLaunch(self):
+        self.assert_tool('lineup', 'LineUp')
 
 
 class PathRoutingClientTests(unittest.TestCase):

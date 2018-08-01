@@ -12,11 +12,14 @@ class UnvalidatedMultipleChoiceField(forms.MultipleChoiceField):
 
 class LaunchForm(forms.Form):
     container_name = forms.CharField()
-    files = UnvalidatedMultipleChoiceField()
     tool = forms.ChoiceField(
         widget=forms.Select,
-        choices=tuple((k, k) for k in tools)
+        choices=tuple(
+            (k, '{}: {}'.format(k, v['description']))
+            for k, v in tools.items())
     )
+    files = UnvalidatedMultipleChoiceField()
+    parameters_json = forms.CharField()
     show_input = forms.BooleanField(required=False)
 
 
