@@ -3,6 +3,8 @@
 ## [v0.0.62](https://pypi.org/project/django-docker-engine/0.0.62/) (???)
 
 * Allow remote URLs as inputs, and not just local files.
+* Add is_live().
+
 
 ## [v0.0.61](https://pypi.org/project/django-docker-engine/0.0.61/) (Aug 1, 2018)
 

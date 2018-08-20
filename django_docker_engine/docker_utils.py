@@ -82,6 +82,8 @@ class DockerClientWrapper(object):
         try:
             self._containers_manager.get_url(container_name)
         except (docker_engine.ExpectedPortMissing, docker.errors.NotFound):
+            # Other errors could be thrown, but only those that should
+            # eventually resolve on their own should be included here.
             return False
         else:
             return True
