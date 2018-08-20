@@ -96,7 +96,7 @@
         }
 
         function setFilesToDefault(toolName) {
-          var defaultFiles = {{ default_files_json | safe }};
+          var defaultFiles = {{ default_urls_json | safe }};
           var myDefaultFiles = defaultFiles[toolName];
           for (option of document.getElementById('id_files')) {
             option.selected = myDefaultFiles.includes(option.value);

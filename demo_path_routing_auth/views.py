@@ -25,11 +25,19 @@ UPLOAD_DIR = os.path.join(os.path.dirname(__file__), 'upload')
 def index(request):
     launch_form = LaunchForm()
     # TODO: Pass this info through the constructor
+    try:
+        port = request.get_port()
+    except AttributeError:  # Django 1.8.19
+        port = request.get_host().replace('localhost:', '')
+    file_to_url = {
+        name: 'http://{}:{}/upload/{}'.format(hostname(), port, name)
+        for name in os.listdir(UPLOAD_DIR) if not name.startswith('.')
+    }
     launch_form.fields['files'] = forms.ChoiceField(
         widget=forms.SelectMultiple,
-        choices=((f, f) for f in os.listdir(UPLOAD_DIR) if f != '.gitignore')
+        choices=((url, name) for (name, url) in file_to_url.items())
     )
-    launch_form.initial['files'] = [request.GET.get('uploaded')]
+    launch_form.initial['files'] = [file_to_url.get(request.GET.get('uploaded'))]
 
     context = {
         'container_names': [container.name for container in client.list()],
@@ -39,8 +47,8 @@ def index(request):
             k: v['default_parameters']
             for k, v in tools.items()
         }),
-        'default_files_json': json.dumps({
-            k: v['default_files']
+        'default_urls_json': json.dumps({
+            k: [file_to_url[f] for f in v['default_files']]
             for k, v in tools.items()
         })
     }
@@ -78,10 +86,7 @@ def launch(request):
         port = request.get_port()
     except AttributeError:  # Django 1.8.19
         port = request.get_host().replace('localhost:', '')
-    input_urls = [
-        'http://{}:{}/upload/{}'.format(hostname(), port, file)
-        for file in post['files']
-    ]
+    input_urls = post['files']
     tool_spec = tools[post['tool']]
 
     container_name = post['container_name']
