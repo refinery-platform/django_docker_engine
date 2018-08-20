@@ -81,7 +81,7 @@ class DockerClientWrapper(object):
     def is_live(self, container_name):
         try:
             self._containers_manager.get_url(container_name)
-        except docker_engine.ExpectedPortMissing, docker.errors.NotFound:
+        except (docker_engine.ExpectedPortMissing, docker.errors.NotFound):
             return False
         else:
             return True
