@@ -1,6 +1,10 @@
 # Change Log
 
-## [v0.0.61](https://pypi.org/project/django-docker-engine/0.0.61/) (???)
+## [v0.0.62](https://pypi.org/project/django-docker-engine/0.0.62/) (???)
+
+* Allow remote URLs as inputs, and not just local files.
+
+## [v0.0.61](https://pypi.org/project/django-docker-engine/0.0.61/) (Aug 1, 2018)
 
 * Tool parameters can be specified in demo.
 * Sensible defaults provided for demo tools.
