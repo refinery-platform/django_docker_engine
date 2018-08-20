@@ -18,7 +18,7 @@ class LaunchForm(forms.Form):
             (k, '{}: {}'.format(k, v['description']))
             for k, v in tools.items())
     )
-    files = UnvalidatedMultipleChoiceField()
+    urls = UnvalidatedMultipleChoiceField()
     parameters_json = forms.CharField()
     show_input = forms.BooleanField(required=False)
 
