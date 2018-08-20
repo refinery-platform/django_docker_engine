@@ -37,6 +37,7 @@ UrlPatterns = namedtuple('UrlPatterns', ['urlpatterns'])
 class _AnonUser():
     # TODO: This is a hack. Waiting for fix for
     # https://github.com/TracyWebTech/django-revproxy/issues/86
+    # https://github.com/TracyWebTech/django-revproxy/pull/92
     def get_username(self):
         return 'anonymous'
 
