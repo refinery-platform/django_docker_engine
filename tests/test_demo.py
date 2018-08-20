@@ -43,9 +43,9 @@ class PathRoutingTests(unittest.TestCase):
              ('rna-seq', 'rna-seq: Linked visualization for gene expression')],
             sorted(fields['tool'].choices))
 
-        self.assertEqual(
-            context['launch_form'].initial,
-            {'urls': ['http://docker.for.mac.localhost:80/upload/3x3.csv']})
+        self.assertIn(
+            '/upload/3x3.csv',
+            context['launch_form'].initial['urls'][0])
 
         content = response.content.decode('utf-8')
         self.assertIn('<option value="debugger">debugger:', content)
