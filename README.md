@@ -48,8 +48,9 @@ A wrapper for [Caleydo LineUp](http://caleydo.org/tools/lineup/), for visualizin
 rankings based on heterogeneous attributes
 
 More information:
-- [for users of the library](https://github.com/refinery-platform/django_docker_engine/blob/master/README-USERS.md)
-- [for developers of the library](https://github.com/refinery-platform/django_docker_engine/blob/master/README-DEVS.md)
-- [background reading](https://github.com/refinery-platform/django_docker_engine/blob/master/notes)
+- [for users of the library](README-USERS.md)
+- [for developers of the library](README-DEVS.md)
+- [for developers of visualizations](README-VIS.md)
+- [background reading](notes)
 - [API documentation](https://www.pydoc.io/pypi/django-docker-engine-0.0.57/)
 - [BOSC 2018 poster](https://f1000research.com/posters/7-1078)
