@@ -17,9 +17,19 @@ from .forms import LaunchForm, UploadForm
 from .tools import tools
 from .utils import hostname
 
+try:
+    from urlparse import urlparse  # Python 2
+except ModuleNotFoundError:
+    from urllib.parse import urlparse  # Python 3
+
 client = DockerClientRunWrapper(
     DockerClientSpec(None, do_input_json_envvar=True))
 UPLOAD_DIR = os.path.join(os.path.dirname(__file__), 'upload')
+
+OUTSIDE_URLS = [
+    'https://s3.amazonaws.com/pkerp/public/gene_annotations.short.db',
+    'https://s3.amazonaws.com/pkerp/public/cnv_short.hibed'
+]
 
 
 def index(request):
@@ -29,16 +39,20 @@ def index(request):
         port = request.get_port()
     except AttributeError:  # Django 1.8.19
         port = request.get_host().replace('localhost:', '')
-    file_to_url = {
-        name: 'http://{}:{}/upload/{}'.format(hostname(), port, name)
-        for name in os.listdir(UPLOAD_DIR) if not name.startswith('.')
+    url_field_choices = (
+        [('http://{}:{}/upload/{}'.format(hostname(), port, name), name)
+         for name in os.listdir(UPLOAD_DIR) if not name.startswith('.')] +
+        [(url, os.path.basename(urlparse(url).path)) for url in OUTSIDE_URLS]
+    )
+    name_to_url = {
+        name: url for (url, name) in url_field_choices
     }
     launch_form.fields['urls'] = forms.ChoiceField(
         widget=forms.SelectMultiple,
-        choices=((url, name) for (name, url) in file_to_url.items())
+        choices=url_field_choices
     )
     launch_form.initial['urls'] = [
-        file_to_url.get(request.GET.get('uploaded'))]
+        name_to_url.get(request.GET.get('uploaded'))]
 
     context = {
         'container_names': [container.name for container in client.list()],
@@ -49,7 +63,7 @@ def index(request):
             for k, v in tools.items()
         }),
         'default_urls_json': json.dumps({
-            k: [file_to_url[f] for f in v['default_files']]
+            k: [name_to_url[f] for f in v['default_files']]
             for k, v in tools.items()
         })
     }

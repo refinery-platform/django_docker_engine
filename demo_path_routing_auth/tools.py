@@ -35,7 +35,7 @@ tools = {
         'image': 'scottx611x/refinery-higlass-docker:v0.3.2',
         'description': '1-D and 2-D genomic data browser',
         'default_parameters': [],
-        'default_files': ['3x3.csv'],
+        'default_files': ['gene_annotations.short.db', 'cnv_short.hibed'],
         'input': lambda urls, prefix: {
             'node_info': {
                 'fake-uuid-{}'.format(i): {'file_url': url}
