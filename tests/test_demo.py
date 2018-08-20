@@ -31,8 +31,8 @@ class PathRoutingTests(unittest.TestCase):
         # More wrapping for older pythons / older djangos.
 
         self.assertIn(
-            ('http://docker.for.mac.localhost:80/upload/3x3.csv', '3x3.csv'),
-            fields['urls'].choices)
+            '3x3.csv',
+            [name for (url, name) in fields['urls'].choices])
         # Locally, you may also have data choices which are not checked in.
 
         self.assertEquals(
