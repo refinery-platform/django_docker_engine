@@ -37,7 +37,8 @@ def index(request):
         widget=forms.SelectMultiple,
         choices=((url, name) for (name, url) in file_to_url.items())
     )
-    launch_form.initial['urls'] = [file_to_url.get(request.GET.get('uploaded'))]
+    launch_form.initial['urls'] = [
+        file_to_url.get(request.GET.get('uploaded'))]
 
     context = {
         'container_names': [container.name for container in client.list()],

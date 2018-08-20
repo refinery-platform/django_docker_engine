@@ -65,7 +65,7 @@ class PathRoutingTests(unittest.TestCase):
                                         {'tool': 'debugger',
                                          'container_name': 'fake-name',
                                          'parameters_json': '[]',
-                                         'urls': ['fake-data'],                                         },
+                                         'urls': ['fake-data'], },
                                         follow=True)
             self.assert_response_redirect(response, '/docker/fake-name/')
 
