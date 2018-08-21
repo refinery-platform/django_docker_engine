@@ -32,6 +32,7 @@ logger = logging.getLogger(__name__)
 
 ContainerInfo = namedtuple('ContainerInfo', ['url', 'name'])
 
+
 class LiveDockerTests(unittest.TestCase):
 
     @property
