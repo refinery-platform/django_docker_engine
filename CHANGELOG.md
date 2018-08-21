@@ -4,6 +4,8 @@
 
 * Allow remote URLs as inputs, and not just local files.
 * Add is_live().
+* Add tools to demo.
+* Documentation for tool authors.
 
 
 ## [v0.0.61](https://pypi.org/project/django-docker-engine/0.0.61/) (Aug 1, 2018)
