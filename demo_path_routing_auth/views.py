@@ -1,6 +1,7 @@
 import json
 import os
 import re
+from sys import version_info
 
 from django import forms
 from django.contrib import auth
@@ -17,19 +18,46 @@ from .forms import LaunchForm, UploadForm
 from .tools import tools
 from .utils import hostname
 
+if version_info >= (3,):
+    from urllib.parse import urlparse
+else:
+    from urlparse import urlparse
+
+
 client = DockerClientRunWrapper(
     DockerClientSpec(None, do_input_json_envvar=True))
 UPLOAD_DIR = os.path.join(os.path.dirname(__file__), 'upload')
+
+OUTSIDE_URLS = [
+    'https://s3.amazonaws.com/pkerp/public/gene_annotations.short.db',
+    'https://s3.amazonaws.com/pkerp/public/cnv_short.hibed',
+    'https://beta.stemcellcommons.org'
+    '/media/file_store/22/e3/raw_data_qualimapReport.zip',
+    'https://rawgit.com/igvteam/igv/master/test/data/gff/NC_009084.gff'
+]
 
 
 def index(request):
     launch_form = LaunchForm()
     # TODO: Pass this info through the constructor
-    launch_form.fields['files'] = forms.ChoiceField(
-        widget=forms.SelectMultiple,
-        choices=((f, f) for f in os.listdir(UPLOAD_DIR) if f != '.gitignore')
+    try:
+        port = request.get_port()
+    except AttributeError:  # Django 1.8.19
+        port = request.get_host().replace('localhost:', '')
+    url_field_choices = (
+        [('http://{}:{}/upload/{}'.format(hostname(), port, name), name)
+         for name in os.listdir(UPLOAD_DIR) if not name.startswith('.')] +
+        [(url, os.path.basename(urlparse(url).path)) for url in OUTSIDE_URLS]
     )
-    launch_form.initial['files'] = [request.GET.get('uploaded')]
+    name_to_url = {
+        name: url for (url, name) in url_field_choices
+    }
+    launch_form.fields['urls'] = forms.ChoiceField(
+        widget=forms.SelectMultiple,
+        choices=url_field_choices
+    )
+    launch_form.initial['urls'] = [
+        name_to_url.get(request.GET.get('uploaded'))]
 
     context = {
         'container_names': [container.name for container in client.list()],
@@ -39,8 +67,8 @@ def index(request):
             k: v['default_parameters']
             for k, v in tools.items()
         }),
-        'default_files_json': json.dumps({
-            k: v['default_files']
+        'default_urls_json': json.dumps({
+            k: [name_to_url[f] for f in v['default_files']]
             for k, v in tools.items()
         })
     }
@@ -73,15 +101,7 @@ def launch(request):
         raise ValidationError(form.errors)
 
     post = form.cleaned_data
-
-    try:
-        port = request.get_port()
-    except AttributeError:  # Django 1.8.19
-        port = request.get_host().replace('localhost:', '')
-    input_urls = [
-        'http://{}:{}/upload/{}'.format(hostname(), port, file)
-        for file in post['files']
-    ]
+    input_urls = post['urls']
     tool_spec = tools[post['tool']]
 
     container_name = post['container_name']

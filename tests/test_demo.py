@@ -25,29 +25,29 @@ class PathRoutingTests(unittest.TestCase):
         context = response.context
 
         fields = context['launch_form'].fields
-        self.assertEqual(['container_name', 'files', 'parameters_json',
-                          'show_input', 'tool'],
+        self.assertEqual(['container_name', 'parameters_json',
+                          'show_input', 'tool', 'urls'],
                          sorted(set(fields.keys())))
         # More wrapping for older pythons / older djangos.
 
-        self.assertIn(('3x3.csv', '3x3.csv'), fields['files'].choices)
+        self.assertIn(
+            '3x3.csv',
+            [name for (url, name) in fields['urls'].choices])
         # Locally, you may also have data choices which are not checked in.
 
         self.assertEquals(
-            [('debugger', 'debugger: Echo the user input'),
-             ('higlass', 'higlass: 1-D and 2-D genomic data browser'),
-             ('intervene', 'intervene: Set intersection visualizations'),
-             ('lineup', 'lineup: Aggregate and sort heterogeneous data'),
-             ('rna-seq', 'rna-seq: Linked visualization for gene expression')],
-            sorted(fields['tool'].choices))
+            {'debugger', 'higlass', 'igv-js', 'intervene',
+             'lineup', 'rna-seq', 'multiqc'},
+            {choice[0] for choice in fields['tool'].choices}
+        )
 
-        self.assertEqual(
-            context['launch_form'].initial,
-            {'files': ['3x3.csv']})
+        self.assertIn(
+            '/upload/3x3.csv',
+            context['launch_form'].initial['urls'][0])
 
         content = response.content.decode('utf-8')
         self.assertIn('<option value="debugger">debugger:', content)
-        self.assertIn('<option value="3x3.csv" selected', content)
+        self.assertIn('>3x3.csv</option>', content)
         # For older django versions, it's
         # > selected="selected"
         # but in newer versions, there is no value for the attribute.
@@ -60,10 +60,10 @@ class PathRoutingTests(unittest.TestCase):
         with patch.object(DockerClientRunWrapper,
                           'run') as mock_run:
             response = self.client.post('/launch/',
-                                        {'files': ['fake-data'],
-                                         'tool': 'debugger',
+                                        {'tool': 'debugger',
                                          'container_name': 'fake-name',
-                                         'parameters_json': '[]'},
+                                         'parameters_json': '[]',
+                                         'urls': ['fake-data'], },
                                         follow=True)
             self.assert_response_redirect(response, '/docker/fake-name/')
 
@@ -76,9 +76,7 @@ class PathRoutingTests(unittest.TestCase):
             self.assertEqual(
                 spec.image_name,
                 'scottx611x/refinery-developer-vis-tool:v0.0.7')
-            self.assertRegexpMatches(
-                spec.input['file_relationships'][0],
-                r'^http://[^/]+/upload/fake-data')
+            self.assertEqual(spec.input['file_relationships'], ['fake-data'])
             self.assertEqual(spec.labels, {})
 
     def test_kill_get_405(self):

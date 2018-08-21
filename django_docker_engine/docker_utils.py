@@ -5,6 +5,8 @@ from datetime import datetime
 from shutil import rmtree
 from time import time
 
+import docker.errors
+
 from django_docker_engine.container_managers import docker_engine
 
 logging.basicConfig()
@@ -75,6 +77,16 @@ class DockerClientWrapper(object):
         self._containers_manager = manager_class(None, root_label)
         # Some methods of the manager will fail without a data_dir,
         # but they shouldn't be called from the read-only client in any event.
+
+    def is_live(self, container_name):
+        try:
+            self._containers_manager.get_url(container_name)
+        except (docker_engine.ExpectedPortMissing, docker.errors.NotFound):
+            # Other errors could be thrown, but only those that should
+            # eventually resolve on their own should be included here.
+            return False
+        else:
+            return True
 
     def lookup_container_url(self, container_name):
         """
