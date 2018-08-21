@@ -27,8 +27,18 @@ tools = {
             {'name': 'Genome Build',
              'value': 'hg19'}
         ],
-        'default_files': ['3x3.csv'],
-        'input': lambda urls, prefix: {'file_relationships': urls}
+        'default_files': ['NC_009084.gff'],
+        'input': lambda urls, prefix: {
+            'node_info': {
+                'fake-uuid-{}'.format(i): {
+                    'file_url': url,
+                    'node_solr_info': {
+                        'name': 'fake-name-{}'.format(i)
+                    }
+                }
+                for (i, url) in enumerate(urls)
+            },
+        }
     },
     'higlass': {
         'image': 'scottx611x/refinery-higlass-docker:v0.3.2',
@@ -49,7 +59,7 @@ tools = {
         'default_parameters': [],
         'default_files': ['3x3.csv'],
         'input': lambda urls, prefix: {
-            'file_relationships': [urls, []],
+            'file_relationships': urls,
             'api_prefix': prefix,
             'extra_directories': ['/refinery-data/']
         }
@@ -60,7 +70,7 @@ tools = {
         'default_parameters': [],
         'default_files': ['raw_data_qualimapReport.zip'],
         'input': lambda urls, prefix: {
-            'file_relationships': [urls, []],
+            'file_relationships': urls,
             'extra_directories': ['/data/']
         }
     }

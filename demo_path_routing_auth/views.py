@@ -30,7 +30,8 @@ OUTSIDE_URLS = [
     'https://s3.amazonaws.com/pkerp/public/gene_annotations.short.db',
     'https://s3.amazonaws.com/pkerp/public/cnv_short.hibed',
     'https://beta.stemcellcommons.org/media/file_store/22/e3/'
-        'raw_data_qualimapReport.zip'
+        'raw_data_qualimapReport.zip',
+    'https://rawgit.com/igvteam/igv/master/test/data/gff/NC_009084.gff'
 ]
 
 
