@@ -1,8 +1,8 @@
 # Change Log
 
-## [v0.0.62](https://pypi.org/project/django-docker-engine/0.0.62/) (???)
+## [v0.0.62](https://pypi.org/project/django-docker-engine/0.0.62/) (Aug 21, 2018)
 
-* Allow remote URLs as inputs, and not just local files.
+* Allow remote URLs as demo inputs, and not just local files.
 * Add is_live().
 * Add tools to demo.
 * Documentation for tool authors.
