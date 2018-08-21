@@ -47,7 +47,7 @@ class PathRoutingTests(unittest.TestCase):
 
         content = response.content.decode('utf-8')
         self.assertIn('<option value="debugger">debugger:', content)
-        self.assertIn('selected>3x3.csv</option>', content)
+        self.assertIn('>3x3.csv</option>', content)
         # For older django versions, it's
         # > selected="selected"
         # but in newer versions, there is no value for the attribute.
