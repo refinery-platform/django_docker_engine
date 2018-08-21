@@ -28,7 +28,9 @@ UPLOAD_DIR = os.path.join(os.path.dirname(__file__), 'upload')
 
 OUTSIDE_URLS = [
     'https://s3.amazonaws.com/pkerp/public/gene_annotations.short.db',
-    'https://s3.amazonaws.com/pkerp/public/cnv_short.hibed'
+    'https://s3.amazonaws.com/pkerp/public/cnv_short.hibed',
+    'https://beta.stemcellcommons.org/media/file_store/22/e3/'
+        'raw_data_qualimapReport.zip'
 ]
 
 
