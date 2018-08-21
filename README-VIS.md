@@ -26,9 +26,9 @@ Here are samples from some of our projects:
 
 - [Python](https://github.com/refinery-platform/heatmap-scatter-dash/blob/master/context/Dockerfile)
 - [R Shiny](https://github.com/refinery-platform/intervene-refinery-docker/blob/master/context/Dockerfile)
-- [JS](https://github.com/refinery-platform/lineup-refinery-docker/blob/master/context/Dockerfile)*
+- [Javascript](https://github.com/refinery-platform/lineup-refinery-docker/blob/master/context/Dockerfile)*
 
-The JS example is different: The visualization is purely client-side, but because a
+The JavaScript example is different: The visualization is purely client-side, but because a
 small script to process the input on startup is required, the base image is
 actually Python.
 
@@ -73,7 +73,8 @@ session cookie needs to be preserved on any AJAX requests you make. Right now,
 FF and Chrome have slightly different implementations of the HTML5 Fetch API
 in this regard.
 - **No WebSockets**: WebSockets are a step beyond HTTP, and won't work across plain
-HTTP proxies like we use.
+HTTP proxies like we use. (Shiny apps use WebSockets by default, but when run
+inside Shiny Server they can be configured to fall back to HTTP.)
 - **No server state**: There are no provisions right
 now to preserve sessions or to make them available with restarts. Instead, try
 to update the query portion of the URL.
