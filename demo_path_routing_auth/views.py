@@ -1,6 +1,7 @@
 import json
 import os
 import re
+from sys import version_info
 
 from django import forms
 from django.contrib import auth
@@ -17,10 +18,11 @@ from .forms import LaunchForm, UploadForm
 from .tools import tools
 from .utils import hostname
 
-try:
-    from urlparse import urlparse  # Python 2
-except ModuleNotFoundError:
-    from urllib.parse import urlparse  # Python 3
+if version_info >= (3,):
+    from urllib.parse import urlparse
+else:
+    from urlparse import urlparse
+
 
 client = DockerClientRunWrapper(
     DockerClientSpec(None, do_input_json_envvar=True))
