@@ -36,12 +36,10 @@ class PathRoutingTests(unittest.TestCase):
         # Locally, you may also have data choices which are not checked in.
 
         self.assertEquals(
-            [('debugger', 'debugger: Echo the user input'),
-             ('higlass', 'higlass: 1-D and 2-D genomic data browser'),
-             ('intervene', 'intervene: Set intersection visualizations'),
-             ('lineup', 'lineup: Aggregate and sort heterogeneous data'),
-             ('rna-seq', 'rna-seq: Linked visualization for gene expression')],
-            sorted(fields['tool'].choices))
+            {'debugger', 'higlass', 'igv-js', 'intervene',
+             'lineup', 'rna-seq', 'multiqc'},
+            {choice[0] for choice in fields['tool'].choices}
+        )
 
         self.assertIn(
             '/upload/3x3.csv',
