@@ -14,11 +14,22 @@ tools = {
         'input': lambda urls, prefix: {'file_relationships': urls}
     },
     'intervene': {
-        'image': 'mccalluc/intervene:v0.0.4',
-        'description': 'Set intersection visualizations',
+        'image': 'mccalluc/intervene:v0.0.5',
+        'description': 'Set intersection Shiny app',
         'default_parameters': [],
-        'default_files': ['fruit.txt', 'green.txt', 'sweet.txt', 'vegetable.txt'],
+        'default_files': ['mESC.genes', 'Myotube.genes', 'pro-B.genes', 'Th-cell.genes'],
         'input': lambda urls, prefix: {'file_relationships': urls}
+    },
+    'shiny-demo': {
+        'image': 'mccalluc/shiny-heatmap-refinery:v0.0.2',
+        'description': 'Trivial Shiny app',
+        'default_parameters': [],
+        'default_files': ['3x3.csv'],
+        'input': lambda urls, prefix: {'file_relationships': urls},
+        'container_port': 3838
+        # Not sure why it needs to be 3838...
+        # but it's also good to exercise container_port.
+        # https://github.com/refinery-platform/shiny-heatmap-refinery/issues/2
     },
     'igv-js': {
         'image': 'gehlenborglab/docker_igv_js:v0.0.9',

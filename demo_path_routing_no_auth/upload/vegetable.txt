@@ -1,6 +1,0 @@
-Cucumber
-Pickle
-Carrot
-Tomato
-Pepper
-Broccoli
