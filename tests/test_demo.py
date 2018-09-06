@@ -35,11 +35,9 @@ class PathRoutingTests(unittest.TestCase):
             [name for (url, name) in fields['urls'].choices])
         # Locally, you may also have data choices which are not checked in.
 
-        self.assertEquals(
-            {'debugger', 'higlass', 'igv-js', 'intervene',
-             'lineup', 'rna-seq', 'multiqc'},
-            {choice[0] for choice in fields['tool'].choices}
-        )
+        self.assertIn(
+            'debugger',
+            [choice[0] for choice in fields['tool'].choices])
 
         self.assertIn(
             '/upload/3x3.csv',
