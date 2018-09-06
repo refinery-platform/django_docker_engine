@@ -14,10 +14,17 @@ tools = {
         'input': lambda urls, prefix: {'file_relationships': urls}
     },
     'intervene': {
-        'image': 'mccalluc/intervene:v0.0.4',
-        'description': 'Set intersection visualizations',
+        'image': 'mccalluc/intervene:v0.0.5',
+        'description': 'Set intersection Shiny app',
         'default_parameters': [],
-        'default_files': ['fruit.txt', 'green.txt', 'sweet.txt', 'vegetable.txt'],
+        'default_files': ['mESC.genes', 'Myotube.genes', 'pro-B.genes', 'Th-cell.genes'],
+        'input': lambda urls, prefix: {'file_relationships': urls}
+    },
+    'shiny-demo': {
+        'image': 'mccalluc/shiny-heatmap-refinery:v0.0.1',
+        'description': 'Trivial Shiny app',
+        'default_parameters': [],
+        'default_files': ['3x3.csv'],
         'input': lambda urls, prefix: {'file_relationships': urls}
     },
     'igv-js': {
