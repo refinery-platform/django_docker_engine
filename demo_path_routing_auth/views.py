@@ -116,8 +116,8 @@ def launch(request):
         container_name=container_name,
         image_name=tool_spec['image'],
         input=input_data,
-        extra_directories=input_data.get('extra_directories') or [],
-        container_port=input_data.get('container_port') or 80,
+        extra_directories=tool_spec.get('extra_directories') or [],
+        container_port=tool_spec.get('container_port') or 80,
     )
     client.run(container_spec)
     return HttpResponseRedirect(container_path)

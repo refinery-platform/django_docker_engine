@@ -21,11 +21,15 @@ tools = {
         'input': lambda urls, prefix: {'file_relationships': urls}
     },
     'shiny-demo': {
-        'image': 'mccalluc/shiny-heatmap-refinery:v0.0.1',
+        'image': 'mccalluc/shiny-heatmap-refinery:v0.0.2',
         'description': 'Trivial Shiny app',
         'default_parameters': [],
         'default_files': ['3x3.csv'],
-        'input': lambda urls, prefix: {'file_relationships': urls}
+        'input': lambda urls, prefix: {'file_relationships': urls},
+        'container_port': 3838
+        # Not sure why it needs to be 3838...
+        # but it's also good to exercise container_port.
+        # https://github.com/refinery-platform/shiny-heatmap-refinery/issues/2
     },
     'igv-js': {
         'image': 'gehlenborglab/docker_igv_js:v0.0.9',
