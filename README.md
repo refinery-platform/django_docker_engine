@@ -35,17 +35,10 @@ each container, and kill the containers you've launched.
 
 ## More information
 
-The Refinery team maintains a [registry](https://github.com/refinery-platform/visualization-tools)
-of Docker images which can be plugged in to this framework. It includes:
-
-- [refinery-higlass-docker](https://github.com/refinery-platform/refinery-higlass-docker):
-A wrapper for [HiGlass](http://higlass.io/), for exploring genomic contact 
-matrices and tracks
-- [heatmap-scatter-dash](https://github.com/refinery-platform/heatmap-scatter-dash):
-A Plotly Dash app for understanding differential expression data
-- [lineup-refinery-docker](https://github.com/refinery-platform/lineup-refinery-docker):
-A wrapper for [Caleydo LineUp](http://caleydo.org/tools/lineup/), for visualizing
-rankings based on heterogeneous attributes
+For the demo server, [`tools.py`](demo_path_routing_auth/tools.py) defines the tools
+which are available and specifies default inputs. Analogously,
+the [`visualization-tools` repo](https://github.com/refinery-platform/visualization-tools)
+defines the tools which can be loaded into Refinery.
 
 More information:
 - [for users of the library](README-USERS.md)
