@@ -1,3 +1,7 @@
+# The CSV also specifies which tool goes with each file... but I could imagine
+# listing multiple incompatible input sets there. The default_files here can
+# just be a simple, coherent example to start from.
+
 tools = {
     'debugger': {
         'image': 'scottx611x/refinery-developer-vis-tool:v0.0.7',

@@ -1,3 +1,4 @@
+import csv
 import json
 import os
 import re
@@ -28,13 +29,9 @@ client = DockerClientRunWrapper(
     DockerClientSpec(None, do_input_json_envvar=True))
 UPLOAD_DIR = os.path.join(os.path.dirname(__file__), 'upload')
 
-OUTSIDE_URLS = [
-    'https://s3.amazonaws.com/pkerp/public/gene_annotations.short.db',
-    'https://s3.amazonaws.com/pkerp/public/cnv_short.hibed',
-    'https://beta.stemcellcommons.org'
-    '/media/file_store/22/e3/raw_data_qualimapReport.zip',
-    'https://rawgit.com/igvteam/igv/master/test/data/gff/NC_009084.gff'
-]
+with open(os.path.join(UPLOAD_DIR, 'demo-data.csv')) as csv_file:
+    reader = csv.DictReader(csv_file)
+    OUTSIDE_URLS = [row['url'] for row in reader]
 
 
 def index(request):
