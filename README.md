@@ -54,3 +54,8 @@ More information:
 - [background reading](notes)
 - [API documentation](https://www.pydoc.io/pypi/django-docker-engine-0.0.57/)
 - [BOSC 2018 poster](https://f1000research.com/posters/7-1078)
+
+## Release process
+
+In your branch update VERSION.txt, using semantic versioning:
+When the PR is merged, the successful Travis build will push a new version to pypi.
