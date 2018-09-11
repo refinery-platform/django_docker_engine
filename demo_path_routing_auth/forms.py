@@ -15,8 +15,8 @@ class LaunchForm(forms.Form):
     tool = forms.ChoiceField(
         widget=forms.Select,
         choices=tuple(
-            (k, '{}: {}'.format(k, v['description']))
-            for k, v in tools.items())
+            (name, '{}: {}'.format(name, tool.description))
+            for name, tool in tools.items())
     )
     urls = UnvalidatedMultipleChoiceField()
     parameters_json = forms.CharField()
