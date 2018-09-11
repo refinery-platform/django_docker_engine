@@ -14,6 +14,7 @@ class Tool():
     memory_use: Expected memory use in MB.
     '''
     # In 3.7, default values are supported for namedtuples. Until then:
+
     def __init__(self, image, description, memory_use,
                  default_parameters=None,
                  default_files=None, input_f=None, container_port=None):
@@ -23,13 +24,14 @@ class Tool():
         self.default_parameters = [] \
             if default_parameters is None else default_parameters
         self.default_files = ['3x3.csv'] \
-            if default_files is None  else default_files
+            if default_files is None else default_files
         self.container_port = 80 \
             if container_port is None else container_port
         self.input_f = lambda urls, prefix: {
             'file_relationships': urls,
             'extra_directories': []
         } if input_f is None else input_f
+
 
 tools = {
     'debugger': Tool(
@@ -45,7 +47,8 @@ tools = {
     'intervene': Tool(
         'mccalluc/intervene:v0.0.5',
         'Set intersection Shiny app',
-        default_files=['mESC.genes', 'Myotube.genes', 'pro-B.genes', 'Th-cell.genes'],
+        default_files=['mESC.genes', 'Myotube.genes',
+                       'pro-B.genes', 'Th-cell.genes'],
         memory_use=208
     ),
     'shiny-demo': Tool(
