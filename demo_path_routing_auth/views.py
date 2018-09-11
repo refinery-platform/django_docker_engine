@@ -33,6 +33,7 @@ with open(os.path.join(UPLOAD_DIR, 'demo-data.csv')) as csv_file:
     reader = csv.DictReader(csv_file)
     OUTSIDE_URLS = [row['url'] for row in reader]
 
+
 def index(request):
     launch_form = LaunchForm()
     # TODO: Pass this info through the constructor
