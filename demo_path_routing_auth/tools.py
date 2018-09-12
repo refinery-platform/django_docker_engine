@@ -94,14 +94,14 @@ tools = {
         memory_use=100  # Highly variable
     ),
     'rna-seq': Tool(
-        'mccalluc/heatmap_scatter_dash:v0.1.8',
+        'mccalluc/heatmap_scatter_dash:v0.1.15',
         'Linked visualization for gene expression',
         input_f=lambda urls, prefix: {
             'file_relationships': urls,
             'api_prefix': prefix,
             'extra_directories': ['/refinery-data/']
         },
-        memory_use=20  # TODO: Confirm
+        memory_use=74
     ),
     'multiqc': Tool(
         'mccalluc/qualimap_multiqc_refinery:v0.0.7',
