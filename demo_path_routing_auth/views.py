@@ -113,7 +113,7 @@ def launch(request):
         container_name=container_name,
         image_name=tool_spec.image,
         input=input_data,
-        extra_directories=tool_spec.extra_directories,
+        extra_directories=input_data.get('extra_directories'),
         container_port=tool_spec.container_port,
     )
     client.run(container_spec)

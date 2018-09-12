@@ -9,7 +9,7 @@ class Tool():
       (In Refinery, there is a UI.)
     default_files: Should match values in demo-data.csv.
       (Doesn't need to be every possible valid input from that file.)
-    input: Lambda which returns a dict which becomes the INPUT_JSON.
+    input_f: Lambda which returns a dict which becomes the INPUT_JSON.
     container_port: If the tool uses a port other than 80.
     memory_use: Expected memory use in MB.
     '''
@@ -17,7 +17,7 @@ class Tool():
 
     def __init__(self, image, description, memory_use,
                  default_parameters=None, default_files=None,
-                 container_port=None, extra_directories=None, input_f=None):
+                 container_port=None, input_f=None):
         self.image = image
         self.description = description
         self.memory_use = memory_use
@@ -27,8 +27,6 @@ class Tool():
             if default_files is None else default_files
         self.container_port = 80 \
             if container_port is None else container_port
-        self.extra_directories = [] \
-            if extra_directories is None else extra_directories
         self.input_f = (lambda urls, prefix: {
             'file_relationships': urls,
             'extra_directories': []
@@ -68,6 +66,7 @@ tools = {
         ],
         default_files=['NC_009084.gff'],
         input_f=lambda urls, prefix: {
+            'extra_directories': [],
             'node_info': {
                 'fake-uuid-{}'.format(i): {
                     'file_url': url,
