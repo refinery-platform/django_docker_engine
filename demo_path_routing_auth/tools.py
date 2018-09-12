@@ -16,8 +16,8 @@ class Tool():
     # In 3.7, default values are supported for namedtuples. Until then:
 
     def __init__(self, image, description, memory_use,
-                 default_parameters=None,
-                 default_files=None, input_f=None, container_port=None):
+                 default_parameters=None, default_files=None,
+                 container_port=None, extra_directories=None, input_f=None):
         self.image = image
         self.description = description
         self.memory_use = memory_use
@@ -27,10 +27,12 @@ class Tool():
             if default_files is None else default_files
         self.container_port = 80 \
             if container_port is None else container_port
-        self.input_f = lambda urls, prefix: {
+        self.extra_directories = [] \
+            if extra_directories is None else extra_directories
+        self.input_f = (lambda urls, prefix: {
             'file_relationships': urls,
             'extra_directories': []
-        } if input_f is None else input_f
+        }) if input_f is None else input_f
 
 
 tools = {
@@ -55,7 +57,7 @@ tools = {
         'mccalluc/shiny-heatmap-refinery:v0.0.2',
         'Trivial Shiny app',
         container_port=3838,
-        memory_use=119
+        memory_use=120
     ),
     'igv-js': Tool(
         'gehlenborglab/docker_igv_js:v0.0.9',
