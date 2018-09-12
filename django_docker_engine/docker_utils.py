@@ -69,6 +69,7 @@ class DockerClientSpec():
 
 _DEFAULT_MANAGER = docker_engine.DockerEngineManager
 _DEFAULT_LABEL = 'io.github.refinery-project.django_docker_engine'
+_MEMORY_USE = '.memory_use'
 
 
 class DockerClientWrapper(object):
@@ -119,7 +120,10 @@ class DockerClientWrapper(object):
 
     def _memory_in_use(self):
         containers = self.list()
-        # import pdb; pdb.set_trace()
+        return sum(
+            [int(container.labels.get(_DEFAULT_LABEL + _MEMORY_USE))
+             for container in containers]
+        )
 
 
 
@@ -245,7 +249,7 @@ class DockerClientRunWrapper(DockerClientWrapper):
         labels.update({
             self.root_label: 'true',
             self.root_label + '.port': str(container_spec.container_port),
-            self.root_label + '.memory_use': str(container_spec.memory_use)
+            self.root_label + _MEMORY_USE: str(container_spec.memory_use)
         })
 
         environment = {}
