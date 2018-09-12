@@ -190,7 +190,6 @@ class LiveDockerTestsClean(LiveDockerTests):
             'container_input_path': '/usr/share/nginx/html/index.html'
         }).url
         self.assert_loads_eventually(url, '{"foo": "bar"}')
-        self.client_wrapper._memory_in_use()  # TODO
 
     def assert_cpu_quota(self, expected, given={}):
 

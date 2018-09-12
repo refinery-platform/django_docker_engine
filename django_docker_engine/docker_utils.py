@@ -21,7 +21,8 @@ class DockerContainerSpec():
                  extra_directories=[],
                  labels={},
                  container_port=80,
-                 cpus=0.5):
+                 cpus=0.5,
+                 memory_use=None):
         self.image_name = image_name
         self.container_name = container_name
         self.container_input_path = container_input_path
@@ -30,6 +31,7 @@ class DockerContainerSpec():
         self.labels = labels
         self.container_port = container_port
         self.cpus = cpus
+        self.memory_use = memory_use
 
     def __repr__(self):
         kwargs = ', '.join(
@@ -115,8 +117,9 @@ class DockerClientWrapper(object):
                 ignore_errors=True
             )
 
-    def _memory_in_use(self, tool_defs):
+    def _memory_in_use(self):
         containers = self.list()
+        # import pdb; pdb.set_trace()
 
 
 
@@ -202,6 +205,9 @@ class DockerClientRunWrapper(DockerClientWrapper):
         Run a given ContainerSpec. Returns the url for the container,
         in contrast to the underlying method, which returns the logs.
         """
+
+        self._memory_in_use()  # TODO: Figure out how much memory is needed
+
         image_name = container_spec.image_name
         if (':' not in image_name):
             image_name += ':latest'
@@ -238,7 +244,8 @@ class DockerClientRunWrapper(DockerClientWrapper):
         labels = container_spec.labels
         labels.update({
             self.root_label: 'true',
-            self.root_label + '.port': str(container_spec.container_port)
+            self.root_label + '.port': str(container_spec.container_port),
+            self.root_label + '.memory_use': str(container_spec.memory_use)
         })
 
         environment = {}

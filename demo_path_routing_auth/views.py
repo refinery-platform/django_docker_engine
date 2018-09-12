@@ -115,6 +115,7 @@ def launch(request):
         input=input_data,
         extra_directories=input_data.get('extra_directories'),
         container_port=tool_spec.container_port,
+        memory_use=tool_spec.memory_use
     )
     client.run(container_spec)
     return HttpResponseRedirect(container_path)
