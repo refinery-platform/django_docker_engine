@@ -1,4 +1,4 @@
-id,url,vis,species
+label,url,vis,species_code
 dixon2012-h1hesc-hindiii-allreps-filtered.1000kb.multires.cool,https://s3.amazonaws.com/pkerp/public/dixon2012-h1hesc-hindiii-allreps-filtered.1000kb.multires.cool,hg,human?
 wgEncodeCaltechRnaSeqHuvecR1x75dTh1014IlnaPlusSignalRep2.hitile,https://s3.amazonaws.com/pkerp/public/wgEncodeCaltechRnaSeqHuvecR1x75dTh1014IlnaPlusSignalRep2.hitile,hg,human?
 Dixon2012-J1-NcoI-R1-filtered.100kb.multires.cool,https://s3.amazonaws.com/pkerp/public/Dixon2012-J1-NcoI-R1-filtered.100kb.multires.cool,hg,human?
