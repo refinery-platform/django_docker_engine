@@ -1,7 +1,5 @@
-from django_docker_engine.proxy import Proxy
-
 from django_docker_engine.historian import FileHistorian
-
+from django_docker_engine.proxy import Proxy
 
 urlpatterns = Proxy(
     historian=FileHistorian(),

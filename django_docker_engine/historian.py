@@ -1,7 +1,7 @@
 from __future__ import print_function
 
-from datetime import datetime
 import os
+from datetime import datetime
 from tempfile import mkdtemp
 
 

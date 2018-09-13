@@ -8,7 +8,6 @@ from time import time
 import docker.errors
 
 from django_docker_engine.container_managers import docker_engine
-
 from django_docker_engine.historian import FileHistorian
 
 logging.basicConfig()
