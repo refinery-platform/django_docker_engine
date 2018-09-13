@@ -26,7 +26,12 @@ else:
 
 
 client = DockerClientRunWrapper(
-    DockerClientSpec(None, do_input_json_envvar=True))
+    DockerClientSpec(None, do_input_json_envvar=True),
+    memory_limit=1024*1024*20  # TODO: Hard-coded 20M limit for now
+    # We could also get the limit by starting a container and then:
+    #   sdk.list()[0].stats(stream=False)['memory_stats']['limit']
+    # but this can be slow: I don't want to do it on every launch.
+)
 UPLOAD_DIR = os.path.join(os.path.dirname(__file__), 'upload')
 
 with open(os.path.join(UPLOAD_DIR, 'demo-data.csv')) as csv_file:

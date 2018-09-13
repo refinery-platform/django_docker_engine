@@ -170,7 +170,8 @@ class DockerClientRunWrapper(DockerClientWrapper):
                  manager_class=_DEFAULT_MANAGER,
                  root_label=_DEFAULT_LABEL,
                  pem=None,
-                 ssh_username=None):
+                 ssh_username=None,
+                 memory_limit=float('inf')):
         super(DockerClientRunWrapper, self).__init__(
             manager_class=manager_class,
             root_label=root_label
@@ -186,6 +187,7 @@ class DockerClientRunWrapper(DockerClientWrapper):
         self._do_input_json_file = docker_client_spec.do_input_json_file
         self._do_input_json_envvar = docker_client_spec.do_input_json_envvar
         self._input_json_url = docker_client_spec.input_json_url
+        self._memory_limit = memory_limit
 
     def _make_directory_on_host(self):
         # TODO: This should only be run locally, and even then...?
@@ -210,8 +212,11 @@ class DockerClientRunWrapper(DockerClientWrapper):
 
         memory_in_use = self._total_memory_use()
         memory_requested = container_spec.memory_use
-        #memory_available =
-        #import pdb; pdb.set_trace()
+        if (memory_requested + memory_in_use) * 1048576 > self._memory_limit:
+            # TODO: Kill LRU
+            logger.warn('{}MB requested + {}MB in use > {} limit'.format(
+                memory_requested, memory_in_use, self._memory_limit
+            ))
 
         image_name = container_spec.image_name
         if (':' not in image_name):
