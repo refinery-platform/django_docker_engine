@@ -211,7 +211,9 @@ class DockerClientRunWrapper(DockerClientWrapper):
         """
 
         total_mem_reservation_mb = self._total_mem_reservation_mb()
-        new_mem_reservation_mb = container_spec.mem_reservation_mb
+        new_mem_reservation_mb = container_spec.mem_reservation_mb or 0
+        # If None (ie, unspecified), treat as 0.
+
         if (total_mem_reservation_mb + new_mem_reservation_mb) > self._mem_limit_mb:
             # TODO: Kill LRU
             logger.warn('{}MB requested + {}MB in use > {}MB limit'.format(
