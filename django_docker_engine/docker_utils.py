@@ -118,7 +118,7 @@ class DockerClientWrapper(object):
                 ignore_errors=True
             )
 
-    def _memory_in_use(self):
+    def _total_memory_use(self):
         containers = self.list()
         return sum(
             [int(container.labels.get(_DEFAULT_LABEL + _MEMORY_USE))
@@ -208,7 +208,10 @@ class DockerClientRunWrapper(DockerClientWrapper):
         in contrast to the underlying method, which returns the logs.
         """
 
-        self._memory_in_use()  # TODO: Figure out how much memory is needed
+        memory_in_use = self._total_memory_use()
+        memory_requested = container_spec.memory_use
+        #memory_available =
+        #import pdb; pdb.set_trace()
 
         image_name = container_spec.image_name
         if (':' not in image_name):
@@ -265,7 +268,8 @@ class DockerClientRunWrapper(DockerClientWrapper):
             labels=labels,
             volumes=volumes,
             nano_cpus=int(container_spec.cpus * 1e9),
-            environment=environment
+            environment=environment,
+            mem_reservation='{}M'.format(memory_requested),
         )
         return self.lookup_container_url(container_spec.container_name)
 
