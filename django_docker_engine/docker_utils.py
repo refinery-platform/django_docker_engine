@@ -125,8 +125,6 @@ class DockerClientWrapper(object):
              for container in containers]
         )
 
-
-
     def _purge(self, label=None, seconds=None):
         for container in self.list({'label': label} if label else {}):
             # TODO: Confirm that the container belongs to me
