@@ -8,6 +8,9 @@ urlpatterns = [
     url(r'^logout/$', views.logout),
     url(r'^launch/$', views.launch),
     url(r'^kill/(.*)$', views.kill),
+    url(r'^logs/(.*)$', views.logs),
+    url(r'^history/(.*)$', views.history),
+    url(r'^kill_lru/', views.kill_lru),
     url(r'^upload/(.*)$', views.upload),
     url(r'^docker/', include(__package__ + '.proxy_url_patterns'))
 ]

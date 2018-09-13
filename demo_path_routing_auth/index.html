@@ -56,8 +56,21 @@
               <td>
                 <a href="/docker/{{ container_name }}/"
                      target="_blank">{{ container_name }}</a></td>
+              <td>
+                <a href="/logs/{{ container_name }}"
+                     target="_blank">logs</a></td>
+              <td>
+                <a href="/history/{{ container_name }}"
+                     target="_blank">history</a></td>
             </tr>
           {% endfor %}
+          <tr>
+            <td>
+              <form action="/kill_lru/" method="post">
+                {% csrf_token %}
+                <input type="submit" value="Kill LRU"></form></td>
+            <td></td>
+          </tr>
         </table>
       {% else %}
         There are no running containers.

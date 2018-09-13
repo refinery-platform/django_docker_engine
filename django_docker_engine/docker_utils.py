@@ -9,6 +9,8 @@ import docker.errors
 
 from django_docker_engine.container_managers import docker_engine
 
+from django_docker_engine.historian import FileHistorian
+
 logging.basicConfig()
 logger = logging.getLogger(__name__)
 
@@ -94,11 +96,18 @@ class DockerClientWrapper(object):
         """
         return self._containers_manager.get_url(container_name)
 
+    def lookup_container_id(self, container_name):
+        return self._containers_manager.get_id(container_name)
+
     def list(self, filters={}):
         return self._containers_manager.list(filters)
 
     def logs(self, container_name):
         return self._containers_manager.logs(container_name)
+
+    def history(self, container_name):
+        id = self.lookup_container_id(container_name)
+        return FileHistorian().list(id)
 
     def kill(self, container):
         mounts = container.attrs['Mounts']
@@ -115,7 +124,17 @@ class DockerClientWrapper(object):
                 ignore_errors=True
             )
 
+    def kill_lru(self):
+        '''
+        Sort the containers so that the least-recently-used ones are first,
+        and then kill them until the needed memory has been freed.
+        TODO: Merge the other branch so we know something about memory.
+        '''
+        self.list()
+        # TODO: Use Historian
+
     def _purge(self, label=None, seconds=None):
+        # TODO: Remove. kill_lru should be used instead.
         for container in self.list({'label': label} if label else {}):
             # TODO: Confirm that the container belongs to me
             if seconds and self._is_active(container, seconds):

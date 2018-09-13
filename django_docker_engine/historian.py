@@ -1,6 +1,8 @@
 from __future__ import print_function
 
 from datetime import datetime
+import os
+from tempfile import mkdtemp
 
 
 class NullHistorian():
@@ -11,7 +13,7 @@ class NullHistorian():
     def __init__(self):
         pass
 
-    def record(self, *args):
+    def record(self, container_id, url):
         pass
 
 
@@ -23,17 +25,22 @@ class FileHistorian():
     Not suitable for production use.
     """
 
-    def __init__(self, path):
-        self.path = path
+    DIR = mkdtemp(suffix='-history')
 
-    def record(self, *args):
-        with open(self.path, 'a') as f:
+    def __init__(self):
+        pass
+
+    def _path(self, container_id):
+        return os.path.join(FileHistorian.DIR, container_id)
+
+    def record(self, container_id, url):
+        with open(self._path(container_id), 'a') as f:
             timestamp = datetime.now().isoformat()
-            args_list = list(args)
-            args_list.insert(0, timestamp)
-            print('\t'.join(args_list), file=f)
+            print('\t'.join([timestamp, url]), file=f)
 
-    def list(self):
-        with open(self.path) as f:
-            lines = f.readlines()
-        return lines
+    def list(self, container_id):
+        with open(self._path(container_id)) as f:
+            return f.readlines()
+
+    def last_timestamp(self, container_id):
+        return os.path.getmtime(self._path(container_id))

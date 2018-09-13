@@ -118,10 +118,17 @@ class DockerEngineManager(BaseManager):
     def create_volume(self):
         return self._volumes_client.create(driver='local')
 
+    def get_id(self, container_name):
+        """
+        :param container_name:
+        :return: container id
+        """
+        return self._containers_client.get(container_name).id
+
     def get_url(self, container_name):
         """
         :param container_name:
-        :return:
+        :return: container url
         """
         remote_host = self._get_base_url_remote_host()
         if remote_host:
