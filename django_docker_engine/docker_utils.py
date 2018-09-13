@@ -22,7 +22,7 @@ class DockerContainerSpec():
                  labels={},
                  container_port=80,
                  cpus=0.5,
-                 memory_use=None):
+                 mem_reservation_mb=None):
         self.image_name = image_name
         self.container_name = container_name
         self.container_input_path = container_input_path
@@ -31,7 +31,7 @@ class DockerContainerSpec():
         self.labels = labels
         self.container_port = container_port
         self.cpus = cpus
-        self.memory_use = memory_use
+        self.mem_reservation_mb = mem_reservation_mb
 
     def __repr__(self):
         kwargs = ', '.join(
@@ -69,7 +69,7 @@ class DockerClientSpec():
 
 _DEFAULT_MANAGER = docker_engine.DockerEngineManager
 _DEFAULT_LABEL = 'io.github.refinery-project.django_docker_engine'
-_MEMORY_USE = '.memory_use'
+_MEM_RESERVATION_MB = '.mem_reservation_mb'
 
 
 class DockerClientWrapper(object):
@@ -118,10 +118,10 @@ class DockerClientWrapper(object):
                 ignore_errors=True
             )
 
-    def _total_memory_use(self):
+    def _total_mem_reservation_mb(self):
         containers = self.list()
         return sum(
-            [int(container.labels.get(_DEFAULT_LABEL + _MEMORY_USE))
+            [int(container.labels.get(_DEFAULT_LABEL + _MEM_RESERVATION_MB))
              for container in containers]
         )
 
@@ -171,7 +171,7 @@ class DockerClientRunWrapper(DockerClientWrapper):
                  root_label=_DEFAULT_LABEL,
                  pem=None,
                  ssh_username=None,
-                 memory_limit=float('inf')):
+                 mem_limit_mb=float('inf')):
         super(DockerClientRunWrapper, self).__init__(
             manager_class=manager_class,
             root_label=root_label
@@ -187,7 +187,7 @@ class DockerClientRunWrapper(DockerClientWrapper):
         self._do_input_json_file = docker_client_spec.do_input_json_file
         self._do_input_json_envvar = docker_client_spec.do_input_json_envvar
         self._input_json_url = docker_client_spec.input_json_url
-        self._memory_limit = memory_limit
+        self._mem_limit_mb = mem_limit_mb
 
     def _make_directory_on_host(self):
         # TODO: This should only be run locally, and even then...?
@@ -210,12 +210,14 @@ class DockerClientRunWrapper(DockerClientWrapper):
         in contrast to the underlying method, which returns the logs.
         """
 
-        memory_in_use = self._total_memory_use()
-        memory_requested = container_spec.memory_use
-        if (memory_requested + memory_in_use) * 1048576 > self._memory_limit:
+        total_mem_reservation_mb = self._total_mem_reservation_mb()
+        new_mem_reservation_mb = container_spec.mem_reservation_mb
+        import pdb;pdb.set_trace()
+        if (total_mem_reservation_mb + new_mem_reservation_mb) > self._mem_limit_mb:
             # TODO: Kill LRU
-            logger.warn('{}MB requested + {}MB in use > {} limit'.format(
-                memory_requested, memory_in_use, self._memory_limit
+            logger.warn('{}MB requested + {}MB in use > {}MB limit'.format(
+                new_mem_reservation_mb, total_mem_reservation_mb,
+                self._mem_limit_mb
             ))
 
         image_name = container_spec.image_name
@@ -255,7 +257,7 @@ class DockerClientRunWrapper(DockerClientWrapper):
         labels.update({
             self.root_label: 'true',
             self.root_label + '.port': str(container_spec.container_port),
-            self.root_label + _MEMORY_USE: str(container_spec.memory_use)
+            self.root_label + _MEM_RESERVATION_MB: str(container_spec.mem_reservation_mb)
         })
 
         environment = {}
@@ -274,7 +276,7 @@ class DockerClientRunWrapper(DockerClientWrapper):
             volumes=volumes,
             nano_cpus=int(container_spec.cpus * 1e9),
             environment=environment,
-            mem_reservation='{}M'.format(memory_requested),
+            mem_reservation='{}M'.format(new_mem_reservation_mb),
         )
         return self.lookup_container_url(container_spec.container_name)
 

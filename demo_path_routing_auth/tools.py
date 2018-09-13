@@ -11,16 +11,16 @@ class Tool():
       (Doesn't need to be every possible valid input from that file.)
     input_f: Lambda which returns a dict which becomes the INPUT_JSON.
     container_port: If the tool uses a port other than 80.
-    memory_use: Expected memory use in MB.
+    mem_reservation_mb: Expected memory use in MB.
     '''
     # In 3.7, default values are supported for namedtuples. Until then:
 
-    def __init__(self, image, description, memory_use,
+    def __init__(self, image, description, mem_reservation_mb,
                  default_parameters=None, default_files=None,
                  container_port=None, input_f=None):
         self.image = image
         self.description = description
-        self.memory_use = memory_use
+        self.mem_reservation_mb = mem_reservation_mb
         self.default_parameters = [] \
             if default_parameters is None else default_parameters
         self.default_files = ['3x3.csv'] \
@@ -37,25 +37,25 @@ tools = {
     'debugger': Tool(
         'scottx611x/refinery-developer-vis-tool:v0.0.7',
         'Echo the user input',
-        memory_use=15
+        mem_reservation_mb=15
     ),
     'lineup': Tool(
         'mccalluc/lineup_refinery:v0.0.8',
         'Aggregate and sort heterogeneous data',
-        memory_use=11
+        mem_reservation_mb=11
     ),
     'intervene': Tool(
         'mccalluc/intervene:v0.0.5',
         'Set intersection Shiny app',
         default_files=['mESC.genes', 'Myotube.genes',
                        'pro-B.genes', 'Th-cell.genes'],
-        memory_use=208
+        mem_reservation_mb=208
     ),
     'shiny-demo': Tool(
         'mccalluc/shiny-heatmap-refinery:v0.0.2',
         'Trivial Shiny app',
         container_port=3838,
-        memory_use=120
+        mem_reservation_mb=120
     ),
     'igv-js': Tool(
         'gehlenborglab/docker_igv_js:v0.0.9',
@@ -77,7 +77,7 @@ tools = {
                 for (i, url) in enumerate(urls)
             },
         },
-        memory_use=15
+        mem_reservation_mb=15
     ),
     'higlass': Tool(
         'scottx611x/refinery-higlass-docker:v0.3.2',
@@ -90,7 +90,7 @@ tools = {
             },
             'extra_directories': ['/refinery-data/']
         },
-        memory_use=100  # Highly variable
+        mem_reservation_mb=100  # Highly variable
     ),
     'rna-seq': Tool(
         'mccalluc/heatmap_scatter_dash:v0.1.15',
@@ -100,7 +100,7 @@ tools = {
             'api_prefix': prefix,
             'extra_directories': ['/refinery-data/']
         },
-        memory_use=74
+        mem_reservation_mb=74
     ),
     'multiqc': Tool(
         'mccalluc/qualimap_multiqc_refinery:v0.0.7',
@@ -110,6 +110,6 @@ tools = {
             'file_relationships': urls,
             'extra_directories': ['/data/']
         },
-        memory_use=20
+        mem_reservation_mb=20
     )
 }
