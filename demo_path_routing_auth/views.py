@@ -130,6 +130,7 @@ def kill(request, name):
 @require_POST
 def kill_lru(request):
     client.kill_lru()
+    return HttpResponseRedirect('/')
 
 
 def logs(request, name):

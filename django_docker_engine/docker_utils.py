@@ -125,12 +125,15 @@ class DockerClientWrapper(object):
 
     def kill_lru(self):
         '''
-        Sort the containers so that the least-recently-used ones are first,
-        and then kill them until the needed memory has been freed.
-        TODO: Merge the other branch so we know something about memory.
+        Kill least-recently-used container.
+        TODO: Keep on killing containers until a given amount of memory
+        has been freed. Waiting on
+        https://github.com/refinery-platform/django_docker_engine/pull/183
         '''
-        self.list()
-        # TODO: Use Historian
+        container_ids = [container.id for container in self.list()]
+        lru_id = FileHistorian().lru(container_ids)
+        lru_container = self._containers_manager.get_container(lru_id)
+        self.kill(lru_container)
 
     def _purge(self, label=None, seconds=None):
         # TODO: Remove. kill_lru should be used instead.

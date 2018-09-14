@@ -125,6 +125,13 @@ class DockerEngineManager(BaseManager):
         """
         return self._containers_client.get(container_name).id
 
+    def get_container(self, container_name_or_id):
+        """
+        :param container_name:
+        :return: container id
+        """
+        return self._containers_client.get(container_name_or_id)
+
     def get_url(self, container_name):
         """
         :param container_name:
