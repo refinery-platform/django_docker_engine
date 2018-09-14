@@ -146,8 +146,8 @@ True
 >>> len(hist)
 2
 
->>> hist[1][1]
-'foobar'
+>>> [h[1] for h in hist]
+['/', '/foobar']
 
 # and Docker logs are also available:
 >>> api_logs = client.logs(container_name)

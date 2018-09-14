@@ -25,7 +25,7 @@ class FileHistorianTests(unittest.TestCase):
         historian.record(id_4, 'zag')
 
         self.assertEqual(
-            ['foo?', 'FOO!'],
+            ['/foo?', '/FOO!'],
             [pair[1] for pair in historian.list(id_1)]
         )
 

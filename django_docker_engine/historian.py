@@ -47,7 +47,7 @@ class FileHistorian():
     def record(self, container_id, url):
         with open(self._path(container_id), 'a') as f:
             timestamp = datetime.now().isoformat()
-            print('\t'.join([timestamp, url]), file=f)
+            print('\t'.join([timestamp, '/' + url]), file=f)
 
     def list(self, container_id):
         with open(self._path(container_id)) as f:
