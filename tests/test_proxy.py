@@ -1,11 +1,8 @@
-import re
 import unittest
-from datetime import datetime
 
 from django.test import RequestFactory
 from mock import mock
 
-from django_docker_engine.historian import FileHistorian
 from django_docker_engine.proxy import Proxy
 
 

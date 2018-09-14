@@ -1,8 +1,8 @@
 from __future__ import print_function
 
+import errno
 import os
 from datetime import datetime
-import errno
 
 
 class NullHistorian():
