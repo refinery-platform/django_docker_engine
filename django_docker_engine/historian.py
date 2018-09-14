@@ -2,7 +2,7 @@ from __future__ import print_function
 
 import os
 from datetime import datetime
-from tempfile import mkdtemp
+import errno
 
 
 class NullHistorian():
@@ -21,14 +21,19 @@ class FileHistorian():
     """
     Records incoming requests to a file, and provides access to the records
     in that file.
-
-    Not suitable for production use.
     """
 
-    DIR = mkdtemp(suffix='-history')
+    DIR = '/tmp/django-docker-file-historian'
 
     def __init__(self):
-        pass
+        # mkdir -p: https://stackoverflow.com/a/600612
+        try:
+            os.makedirs(FileHistorian.DIR)
+        except OSError as exc:  # Python >2.5
+            if exc.errno == errno.EEXIST and os.path.isdir(FileHistorian.DIR):
+                pass
+            else:
+                raise
 
     def _path(self, container_id):
         return os.path.join(FileHistorian.DIR, container_id)
