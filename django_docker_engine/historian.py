@@ -16,6 +16,12 @@ class NullHistorian():
     def record(self, container_id, url):
         pass
 
+    def list(self, container_id):
+        return []
+
+    def last_timestamp(self, container_id):
+        return 0
+
 
 class FileHistorian():
     """
@@ -45,7 +51,17 @@ class FileHistorian():
 
     def list(self, container_id):
         with open(self._path(container_id)) as f:
-            return f.readlines()
+            return [line.rstrip().split('\t') for line in f]
 
     def last_timestamp(self, container_id):
         return os.path.getmtime(self._path(container_id))
+
+    def lru(self, container_id_set):
+        '''
+        Of the given ids, which has the least-recent timestamp?
+        '''
+        id_timestamp_pairs = [
+            (id, self.last_timestamp(id)) for id in container_id_set
+        ]
+        oldest_pair = min(id_timestamp_pairs, key=lambda pair: pair[1])
+        return oldest_pair[0]
