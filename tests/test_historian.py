@@ -30,8 +30,8 @@ class FileHistorianTests(unittest.TestCase):
         )
 
         self.assertGreater(
-            historian.last_timestamp(id_2),
-            historian.last_timestamp(id_1)
+            historian._last_timestamp(id_2),
+            historian._last_timestamp(id_1)
         )
 
         lru = historian.lru({id_1, id_2, id_3, id_4})

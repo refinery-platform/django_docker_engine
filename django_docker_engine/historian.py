@@ -53,7 +53,7 @@ class FileHistorian():
         with open(self._path(container_id)) as f:
             return [line.rstrip().split('\t') for line in f]
 
-    def last_timestamp(self, container_id):
+    def _last_timestamp(self, container_id):
         return os.path.getmtime(self._path(container_id))
 
     def lru(self, container_id_set):
@@ -61,7 +61,7 @@ class FileHistorian():
         Of the given ids, which has the least-recent timestamp?
         '''
         id_timestamp_pairs = [
-            (id, self.last_timestamp(id)) for id in container_id_set
+            (id, self._last_timestamp(id)) for id in container_id_set
         ]
         oldest_pair = min(id_timestamp_pairs, key=lambda pair: pair[1])
         return oldest_pair[0]
