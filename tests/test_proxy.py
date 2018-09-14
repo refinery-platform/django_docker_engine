@@ -39,14 +39,9 @@ class CSRFTests(unittest.TestCase):
 class ProxyTests(unittest.TestCase):
 
     def test_proxy_please_wait(self):
-        history_path = '/tmp/django-docker-history-{}'.format(
-            re.sub(r'\D', '-', str(datetime.now()))
-        )
-        historian = FileHistorian(history_path)
         title_text = 'test-title'
         body_html = '<p>test-body</p>'
         proxy = Proxy(
-            historian=historian,
             please_wait_title='<' + title_text + '>',
             please_wait_body_html=body_html,
             logs_path='docker-logs'
@@ -71,11 +66,6 @@ class ProxyTests(unittest.TestCase):
                       '&gt;</title>', str(response.content))  # Title escaped
         self.assertIn(body_html, str(response.content))  # Body not escaped
         self.assertIn('http-equiv="refresh"', str(response.content))
-
-        self.assertEqual(
-            [line.split('\t')[1:] for line in historian.list()],
-            [['fake-container', 'fake-url\n']]
-        )
 
         # The doctests handle the case where a container has been started.
         logs_response = urlpatterns[0].callback(

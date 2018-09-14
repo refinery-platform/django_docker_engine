@@ -139,7 +139,12 @@ True
 >>> ('Welcome to nginx' in nginx_welcome) or nginx_welcome
 True
 
-# Logs from each container are available from the API:
+# The history of requests is available:
+>>> hist = client.history(container_name)
+>>> hist
+TODO!!!
+
+# and Docker logs are also available:
 >>> api_logs = client.logs(container_name)
 >>> (b'"GET / HTTP/1.1" 200' in api_logs) or api_logs
 True
@@ -148,6 +153,8 @@ True
 >>> ui_logs = requests.get(proxy_url + 'docker-logs').text
 >>> ('"GET / HTTP/1.1" 200' in ui_logs) or ui_logs
 True
+
+
 
 ```
 
