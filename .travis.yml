@@ -25,6 +25,7 @@ before_script:
 - pip install django==$DJANGO_VERSION
 - sudo sh -c 'echo "127.0.0.1 container-name.docker.localhost" >> /etc/hosts'
 script: ./test.sh
+after_success: codecov
 deploy:
   # Defaults to only deploy on master;
   # PyPi blocks the same version from being uploaded twice.
