@@ -133,6 +133,20 @@ def kill(request, name):
     return HttpResponseRedirect('/')
 
 
+@require_POST
+def kill_lru(request):
+    client.kill_lru()
+    return HttpResponseRedirect('/')
+
+
+def logs(request, name):
+    return HttpResponse(client.logs(name), content_type='text/plain')
+
+
+def history(request, name):
+    return HttpResponse(client.history(name), content_type='text/plain')
+
+
 def upload(request, name):
     valid_re = r'^[a-zA-Z0-9_.-]+$'
 

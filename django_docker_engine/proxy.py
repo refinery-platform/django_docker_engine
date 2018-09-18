@@ -107,9 +107,10 @@ class Proxy():
             return view(request)
 
     def _proxy_view(self, request, container_name, url):
-        self.historian.record(container_name, url)
         try:
             client = DockerClientWrapper()
+            self.historian.record(
+                client.lookup_container_id(container_name), url)
             container_url = client.lookup_container_url(container_name)
             return self._internal_proxy_view(request, container_url, url)
         except (DockerEngineManagerError, NotFound, BadStatusLine) as e:

@@ -139,7 +139,17 @@ True
 >>> ('Welcome to nginx' in nginx_welcome) or nginx_welcome
 True
 
-# Logs from each container are available from the API:
+>>> nginx_404 = requests.get(proxy_url + 'foobar').text
+
+# The history of requests is available:
+>>> hist = client.history(container_name)
+>>> len(hist)
+2
+
+>>> [h[1] for h in hist]
+['/', '/foobar']
+
+# and Docker logs are also available:
 >>> api_logs = client.logs(container_name)
 >>> (b'"GET / HTTP/1.1" 200' in api_logs) or api_logs
 True
@@ -176,41 +186,5 @@ to refresh indefinitely.
 >>> text = requests.get(proxy_url).text
 >>> assert 'Please wait' in text, 'unexpected: {}'.format(text)
 >>> assert 'http-equiv="refresh"' in text, 'unexpected: {}'.format(text)
-
-```
-
-### Historian
-
-The `Historian` provides access to a record of the requests that have been
-made through the Proxy. Its configuration, along with that for the "Please wait"
-page needs to be made as part of your django configuration. The example here
-shows how it can be configured:
-
-```
->>> from os import environ
->>> environ['DJANGO_SETTINGS_MODULE'] = 'demo_path_routing_no_auth.settings'
->>> from django_docker_engine.historian import FileHistorian
->>> from django_docker_engine.proxy import Proxy
->>> from django.test import RequestFactory
-
->>> import django
->>> django.setup()
-
->>> historian = FileHistorian('/tmp/readme-doc-text.txt')
->>> proxy = Proxy(
-...     historian=historian,
-...     please_wait_title='<test-title>',
-...     please_wait_body_html='<p>test-body</p>')
->>> urlpatterns = proxy.url_patterns()
-
-# All of this would be handled by Django in practice:
->>> response = urlpatterns[-1].callback(
-...     request=RequestFactory().get('/fake-url'),
-...     container_name='fake-container',
-...     url='fake-url')
->>> html = response.content.decode()
->>> assert '<title>&lt;test-title&gt;</title>' in html
->>> assert '<p>test-body</p>' in html
->>> assert 'fake-container\tfake-url' in historian.list()[-1] 
 
 ```
