@@ -19,7 +19,12 @@ class FileHistorianTests(unittest.TestCase):
         historian.record(id_1, 'foo?')
         historian.record(id_2, 'bar?')
         historian.record(id_1, 'FOO!')
-        sleep(1)  # Can't rely on sub-second resolution being available.
+
+        sleep(1)
+        # Can't rely on sub-second resolution being available,
+        # and since we're looking at file-system modification dates,
+        # using freezegun or mocking at a high-level wouldn't work.
+
         historian.record(id_2, 'BAR!')
         historian.record(id_3, 'zig')
         historian.record(id_4, 'zag')
