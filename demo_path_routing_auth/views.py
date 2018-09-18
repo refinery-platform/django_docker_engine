@@ -26,7 +26,12 @@ else:
 
 
 client = DockerClientRunWrapper(
-    DockerClientSpec(None, do_input_json_envvar=True))
+    DockerClientSpec(None, do_input_json_envvar=True),
+    mem_limit_mb=20  # TODO: Hard-coded 20M limit for now
+    # We could also get the limit by starting a container and then:
+    #   sdk.list()[0].stats(stream=False)['memory_stats']['limit']
+    # but this can be slow: I don't want to do it on every launch.
+)
 UPLOAD_DIR = os.path.join(os.path.dirname(__file__), 'upload')
 
 with open(os.path.join(UPLOAD_DIR, 'demo-data.csv')) as csv_file:
@@ -61,11 +66,11 @@ def index(request):
         'launch_form': launch_form,
         'upload_form': UploadForm(),
         'default_parameters_json': json.dumps({
-            k: v['default_parameters']
+            k: v.default_parameters
             for k, v in tools.items()
         }),
         'default_urls_json': json.dumps({
-            k: [name_to_url[f] for f in v['default_files']]
+            k: [name_to_url[f] for f in v.default_files]
             for k, v in tools.items()
         })
     }
@@ -103,7 +108,7 @@ def launch(request):
 
     container_name = post['container_name']
     container_path = '/docker/{}/'.format(container_name)
-    input_data = tool_spec['input'](input_urls, container_path)
+    input_data = tool_spec.input_f(input_urls, container_path)
     input_data['parameters'] = json.loads(post['parameters_json'])
 
     if post.get('show_input'):
@@ -111,10 +116,11 @@ def launch(request):
 
     container_spec = DockerContainerSpec(
         container_name=container_name,
-        image_name=tool_spec['image'],
+        image_name=tool_spec.image,
         input=input_data,
-        extra_directories=tool_spec.get('extra_directories') or [],
-        container_port=tool_spec.get('container_port') or 80,
+        extra_directories=input_data.get('extra_directories'),
+        container_port=tool_spec.container_port,
+        mem_reservation_mb=tool_spec.mem_reservation_mb
     )
     client.run(container_spec)
     return HttpResponseRedirect(container_path)
