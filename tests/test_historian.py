@@ -39,11 +39,11 @@ class FileHistorianTests(unittest.TestCase):
             historian._last_timestamp(id_1)
         )
 
-        lru = historian.lru({id_1, id_2, id_3, id_4})
-        self.assertEqual(lru, id_1)
+        lru = historian.sort_lru({id_1, id_2, id_3, id_4})
+        self.assertEqual(lru[0], id_1)
 
         sleep(1)
         historian.record(id_1, 'no longer the least recent!')
 
-        lru = historian.lru({id_1, id_2, id_3, id_4})
-        self.assertNotEqual(lru, id_1)
+        lru = historian.sort_lru({id_1, id_2, id_3, id_4})
+        self.assertNotEqual(lru[0], id_1)

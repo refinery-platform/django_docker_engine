@@ -56,12 +56,14 @@ class FileHistorian():
     def _last_timestamp(self, container_id):
         return os.path.getmtime(self._path(container_id))
 
-    def lru(self, container_id_set):
+    def sort_lru(self, container_id_set):
         '''
-        Of the given ids, which has the least-recent timestamp?
+        Returns the container IDs sorted with the least-recently-used first.
         '''
         id_timestamp_pairs = [
             (id, self._last_timestamp(id)) for id in container_id_set
         ]
-        oldest_pair = min(id_timestamp_pairs, key=lambda pair: pair[1])
-        return oldest_pair[0]
+        return [
+            pair[0] for pair in
+            sorted(id_timestamp_pairs, key=lambda pair: pair[1])
+        ]

@@ -27,7 +27,7 @@ else:
 
 client = DockerClientRunWrapper(
     DockerClientSpec(None, do_input_json_envvar=True),
-    mem_limit_mb=20  # TODO: Hard-coded 20M limit for now
+    mem_limit_mb=35  # TODO: Hard-coded limit for now
     # We could also get the limit by starting a container and then:
     #   sdk.list()[0].stats(stream=False)['memory_stats']['limit']
     # but this can be slow: I don't want to do it on every launch.
@@ -130,12 +130,6 @@ def launch(request):
 def kill(request, name):
     container = client.list(filters={'name': name})[0]
     client.kill(container)
-    return HttpResponseRedirect('/')
-
-
-@require_POST
-def kill_lru(request):
-    client.kill_lru()
     return HttpResponseRedirect('/')
 
 

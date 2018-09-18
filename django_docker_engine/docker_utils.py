@@ -111,7 +111,8 @@ class DockerClientWrapper(object):
         id = self.lookup_container_id(container_name)
         return FileHistorian().list(id)
 
-    def kill(self, container):
+    @staticmethod
+    def kill(container):
         mounts = container.attrs['Mounts']
         container.remove(
             force=True,
@@ -126,23 +127,35 @@ class DockerClientWrapper(object):
                 ignore_errors=True
             )
 
-    def kill_lru(self):
+    def _kill_lru(self, need_to_free):
         '''
-        Kill least-recently-used container.
-        TODO: Keep on killing containers until a given amount of memory
-        has been freed. Waiting on
-        https://github.com/refinery-platform/django_docker_engine/pull/183
+        Kill least-recently-used containers until need_to_free reserved memory
+        has been freed. Runs asynchronously: When this returns, the containers
+        are still running, but will shut down shortly.
         '''
         container_ids = [container.id for container in self.list()]
-        lru_id = FileHistorian().lru(container_ids)
-        lru_container = self._containers_manager.get_container(lru_id)
-        self.kill(lru_container)
+        # TODO: Historian class should be parameterized.
+        lru_sorted = FileHistorian().sort_lru(container_ids)
+        memory_freed = 0
+        while memory_freed < need_to_free:
+            next_id = lru_sorted.pop(0)
+            next_container = self._containers_manager.get_container(next_id)
+            mem_reservation_mb = self._mem_reservation_mb(next_container)
+            memory_freed += mem_reservation_mb
+            self.kill(next_container)
+            logger.warn(
+                'Killed {} to free up {}MB: {}MB freed so far. '
+                    'Need to free {}.'.format(
+                next_container.name, mem_reservation_mb, memory_freed,
+                    need_to_free))
+
+    def _mem_reservation_mb(self, container):
+        return int(container.labels.get(_DEFAULT_LABEL + _MEM_RESERVATION_MB))
 
     def _total_mem_reservation_mb(self):
         containers = self.list()
         return sum(
-            [int(container.labels.get(_DEFAULT_LABEL + _MEM_RESERVATION_MB))
-             for container in containers]
+            self._mem_reservation_mb(container) for container in containers
         )
 
     def _purge(self, label=None, seconds=None):
@@ -235,12 +248,18 @@ class DockerClientRunWrapper(DockerClientWrapper):
         new_mem_reservation_mb = container_spec.mem_reservation_mb or 0
         # If None (ie, unspecified), treat as 0.
 
-        if (total_mem_reservation_mb + new_mem_reservation_mb) > self._mem_limit_mb:
-            # TODO: Kill LRU
-            logger.warn('{}MB requested + {}MB in use > {}MB limit'.format(
-                new_mem_reservation_mb, total_mem_reservation_mb,
-                self._mem_limit_mb
+        need_to_free = (
+            new_mem_reservation_mb + total_mem_reservation_mb
+            - self._mem_limit_mb)
+        if need_to_free > 0:
+            logger.warn(
+                '{}MB requested + {}MB in use - {}MB limit = {}MB > 0'.format(
+                    new_mem_reservation_mb,
+                    total_mem_reservation_mb,
+                    self._mem_limit_mb,
+                    need_to_free
             ))
+            self._kill_lru(need_to_free)
 
         image_name = container_spec.image_name
         if (':' not in image_name):
