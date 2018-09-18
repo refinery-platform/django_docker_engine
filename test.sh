@@ -10,6 +10,11 @@ die() { set +v; echo "$*" 1>&2 ; sleep 1; exit 1; }
 ping -c1 container-name.docker.localhost > /dev/null  # Prereq for hostname-based dispatch.
 docker info | grep 'Operating System'  # Are we able to connect to Docker, and what OS is it?
 
+start preflight
+[ -z "`docker ps -qa`" ] || die 'Kill containers before running tests: "docker ps -qa | xargs docker stop | xargs docker rm"'
+[ -z "`lsof -t -i tcp:8000`" ] || die 'Free port 80 before running tests: "lsof -t -i tcp:8000 | xargs kill"'
+end preflight
+
 start test
 ./manage.py test --verbosity=2
 end test
