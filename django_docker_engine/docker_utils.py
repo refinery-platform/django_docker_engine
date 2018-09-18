@@ -76,8 +76,10 @@ _MEM_RESERVATION_MB = '.mem_reservation_mb'
 class DockerClientWrapper(object):
 
     def __init__(self,
+                 historian=None,
                  manager_class=_DEFAULT_MANAGER,
                  root_label=_DEFAULT_LABEL):
+        self._historian = FileHistorian() if historian is None else historian
         self._containers_manager = manager_class(None, root_label)
         # Some methods of the manager will fail without a data_dir,
         # but they shouldn't be called from the read-only client in any event.
@@ -135,7 +137,7 @@ class DockerClientWrapper(object):
         '''
         container_ids = [container.id for container in self.list()]
         # TODO: Historian class should be parameterized.
-        lru_sorted = FileHistorian().sort_lru(container_ids)
+        lru_sorted = self._historian.sort_lru(container_ids)
         memory_freed = 0
         while memory_freed < need_to_free:
             next_id = lru_sorted.pop(0)
