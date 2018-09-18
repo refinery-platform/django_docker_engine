@@ -147,8 +147,8 @@ class DockerClientWrapper(object):
             self.kill(next_container)
             logger.warn(
                 'Killed {} to free up {}MB: {}MB freed so far. '
-                    'Need to free {}.'.format(
-                next_container.name, mem_reservation_mb, memory_freed,
+                'Need to free {}.'.format(
+                    next_container.name, mem_reservation_mb, memory_freed,
                     need_to_free))
 
     def _mem_reservation_mb(self, container):
@@ -260,7 +260,7 @@ class DockerClientRunWrapper(DockerClientWrapper):
                     total_mem_reservation_mb,
                     self._mem_limit_mb,
                     need_to_free
-            ))
+                ))
             self._kill_lru(need_to_free)
 
         image_name = container_spec.image_name
