@@ -22,7 +22,8 @@ class DockerContainerSpec():
                  extra_directories=[],
                  labels={},
                  container_port=80,
-                 cpus=0.5):
+                 cpus=0.5,
+                 mem_reservation_mb=None):
         self.image_name = image_name
         self.container_name = container_name
         self.container_input_path = container_input_path
@@ -31,6 +32,7 @@ class DockerContainerSpec():
         self.labels = labels
         self.container_port = container_port
         self.cpus = cpus
+        self.mem_reservation_mb = mem_reservation_mb
 
     def __repr__(self):
         kwargs = ', '.join(
@@ -68,6 +70,7 @@ class DockerClientSpec():
 
 _DEFAULT_MANAGER = docker_engine.DockerEngineManager
 _DEFAULT_LABEL = 'io.github.refinery-project.django_docker_engine'
+_MEM_RESERVATION_MB = '.mem_reservation_mb'
 
 
 class DockerClientWrapper(object):
@@ -135,6 +138,13 @@ class DockerClientWrapper(object):
         lru_container = self._containers_manager.get_container(lru_id)
         self.kill(lru_container)
 
+    def _total_mem_reservation_mb(self):
+        containers = self.list()
+        return sum(
+            [int(container.labels.get(_DEFAULT_LABEL + _MEM_RESERVATION_MB))
+             for container in containers]
+        )
+
     def _purge(self, label=None, seconds=None):
         # TODO: Remove. kill_lru should be used instead.
         for container in self.list({'label': label} if label else {}):
@@ -181,7 +191,8 @@ class DockerClientRunWrapper(DockerClientWrapper):
                  manager_class=_DEFAULT_MANAGER,
                  root_label=_DEFAULT_LABEL,
                  pem=None,
-                 ssh_username=None):
+                 ssh_username=None,
+                 mem_limit_mb=float('inf')):
         super(DockerClientRunWrapper, self).__init__(
             manager_class=manager_class,
             root_label=root_label
@@ -197,6 +208,7 @@ class DockerClientRunWrapper(DockerClientWrapper):
         self._do_input_json_file = docker_client_spec.do_input_json_file
         self._do_input_json_envvar = docker_client_spec.do_input_json_envvar
         self._input_json_url = docker_client_spec.input_json_url
+        self._mem_limit_mb = mem_limit_mb
 
     def _make_directory_on_host(self):
         # TODO: This should only be run locally, and even then...?
@@ -218,6 +230,18 @@ class DockerClientRunWrapper(DockerClientWrapper):
         Run a given ContainerSpec. Returns the url for the container,
         in contrast to the underlying method, which returns the logs.
         """
+
+        total_mem_reservation_mb = self._total_mem_reservation_mb()
+        new_mem_reservation_mb = container_spec.mem_reservation_mb or 0
+        # If None (ie, unspecified), treat as 0.
+
+        if (total_mem_reservation_mb + new_mem_reservation_mb) > self._mem_limit_mb:
+            # TODO: Kill LRU
+            logger.warn('{}MB requested + {}MB in use > {}MB limit'.format(
+                new_mem_reservation_mb, total_mem_reservation_mb,
+                self._mem_limit_mb
+            ))
+
         image_name = container_spec.image_name
         if (':' not in image_name):
             image_name += ':latest'
@@ -254,7 +278,8 @@ class DockerClientRunWrapper(DockerClientWrapper):
         labels = container_spec.labels
         labels.update({
             self.root_label: 'true',
-            self.root_label + '.port': str(container_spec.container_port)
+            self.root_label + '.port': str(container_spec.container_port),
+            self.root_label + _MEM_RESERVATION_MB: str(container_spec.mem_reservation_mb)
         })
 
         environment = {}
@@ -272,7 +297,8 @@ class DockerClientRunWrapper(DockerClientWrapper):
             labels=labels,
             volumes=volumes,
             nano_cpus=int(container_spec.cpus * 1e9),
-            environment=environment
+            environment=environment,
+            mem_reservation='{}M'.format(new_mem_reservation_mb),
         )
         return self.lookup_container_url(container_spec.container_name)
 
