@@ -11,14 +11,17 @@ ping -c1 container-name.docker.localhost > /dev/null  # Prereq for hostname-base
 docker info | grep 'Operating System'  # Are we able to connect to Docker, and what OS is it?
 
 start test
-coverage run manage.py test --verbosity=2
-coverage report --skip-covered --show-missing --fail-under 100
+# Travis logs were truncated, so always use "die" to avoid race condition.
+coverage run manage.py test --verbosity=2 \
+  && coverage report --skip-covered --show-missing --fail-under 100 \
+  || die
 end test
 
 start doctest
 # Add "--append" if you want to have a single coverage.
-coverage run -m doctest *.md
-coverage report --skip-covered --show-missing --fail-under 67
+coverage run -m doctest *.md \
+  && coverage report --skip-covered --show-missing --fail-under 67 \
+  || die
 end doctest
 
 start docker
