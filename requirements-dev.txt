@@ -1,10 +1,22 @@
+# Static code style checkers and fixers
 flake8==3.3.0
 isort==4.2.15
 autopep8==1.3.3
-mock==2.0.0  # This is a builtin in Python 3.3 and above
+
+# This is a builtin in Python 3.3 and above
+mock==2.0.0
+
+# Spider the demo in tests
 beautifulsoup4==4.6.0
 mechanicalsoup==0.10.0
 requests==2.19.1
+
+# Read .travis.yml so that our pypi version metadata matches our tests
 PyYAML==3.12
+
+# Packaging up for pypi
 wheel==0.30.0
-# paramiko==2.1.2  # Only needed if trying to run tests against remote docker engine
+
+# Code coverage
+codecov==2.0.15
+coverage==4.5.1

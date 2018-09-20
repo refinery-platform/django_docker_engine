@@ -11,17 +11,23 @@ ping -c1 container-name.docker.localhost > /dev/null  # Prereq for hostname-base
 docker info | grep 'Operating System'  # Are we able to connect to Docker, and what OS is it?
 
 start test
-./manage.py test --verbosity=2
+# Travis logs were truncated, so always use "die" to avoid race condition.
+coverage run manage.py test --verbosity=2 \
+  && coverage report --fail-under 30 \
+  || die
 end test
+
+start doctest
+# Add "--append" if you want to have a single coverage.
+coverage run -m doctest *.md \
+  && coverage report --fail-under 60 \
+  || die
+end doctest
 
 start docker
 docker system df
 # TODO: Make assertions about the disk usage we would expect to see.
 end docker
-
-start doctest
-python -m doctest *.md
-end doctest
 
 start format
 flake8 --exclude build . || die "Run 'autopep8 --in-place -r .'"
