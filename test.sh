@@ -13,14 +13,14 @@ docker info | grep 'Operating System'  # Are we able to connect to Docker, and w
 start test
 # Travis logs were truncated, so always use "die" to avoid race condition.
 coverage run manage.py test --verbosity=2 \
-  && coverage report --skip-covered --show-missing --fail-under 30 \
+  && coverage report --include=django_docker_engine/* --skip-covered --show-missing --fail-under 30 \
   || die
 end test
 
 start doctest
 # Add "--append" if you want to have a single coverage.
 coverage run -m doctest *.md \
-  && coverage report --skip-covered --show-missing --fail-under 60 \
+  && coverage report --include=django_docker_engine/* --skip-covered --show-missing --fail-under 60 \
   || die
 end doctest
 
