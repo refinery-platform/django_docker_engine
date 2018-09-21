@@ -5,7 +5,6 @@ import re
 import subprocess
 import unittest
 from collections import namedtuple
-from shutil import rmtree
 from sys import version_info
 from time import sleep
 
