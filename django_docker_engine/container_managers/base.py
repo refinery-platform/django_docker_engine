@@ -1,13 +1,13 @@
 import abc
 import sys
 
-if sys.version_info >= (3, 4):
+if sys.version_info >= (3, 4):  # pragma: no cover
     ABC = abc.ABC
 else:
     ABC = abc.ABCMeta('ABC', (), {})
 
 
-class BaseManager(ABC):
+class BaseManager(ABC):  # pragma: no cover
     """
     This provides an interface which satisfies both local and remote Docker use.
     The methods are based on a subset of those provided by
