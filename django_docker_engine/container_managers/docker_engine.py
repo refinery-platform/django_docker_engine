@@ -68,6 +68,12 @@ class DockerEngineManager(BaseManager):
         if remote_host_match:
             return remote_host_match.group(1)
 
+    def _is_base_url_local(self):
+        return self._base_url in [
+            'http+docker://' + host for host in
+            ['localunixsocket', 'localhost']
+        ]
+
     def run(self, image_name, cmd, **kwargs):
         """
         :param image_name:
@@ -180,36 +186,6 @@ class DockerEngineManager(BaseManager):
         container = self._containers_client.get(container_name)
         return container.logs(timestamps=True)
 
-
-if sys.version_info >= (3, 4):
-    ABC = abc.ABC
-else:
-    ABC = abc.ABCMeta('ABC', (), {})
-
-
-class _HostFiles(ABC):
-    @abc.abstractmethod
-    def write(self, path, content):
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def mkdir_p(self, path):
-        raise NotImplementedError()
-
-
-class _LocalHostFiles(_HostFiles):
-    def __init__(self):
-        pass
-
-    def write(self, path, content):
-        with open(path, 'w') as file:
-            file.write(content)
-            file.write('\n')
-            # TODO: For consistency with heredoc in _RemoteHostFiles, add a newline...
-            # I don't think this hurts with JSON, but not ideal.
-
-    def mkdir_p(self, path):
-        dir_util.mkpath(path)
 
 # TODO: At some point we need to be more abstract,
 #       instead of using the SDK responses directly...

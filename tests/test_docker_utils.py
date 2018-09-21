@@ -217,14 +217,3 @@ class LiveDockerTestsClean(LiveDockerTests):
         self.client_wrapper.purge_inactive(0)
         self.assertEqual(0, self.count_containers())
         # But with an even tighter limit, it should be purged.
-
-
-class LiveDockerTestsCleanJsonFile(LiveDockerTestsClean):
-
-    @property
-    def spec(self):
-        return DockerClientSpec('/tmp/django-docker-engine-test',
-                                do_input_json_file=True)
-
-    def assert_correct_ls_tmp(self, ls_tmp_orig):
-        self.assertGreater(self.ls_tmp(), ls_tmp_orig)
