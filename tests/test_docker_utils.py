@@ -38,8 +38,7 @@ class LiveDockerTests(unittest.TestCase):
     @property
     def spec(self):
         return DockerClientSpec('/tmp/django-docker-engine-test',
-                                do_input_json_envvar=True,
-                                do_input_json_file=True)
+                                do_input_json_envvar=True)
 
     def setUp(self):
         # Docker Engine's clock stops when the computer goes to sleep,
@@ -82,39 +81,6 @@ class LiveDockerTests(unittest.TestCase):
             r'^tcp://(\d+\.\d+\.\d+\.\d+):\d+$',
             self.docker_host()
         ).group(1)
-
-    def remote_exec(self, command):
-        # TODO: If we target a remote dockerengine during tests,
-        # and we use input.json mounting, then this is necessary...
-        # but, we generally aren't doing that, and in any case
-        # we're moving towards the input modes that don't require SSH.
-        import paramiko
-        host_ip = self.docker_host_ip()
-        key = paramiko.RSAKey.from_private_key_file(LiveDockerTests.PEM)
-        client = paramiko.SSHClient()
-        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        client.connect(hostname=host_ip, username='ec2-user', pkey=key)
-        client.exec_command(command)
-
-    PEM = 'django_docker_cloudformation.pem'
-
-    # These *_on_host methods are in a sense duplicates of the helper methods
-    # in docker_utils.py, but I think here it makes sense to have explicit
-    # if-thens, rather than hiding it with polymorphism.
-
-    def mkdir_on_host(self, path):
-        if self.docker_host():
-            self.remote_exec('mkdir -p {}'.format(path))
-        else:
-            dir_util.mkpath(path)
-
-    def write_to_host(self, content, path):
-        if self.docker_host():
-            self.remote_exec("cat > {} <<'END'\n{}\nEND".format(path, content))
-        else:
-            with open(path, 'w') as file:
-                file.write(content)
-                file.write('\n')  # For consistency with heredoc
 
     # Other supporting methods for tests:
     def timestamp(self):

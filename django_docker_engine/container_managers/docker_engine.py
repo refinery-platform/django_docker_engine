@@ -47,8 +47,6 @@ class DockerEngineManager(BaseManager):
             data_dir,  # TODO: Only needed if passing input.json as file?
             root_label,
             client=docker.from_env(),
-            pem=None,
-            ssh_username=None
     ):
         """
         :param string data_dir: Only needed if input is passed as file.
@@ -57,10 +55,6 @@ class DockerEngineManager(BaseManager):
         The DOCKER_HOST environment variable specifies where the Docker Engine
         is. To override this, create a DockerClient with the correct base_url
         and provide it here.
-        :param string pem: Only needed if input is passed as file, and
-        the Docker Engine is remote.
-        :param string ssh_username: Only needed if input is passed as file, and
-        the Docker Engine is remote.
         """
         self._base_url = client.api.base_url
         self._containers_client = client.containers
@@ -69,27 +63,10 @@ class DockerEngineManager(BaseManager):
         self._data_dir = data_dir
         self._root_label = root_label
 
-        remote_host = self._get_base_url_remote_host()
-        if remote_host:
-            self.host_files = _RemoteHostFiles(
-                host=remote_host,
-                pem=pem,
-                ssh_username=ssh_username)
-        elif self._is_base_url_local():
-            self.host_files = _LocalHostFiles()
-        else:
-            raise RuntimeError(
-                'Unexpected client base_url: %s', self._base_url)
-
     def _get_base_url_remote_host(self):
         remote_host_match = re.match(r'^http://([^:]+):\d+$', self._base_url)
         if remote_host_match:
             return remote_host_match.group(1)
-
-    def _is_base_url_local(self):
-        return self._base_url in [
-            'http+docker://' + host for host in ['localunixsocket', 'localhost']
-        ]
 
     def run(self, image_name, cmd, **kwargs):
         """
@@ -203,12 +180,6 @@ class DockerEngineManager(BaseManager):
         container = self._containers_client.get(container_name)
         return container.logs(timestamps=True)
 
-    def _mkdtemp(self):
-        timestamp = re.sub(r'\W', '_', str(datetime.now()))
-        tmp_dir = os.path.join(self._data_dir, timestamp)
-        self.host_files.mkdir_p(tmp_dir)
-        return tmp_dir
-
 
 if sys.version_info >= (3, 4):
     ABC = abc.ABC
@@ -239,36 +210,6 @@ class _LocalHostFiles(_HostFiles):
 
     def mkdir_p(self, path):
         dir_util.mkpath(path)
-
-
-class _RemoteHostFiles(_HostFiles):
-    # TODO: Try again with paramiko: https://github.com/paramiko/paramiko/issues/959
-    def __init__(self, host, pem, ssh_username=None,
-                 strict_host_key_checking=False):
-        self.host = host
-        self.pem = pem
-        self.ssh_username = ssh_username
-        self.strict_host_key_checking = strict_host_key_checking
-
-    def _exec(self, command):
-        cmd_tokens = ['ssh']
-        if not self.strict_host_key_checking:
-            cmd_tokens.append('-oStrictHostKeyChecking=no')
-        if self.pem:
-            cmd_tokens.extend(['-i', self.pem])
-        if self.ssh_username:
-            cmd_tokens.append('{}@{}'.format(self.ssh_username, self.host))
-        else:
-            cmd_tokens.append(self.host)
-        cmd_tokens.append(command)
-        subprocess.check_call(cmd_tokens)
-
-    def write(self, path, content):
-        self._exec(
-            "cat > {} <<'END_CONTENT'\n{}\nEND_CONTENT".format(path, content))
-
-    def mkdir_p(self, path):
-        self._exec('mkdir -p {}'.format(path))
 
 # TODO: At some point we need to be more abstract,
 #       instead of using the SDK responses directly...

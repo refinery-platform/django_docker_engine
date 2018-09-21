@@ -46,24 +46,19 @@ class DockerContainerSpec():
 class DockerClientSpec():
 
     def __init__(self, data_dir,
-                 do_input_json_file=False,
                  do_input_json_envvar=False,
                  input_json_url=None):
-        assert do_input_json_file or do_input_json_envvar or input_json_url,\
-            'Input must be provided to the container, '\
-            'either as a json file to mount, '\
-            'an environment variable containing json, '\
+        assert do_input_json_envvar or input_json_url,\
+            'Input must be provided to the container '\
+            'as an environment variable containing json '\
             'or an environment variable containing a url pointing to json'
-        # Multiple can be specified: The container needs to be able
+        # Both can be specified: The container needs to be able
         # to read from at least one specified source. Limitations:
-        # - do_input_json_file:
-        #   Requires ssh access if remote
         # - do_input_json_envvar:
         #   Creates potentially problematic huge envvar
         # - input_json_url:
         #   World-readable URL could be an unwanted leak
         self.data_dir = data_dir
-        self.do_input_json_file = do_input_json_file
         self.do_input_json_envvar = do_input_json_envvar
         self.input_json_url = input_json_url
 
@@ -205,7 +200,6 @@ class DockerClientRunWrapper(DockerClientWrapper):
                  docker_client_spec,
                  manager_class=_DEFAULT_MANAGER,
                  root_label=_DEFAULT_LABEL,
-                 pem=None,
                  ssh_username=None,
                  mem_limit_mb=float('inf')):
         super(DockerClientRunWrapper, self).__init__(
@@ -213,32 +207,17 @@ class DockerClientRunWrapper(DockerClientWrapper):
             root_label=root_label
         )
         manager_kwargs = {}
-        if pem:
-            manager_kwargs['pem'] = pem
         if ssh_username:
             manager_kwargs['ssh_username'] = ssh_username
         self._containers_manager = manager_class(
             docker_client_spec.data_dir, root_label, **manager_kwargs)
         self.root_label = root_label
-        self._do_input_json_file = docker_client_spec.do_input_json_file
         self._do_input_json_envvar = docker_client_spec.do_input_json_envvar
         self._input_json_url = docker_client_spec.input_json_url
         self._mem_limit_mb = mem_limit_mb
 
-    def _make_directory_on_host(self):
-        # TODO: This should only be run locally, and even then...?
-        return self._containers_manager._mkdtemp()
-
     def _make_volume_on_host(self):
         return self._containers_manager.create_volume().name
-
-    def _write_input_to_host(self, input):  # noqa: A002
-        host_input_dir = self._make_directory_on_host()
-        # The host filename "input.json" is arbitrary.
-        host_input_path = os.path.join(host_input_dir, 'input.json')
-        content = json.dumps(input)
-        self._containers_manager.host_files.write(host_input_path, content)
-        return host_input_path
 
     def run(self, container_spec):
         """
@@ -270,10 +249,6 @@ class DockerClientRunWrapper(DockerClientWrapper):
             # https://github.com/docker/docker-py/issues/1510
 
         volume_spec = []
-        if self._do_input_json_file:
-            volume_spec.append({
-                'host': self._write_input_to_host(container_spec.input),
-                'bind': container_spec.container_input_path})
 
         for directory in container_spec.extra_directories:
             assert os.path.isabs(directory), \

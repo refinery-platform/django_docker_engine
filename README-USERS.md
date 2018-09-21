@@ -28,10 +28,6 @@ There are essentially two ways of passing input to a container on startup:
 By mounting a file from the host filesystem and by passing environment variables.
 The method used depend on the parameters you use for `DockerClientSpec`.
 
-`do_input_json_file` (boolean):
-- Input is serialized to a JSON file and saved in a tmp directory.
-- If Docker Engine is on a remote host, requires SSH access.
-
 `do_input_json_envvar` (boolean):
 - Instead of writing a file, JSON is stored in an environment variable.
 - There is limit to the size of environment variables: Typically 2M, but it could be lower.
