@@ -36,8 +36,7 @@ class LiveDockerTests(unittest.TestCase):
 
     @property
     def spec(self):
-        return DockerClientSpec('/tmp/django-docker-engine-test',
-                                do_input_json_envvar=True)
+        return DockerClientSpec(do_input_json_envvar=True)
 
     def setUp(self):
         # Docker Engine's clock stops when the computer goes to sleep,
@@ -50,10 +49,6 @@ class LiveDockerTests(unittest.TestCase):
         self.client_wrapper = DockerClientRunWrapper(self.spec)
         self.test_label = self.client_wrapper.root_label + '.test'
         self.initial_containers = self.client_wrapper.list()
-        self.initial_tmp = self.ls_tmp()
-        if self.initial_tmp != []:
-            logger.warn('Previous tests left junk in {}'.format(
-                self.client_wrapper._get_data_dir()))
 
         # There may be containers running which are not "my containers".
         self.assertEqual(0, self.count_containers())
@@ -107,12 +102,6 @@ class LiveDockerTests(unittest.TestCase):
             sleep(0.1)
         self.fail('Never got 200')
 
-    def ls_tmp(self):
-        try:
-            return sorted(os.listdir(self.client_wrapper._get_data_dir()))
-        except OSError:
-            return []
-
 
 class LiveDockerTestsDirty(LiveDockerTests):
     # This test leaves temp files around so we can't make
@@ -135,9 +124,7 @@ class LiveDockerTestsClean(LiveDockerTests):
 
     def tearDown(self):
         self.client_wrapper.purge_by_label(self.test_label)
-
         self.assertEqual(self.initial_containers, self.client_wrapper.list())
-        self.assertEqual(self.initial_tmp, self.ls_tmp())
 
     def test_at_a_minimum(self):
         # A no-op, but if the tests stall, it may be
@@ -164,14 +151,9 @@ class LiveDockerTestsClean(LiveDockerTests):
                           'run') as mock_run, \
                 patch.object(DockerClientRunWrapper,
                              'lookup_container_url'):
-            old_dirs = set(self.ls_tmp())
             self.start_container(given)
             (args, kwargs) = mock_run.call_args
             self.assertEqual(kwargs['nano_cpus'], expected)
-            new_dirs = set(self.ls_tmp()) - old_dirs
-            # Can't rely on normal cleanup, because there is no container.
-            for dir in new_dirs:
-                rmtree('/tmp/django-docker-engine-test/' + dir)
 
     def test_container_spec_cpu_default(self):
         self.assert_cpu_quota(5e8)

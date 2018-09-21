@@ -45,7 +45,7 @@ class DockerContainerSpec():
 
 class DockerClientSpec():
 
-    def __init__(self, data_dir,
+    def __init__(self,
                  do_input_json_envvar=False,
                  input_json_url=None):
         assert do_input_json_envvar or input_json_url,\
@@ -58,7 +58,6 @@ class DockerClientSpec():
         #   Creates potentially problematic huge envvar
         # - input_json_url:
         #   World-readable URL could be an unwanted leak
-        self.data_dir = data_dir
         self.do_input_json_envvar = do_input_json_envvar
         self.input_json_url = input_json_url
 
@@ -75,9 +74,7 @@ class DockerClientWrapper(object):
                  manager_class=_DEFAULT_MANAGER,
                  root_label=_DEFAULT_LABEL):
         self._historian = FileHistorian() if historian is None else historian
-        self._containers_manager = manager_class(None, root_label)
-        # Some methods of the manager will fail without a data_dir,
-        # but they shouldn't be called from the read-only client in any event.
+        self._containers_manager = manager_class(root_label)
 
     def is_live(self, container_name):
         try:
@@ -209,8 +206,7 @@ class DockerClientRunWrapper(DockerClientWrapper):
         manager_kwargs = {}
         if ssh_username:
             manager_kwargs['ssh_username'] = ssh_username
-        self._containers_manager = manager_class(
-            docker_client_spec.data_dir, root_label, **manager_kwargs)
+        self._containers_manager = manager_class(root_label, **manager_kwargs)
         self.root_label = root_label
         self._do_input_json_envvar = docker_client_spec.do_input_json_envvar
         self._input_json_url = docker_client_spec.input_json_url
@@ -297,6 +293,3 @@ class DockerClientRunWrapper(DockerClientWrapper):
             mem_reservation='{}M'.format(new_mem_reservation_mb),
         )
         return self.lookup_container_url(container_spec.container_name)
-
-    def _get_data_dir(self):
-        return self._containers_manager._data_dir

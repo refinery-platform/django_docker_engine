@@ -109,8 +109,7 @@ class PathRoutingClientTests(unittest.TestCase):
         # TODO: Might use mkdtemp, but Docker couldn't see the directory?
         # self.tmp_dir = mkdtemp()
         # chmod(self.tmp_dir, 0777)
-        spec = DockerClientSpec(self.tmp_dir,
-                                do_input_json_envvar=True)
+        spec = DockerClientSpec(do_input_json_envvar=True)
         self.client = DockerClientRunWrapper(spec)
 
     def tearDown(self):
@@ -246,8 +245,7 @@ class HostRoutingClientTests(PathRoutingClientTests):
         ])
         home = 'http://localhost:' + self.port
         wait_for_server(home)
-        spec = DockerClientSpec(self.tmp_dir,
-                                do_input_json_envvar=True)
+        spec = DockerClientSpec(do_input_json_envvar=True)
         self.client = DockerClientRunWrapper(spec)
 
     # Tests from superclass are run

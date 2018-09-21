@@ -38,7 +38,6 @@ class DockerEngineManager(BaseManager):
 
     def __init__(
             self,
-            data_dir,  # TODO: Only needed if passing input.json as file?
             root_label,
             client=docker.from_env(),
     ):
@@ -54,7 +53,6 @@ class DockerEngineManager(BaseManager):
         self._containers_client = client.containers
         self._images_client = client.images
         self._volumes_client = client.volumes
-        self._data_dir = data_dir
         self._root_label = root_label
 
     def _get_base_url_remote_host(self):
@@ -116,7 +114,7 @@ class DockerEngineManager(BaseManager):
         """
         remote_host = self._get_base_url_remote_host()
         if remote_host:
-            host = remote_host
+            host = remote_host  # pragma: no cover
         elif self._is_base_url_local():
             host = 'localhost'
         else:

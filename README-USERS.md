@@ -89,7 +89,7 @@ and not just have installed it via pip.)
 ```
 >>> from django_docker_engine.docker_utils import (
 ...     DockerClientRunWrapper, DockerClientSpec, DockerContainerSpec)
->>> client_spec = DockerClientSpec(None, do_input_json_envvar=True)
+>>> client_spec = DockerClientSpec(do_input_json_envvar=True)
 >>> client = DockerClientRunWrapper(client_spec)
 
 # First, confirm no containers are already running:
