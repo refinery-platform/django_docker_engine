@@ -12,7 +12,7 @@ mechanicalsoup==0.10.0
 requests==2.19.1
 
 # Read .travis.yml so that our pypi version metadata matches our tests
-PyYAML==3.12
+PyYAML==3.13
 
 # Packaging up for pypi
 wheel==0.30.0
