@@ -150,12 +150,14 @@ class LiveDockerTestsClean(LiveDockerTests):
         self.assert_loads_eventually(info.url, 'Welcome to nginx!')
         self.assertTrue(self.client_wrapper.is_live(info.name))
 
-    def test_container_spec_with_input(self):
-        url = self.start_container({
-            'input': {'foo': 'bar'},
-            'container_input_path': '/usr/share/nginx/html/index.html'
-        }).url
-        self.assert_loads_eventually(url, '{"foo": "bar"}')
+    # TODO: We're no longer writing the input straight to disk:
+    #       Instead we need to test with an image that reads the envvars
+    # def test_container_spec_with_input(self):
+    #     url = self.start_container({
+    #         'input': {'foo': 'bar'},
+    #         'container_input_path': '/usr/share/nginx/html/index.html'
+    #     }).url
+    #     self.assert_loads_eventually(url, '{"foo": "bar"}')
 
     def assert_cpu_quota(self, expected, given={}):
 
