@@ -26,7 +26,7 @@ else:
 
 
 client = DockerClientRunWrapper(
-    DockerClientSpec(None, do_input_json_envvar=True),
+    DockerClientSpec(do_input_json_envvar=True),
     mem_limit_mb=35  # TODO: Hard-coded limit for now
     # We could also get the limit by starting a container and then:
     #   sdk.list()[0].stats(stream=False)['memory_stats']['limit']

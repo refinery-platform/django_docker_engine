@@ -5,8 +5,6 @@ import re
 import subprocess
 import unittest
 from collections import namedtuple
-from distutils import dir_util
-from shutil import rmtree
 from sys import version_info
 from time import sleep
 
@@ -37,9 +35,7 @@ class LiveDockerTests(unittest.TestCase):
 
     @property
     def spec(self):
-        return DockerClientSpec('/tmp/django-docker-engine-test',
-                                do_input_json_envvar=True,
-                                do_input_json_file=True)
+        return DockerClientSpec(do_input_json_envvar=True)
 
     def setUp(self):
         # Docker Engine's clock stops when the computer goes to sleep,
@@ -52,10 +48,6 @@ class LiveDockerTests(unittest.TestCase):
         self.client_wrapper = DockerClientRunWrapper(self.spec)
         self.test_label = self.client_wrapper.root_label + '.test'
         self.initial_containers = self.client_wrapper.list()
-        self.initial_tmp = self.ls_tmp()
-        if self.initial_tmp != []:
-            logger.warn('Previous tests left junk in {}'.format(
-                self.client_wrapper._get_data_dir()))
 
         # There may be containers running which are not "my containers".
         self.assertEqual(0, self.count_containers())
@@ -83,39 +75,6 @@ class LiveDockerTests(unittest.TestCase):
             self.docker_host()
         ).group(1)
 
-    def remote_exec(self, command):
-        # TODO: If we target a remote dockerengine during tests,
-        # and we use input.json mounting, then this is necessary...
-        # but, we generally aren't doing that, and in any case
-        # we're moving towards the input modes that don't require SSH.
-        import paramiko
-        host_ip = self.docker_host_ip()
-        key = paramiko.RSAKey.from_private_key_file(LiveDockerTests.PEM)
-        client = paramiko.SSHClient()
-        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        client.connect(hostname=host_ip, username='ec2-user', pkey=key)
-        client.exec_command(command)
-
-    PEM = 'django_docker_cloudformation.pem'
-
-    # These *_on_host methods are in a sense duplicates of the helper methods
-    # in docker_utils.py, but I think here it makes sense to have explicit
-    # if-thens, rather than hiding it with polymorphism.
-
-    def mkdir_on_host(self, path):
-        if self.docker_host():
-            self.remote_exec('mkdir -p {}'.format(path))
-        else:
-            dir_util.mkpath(path)
-
-    def write_to_host(self, content, path):
-        if self.docker_host():
-            self.remote_exec("cat > {} <<'END'\n{}\nEND".format(path, content))
-        else:
-            with open(path, 'w') as file:
-                file.write(content)
-                file.write('\n')  # For consistency with heredoc
-
     # Other supporting methods for tests:
     def timestamp(self):
         return re.sub(r'\W', '_', str(datetime.datetime.now()))
@@ -142,12 +101,6 @@ class LiveDockerTests(unittest.TestCase):
             sleep(0.1)
         self.fail('Never got 200')
 
-    def ls_tmp(self):
-        try:
-            return sorted(os.listdir(self.client_wrapper._get_data_dir()))
-        except OSError:
-            return []
-
 
 class LiveDockerTestsDirty(LiveDockerTests):
     # This test leaves temp files around so we can't make
@@ -170,9 +123,7 @@ class LiveDockerTestsClean(LiveDockerTests):
 
     def tearDown(self):
         self.client_wrapper.purge_by_label(self.test_label)
-
         self.assertEqual(self.initial_containers, self.client_wrapper.list())
-        self.assertEqual(self.initial_tmp, self.ls_tmp())
 
     def test_at_a_minimum(self):
         # A no-op, but if the tests stall, it may be
@@ -184,27 +135,15 @@ class LiveDockerTestsClean(LiveDockerTests):
         self.assert_loads_eventually(info.url, 'Welcome to nginx!')
         self.assertTrue(self.client_wrapper.is_live(info.name))
 
-    def test_container_spec_with_input(self):
-        url = self.start_container({
-            'input': {'foo': 'bar'},
-            'container_input_path': '/usr/share/nginx/html/index.html'
-        }).url
-        self.assert_loads_eventually(url, '{"foo": "bar"}')
-
     def assert_cpu_quota(self, expected, given={}):
 
         with patch.object(DockerEngineManager,
                           'run') as mock_run, \
                 patch.object(DockerClientRunWrapper,
                              'lookup_container_url'):
-            old_dirs = set(self.ls_tmp())
             self.start_container(given)
             (args, kwargs) = mock_run.call_args
             self.assertEqual(kwargs['nano_cpus'], expected)
-            new_dirs = set(self.ls_tmp()) - old_dirs
-            # Can't rely on normal cleanup, because there is no container.
-            for dir in new_dirs:
-                rmtree('/tmp/django-docker-engine-test/' + dir)
 
     def test_container_spec_cpu_default(self):
         self.assert_cpu_quota(5e8)
@@ -251,14 +190,3 @@ class LiveDockerTestsClean(LiveDockerTests):
         self.client_wrapper.purge_inactive(0)
         self.assertEqual(0, self.count_containers())
         # But with an even tighter limit, it should be purged.
-
-
-class LiveDockerTestsCleanJsonFile(LiveDockerTestsClean):
-
-    @property
-    def spec(self):
-        return DockerClientSpec('/tmp/django-docker-engine-test',
-                                do_input_json_file=True)
-
-    def assert_correct_ls_tmp(self, ls_tmp_orig):
-        self.assertGreater(self.ls_tmp(), ls_tmp_orig)

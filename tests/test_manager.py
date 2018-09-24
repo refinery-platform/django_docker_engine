@@ -16,9 +16,8 @@ class DockerEngineManagerTests(unittest.TestCase):
 
     def setUp(self):
         timestamp = re.sub(r'\W', '-', datetime.now().isoformat())
-        data_dir = '/tmp/django-docker-tests-' + timestamp
         self.root_label = 'test-root'
-        self.manager = DockerEngineManager(data_dir, self.root_label)
+        self.manager = DockerEngineManager(self.root_label)
         self.container_name = timestamp
         self.kwargs = {
             'cmd': None
