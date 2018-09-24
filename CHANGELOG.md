@@ -1,5 +1,11 @@
 # Change Log
 
+## [v.0.1.0](https://pypi.org/project/django-docker-engine/0.1.1/) (Sep 24, 2018)
+
+* Remove the option for passing inputs via file mounting.
+* Start measuring test coverage: Minimum can be improved over time.
+* Support Python 3.7.
+
 ## [v.0.1.0](https://pypi.org/project/django-docker-engine/0.1.0/) (Sep 19, 2018)
 
 With this release there's a big philosophical change: Instead of leaving the
