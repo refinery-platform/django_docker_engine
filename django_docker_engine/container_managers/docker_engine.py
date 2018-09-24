@@ -42,7 +42,6 @@ class DockerEngineManager(BaseManager):
             client=docker.from_env(),
     ):
         """
-        :param string data_dir: Only needed if input is passed as file.
         :param string root_label:
         :param client: The default behavior matches that of the Docker CLI:
         The DOCKER_HOST environment variable specifies where the Docker Engine
