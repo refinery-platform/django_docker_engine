@@ -128,7 +128,6 @@ class DockerClientWrapper(object):
         are still running, but will shut down shortly.
         '''
         container_ids = [container.id for container in self.list()]
-        # TODO: Historian class should be parameterized.
         lru_sorted = self._historian.sort_lru(container_ids)
         memory_freed = 0
         while memory_freed < need_to_free:

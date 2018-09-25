@@ -30,6 +30,17 @@ logger = logging.getLogger(__name__)
 
 ContainerInfo = namedtuple('ContainerInfo', ['url', 'name'])
 
+class ContainerSpecTests(unittest.TestCase):
+
+    def test_container_spec_repr(self):
+        spec = DockerContainerSpec('image-name', 'container-name')
+        self.assertEqual(
+            str(spec),
+            "DockerContainerSpec(container_input_path='/tmp/input.json', "
+            "container_name='container-name', container_port=80, cpus=0.5, "
+            "extra_directories=[], image_name='image-name', input={}, "
+            "labels={}, mem_reservation_mb=None)")
+
 
 class LiveDockerTests(unittest.TestCase):
 
