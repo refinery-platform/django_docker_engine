@@ -166,11 +166,14 @@ class PathRoutingClientTests(unittest.TestCase):
         logs = self.client.logs(self.container_name).decode('utf-8')
         self.assertIn('"GET / HTTP/1.1" 200', logs)
 
+        history = self.client.history(self.container_name)
+        self.assertEqual([event[1] for event in history], ['/', '/bad-path'])
+
     def assert_http_verb(self, verb):
         response = requests.__dict__[verb.lower()](self.url)
         self.assert_in_html('HTTP/1.1 {} /'.format(verb), response.content)
-        # Response shouldn't be HTML, but if we get the Django error page,
-        # this will make it much more readable.
+        # Response shouldn't be HTML, but if it fails and we get the
+        # Django error page, this will make it much more readable.
 
     def test_http_echo_verbs(self):
         self.client.run(
