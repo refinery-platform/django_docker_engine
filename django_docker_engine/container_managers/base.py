@@ -19,7 +19,7 @@ class BaseManager(ABC):
     """
 
     @abc.abstractmethod
-    def run(self, image_name, cmd, **kwargs):
+    def run(self, image_name, **kwargs):
         raise NotImplementedError()
 
     @abc.abstractmethod

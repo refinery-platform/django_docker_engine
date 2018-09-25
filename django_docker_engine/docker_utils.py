@@ -286,7 +286,6 @@ class DockerClientRunWrapper(DockerClientWrapper):
             image_name,
             name=container_spec.container_name,
             ports={'{}/tcp'.format(container_spec.container_port): None},
-            cmd=None,
             detach=True,
             labels=labels,
             volumes=volumes,
