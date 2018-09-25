@@ -21,7 +21,7 @@ end preflight
 start test
 # Travis logs were truncated, so always use "die" to avoid race condition.
 coverage run manage.py test --verbosity=2 \
-  && coverage report --fail-under 30 \
+  && coverage report --fail-under 80 \
   || die
 end test
 
