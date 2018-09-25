@@ -16,14 +16,13 @@ logger = logging.getLogger(__name__)
 
 class DockerContainerSpec():
 
-    def __init__(self, image_name, container_name,
+    def __init__(self, image_name, container_name, mem_reservation_mb,
                  input={},  # noqa: A002
                  container_input_path='/tmp/input.json',
                  extra_directories=[],
                  labels={},
                  container_port=80,
-                 cpus=0.5,
-                 mem_reservation_mb=None):
+                 cpus=0.5):
         self.image_name = image_name
         self.container_name = container_name
         self.container_input_path = container_input_path
@@ -283,7 +282,7 @@ class DockerClientRunWrapper(DockerClientWrapper):
         if self._input_json_url:
             environment['INPUT_JSON_URL'] = self._input_json_url
 
-        self._containers_manager.run(
+        container = self._containers_manager.run(
             image_name,
             name=container_spec.container_name,
             ports={'{}/tcp'.format(container_spec.container_port): None},
@@ -295,4 +294,5 @@ class DockerClientRunWrapper(DockerClientWrapper):
             environment=environment,
             mem_reservation='{}M'.format(new_mem_reservation_mb),
         )
+        self._historian.create(container.id)
         return self.lookup_container_url(container_spec.container_name)

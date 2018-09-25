@@ -110,7 +110,8 @@ class PathRoutingClientTests(unittest.TestCase):
         # self.tmp_dir = mkdtemp()
         # chmod(self.tmp_dir, 0777)
         spec = DockerClientSpec(do_input_json_envvar=True)
-        self.client = DockerClientRunWrapper(spec)
+        self.client = DockerClientRunWrapper(spec, mem_limit_mb=35)
+        # 35MB is enough for two nginx containers.
 
     def tearDown(self):
         self.process.kill()
@@ -155,7 +156,7 @@ class PathRoutingClientTests(unittest.TestCase):
                 labels={'subprocess-test-label': 'True'}
             )
         )
-        time.sleep(1)  # TODO: Race condition sensitivity?
+        time.sleep(1)  # TODO: Race condition kludge!
         r_good = requests.get(self.url)
         self.assert_in_html('Welcome to nginx', r_good.content)
 
@@ -168,6 +169,21 @@ class PathRoutingClientTests(unittest.TestCase):
 
         history = self.client.history(self.container_name)
         self.assertEqual([event[1] for event in history], ['/', '/bad-path'])
+
+    def test_multi_container_lru_killer(self):
+        for i in range(3):
+            self.client.run(
+                DockerContainerSpec(
+                    image_name=NGINX_IMAGE,
+                    container_name='{}-{}'.format(self.container_name, i),
+                    mem_reservation_mb=15,
+                    labels={'subprocess-test-label': 'True'}
+                )
+            )
+        self.assertEqual(len(self.client.list()), 2)
+        # File-system timestamps that Historian relies on only have
+        # one-second resolution, so we can't say which container will
+        # have been killed.
 
     def assert_http_verb(self, verb):
         response = requests.__dict__[verb.lower()](self.url)
@@ -184,7 +200,7 @@ class PathRoutingClientTests(unittest.TestCase):
                 labels={'subprocess-test-label': 'True'}
             )
         )
-        time.sleep(1)  # TODO: Race condition sensitivity?
+        time.sleep(1)  # TODO: Race condition kludge!
         # https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods
         self.assert_http_verb('GET')
         # HEAD has no body, understandably
