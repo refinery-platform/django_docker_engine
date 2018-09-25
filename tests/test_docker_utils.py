@@ -30,6 +30,7 @@ logger = logging.getLogger(__name__)
 
 ContainerInfo = namedtuple('ContainerInfo', ['url', 'name'])
 
+
 class ContainerSpecTests(unittest.TestCase):
 
     def test_container_spec_repr(self):
