@@ -123,7 +123,8 @@ class PathRoutingClientTests(unittest.TestCase):
             DockerContainerSpec(
                 image_name=ALPINE_IMAGE,  # Will never response to HTTP
                 container_name=self.container_name,
-                labels={'subprocess-test-label': 'True'}
+                labels={'subprocess-test-label': 'True'},
+                mem_reservation_mb=15
             )
         )
         r = requests.get(self.url)
@@ -153,7 +154,8 @@ class PathRoutingClientTests(unittest.TestCase):
             DockerContainerSpec(
                 image_name=NGINX_IMAGE,
                 container_name=self.container_name,
-                labels={'subprocess-test-label': 'True'}
+                labels={'subprocess-test-label': 'True'},
+                mem_reservation_mb=15
             )
         )
         time.sleep(1)  # TODO: Race condition kludge!
@@ -199,7 +201,8 @@ class PathRoutingClientTests(unittest.TestCase):
                 image_name=ECHO_IMAGE,
                 container_port=8080,  # and/or set PORT envvar
                 container_name=self.container_name,
-                labels={'subprocess-test-label': 'True'}
+                labels={'subprocess-test-label': 'True'},
+                mem_reservation_mb=15
             )
         )
         time.sleep(1)  # TODO: Race condition kludge!
@@ -229,7 +232,8 @@ class PathRoutingClientTests(unittest.TestCase):
                 image_name=ECHO_IMAGE,
                 container_port=8080,  # and/or set PORT envvar
                 container_name=self.container_name,
-                labels={'subprocess-test-label': 'True'}
+                labels={'subprocess-test-label': 'True'},
+                mem_reservation_mb=15
             )
         )
         self.assert_http_body('POST')
