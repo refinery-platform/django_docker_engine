@@ -16,7 +16,7 @@ from docker.errors import NotFound
 from revproxy.views import ProxyView
 from urllib3.exceptions import MaxRetryError
 
-from django_docker_engine.historian import NullHistorian
+from django_docker_engine.historian import FileHistorian
 
 from .container_managers.docker_engine import DockerEngineManagerError
 from .docker_utils import DockerClientWrapper
@@ -47,7 +47,7 @@ class _AnonUser():
 
 class Proxy():
     def __init__(self,
-                 historian=NullHistorian(),
+                 historian=FileHistorian(),
                  please_wait_title='Please wait',
                  please_wait_body_html='<h1>Please wait</h1>',
                  csrf_exempt=True,

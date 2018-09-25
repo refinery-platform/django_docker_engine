@@ -271,7 +271,7 @@ class HostRoutingClientTests(PathRoutingClientTests):
         home = 'http://localhost:' + self.port
         wait_for_server(home)
         spec = DockerClientSpec(do_input_json_envvar=True)
-        self.client = DockerClientRunWrapper(spec)
+        self.client = DockerClientRunWrapper(spec, mem_limit_mb=35)
 
     # Tests from superclass are run
 
