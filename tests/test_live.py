@@ -171,6 +171,7 @@ class PathRoutingClientTests(unittest.TestCase):
         self.assertEqual([event[1] for event in history], ['/', '/bad-path'])
 
     def test_multi_container_lru_killer(self):
+        self.assertEqual(len(self.client.list()), 0)
         for i in range(3):
             self.client.run(
                 DockerContainerSpec(
@@ -181,6 +182,7 @@ class PathRoutingClientTests(unittest.TestCase):
                 )
             )
         self.assertEqual(len(self.client.list()), 2)
+        # ie, one less than the number of containers started.
         # File-system timestamps that Historian relies on only have
         # one-second resolution, so we can't say which container will
         # have been killed.
