@@ -244,9 +244,8 @@ class DockerClientRunWrapper(DockerClientWrapper):
             # https://github.com/docker/docker-py/issues/1510
 
         for directory in container_spec.extra_directories:
-            assert os.path.isabs(directory), \
-                "Specified path: `{}` is not absolute".format(directory)
-
+            if not os.path.isabs(directory):
+                raise StandardError('{} is not absolute'.format(directory))
         volumes = {
             self._make_volume_on_host() : {
                 'mode': 'rw',
