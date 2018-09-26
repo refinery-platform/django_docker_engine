@@ -1,8 +1,8 @@
 import unittest
 
+from django_docker_engine.container_managers.docker_engine import \
+    PossiblyOutOfDiskSpace
 from django_docker_engine.docker_utils import DockerClientWrapper
-from django_docker_engine.container_managers.docker_engine import (
-    PossiblyOutOfDiskSpace)
 
 
 class ClientWrapperTests(unittest.TestCase):
