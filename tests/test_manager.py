@@ -19,9 +19,7 @@ class DockerEngineManagerTests(unittest.TestCase):
         self.root_label = 'test-root'
         self.manager = DockerEngineManager(self.root_label)
         self.container_name = timestamp
-        self.kwargs = {
-            'cmd': None
-        }
+        self.kwargs = {}
 
     def _cleanup_container(self):
         # TODO: Why the '/'?
@@ -56,10 +54,6 @@ class DockerEngineManagerTests(unittest.TestCase):
     def test_bad_image_pull(self):
         with self.assertRaises(PossiblyOutOfDiskSpace):
             self.manager.pull('no_such_image')
-
-    def test_bad_image_run(self):
-        with self.assertRaises(PossiblyOutOfDiskSpace):
-            self.manager.run('no_such_image', cmd='foo')
 
     def test_minimum_kwargs_to_run(self):
         self.assert_add_kwarg_still_fails(

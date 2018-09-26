@@ -31,6 +31,18 @@ logger = logging.getLogger(__name__)
 ContainerInfo = namedtuple('ContainerInfo', ['url', 'name'])
 
 
+class ContainerSpecTests(unittest.TestCase):
+
+    def test_container_spec_repr(self):
+        spec = DockerContainerSpec('image-name', 'container-name', 12345)
+        self.assertEqual(
+            str(spec),
+            "DockerContainerSpec(container_input_path='/tmp/input.json', "
+            "container_name='container-name', container_port=80, cpus=0.5, "
+            "extra_directories=[], image_name='image-name', input={}, "
+            "labels={}, mem_reservation_mb=12345)")
+
+
 class LiveDockerTests(unittest.TestCase):
 
     @property
@@ -58,7 +70,8 @@ class LiveDockerTests(unittest.TestCase):
         kwargs = {
             'image_name': NGINX_IMAGE,
             'container_name': name,
-            'labels': {self.test_label: 'true'}
+            'labels': {self.test_label: 'true'},
+            'mem_reservation_mb': 15
         }
         kwargs.update(extra_kwargs)
         return ContainerInfo(
@@ -137,8 +150,10 @@ class LiveDockerTestsClean(LiveDockerTests):
 
     def assert_cpu_quota(self, expected, given={}):
 
-        with patch.object(DockerEngineManager,
-                          'run') as mock_run, \
+        MockContainer = namedtuple('MockContainer', ['id'])
+
+        with patch.object(DockerEngineManager, 'run',
+                          return_value=MockContainer('id-foo')) as mock_run, \
                 patch.object(DockerClientRunWrapper,
                              'lookup_container_url'):
             self.start_container(given)

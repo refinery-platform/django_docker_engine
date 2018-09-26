@@ -110,7 +110,8 @@ class PathRoutingClientTests(unittest.TestCase):
         # self.tmp_dir = mkdtemp()
         # chmod(self.tmp_dir, 0777)
         spec = DockerClientSpec(do_input_json_envvar=True)
-        self.client = DockerClientRunWrapper(spec)
+        self.client = DockerClientRunWrapper(spec, mem_limit_mb=35)
+        # 35MB is enough for two nginx containers.
 
     def tearDown(self):
         self.process.kill()
@@ -122,7 +123,8 @@ class PathRoutingClientTests(unittest.TestCase):
             DockerContainerSpec(
                 image_name=ALPINE_IMAGE,  # Will never response to HTTP
                 container_name=self.container_name,
-                labels={'subprocess-test-label': 'True'}
+                labels={'subprocess-test-label': 'True'},
+                mem_reservation_mb=15
             )
         )
         r = requests.get(self.url)
@@ -152,10 +154,11 @@ class PathRoutingClientTests(unittest.TestCase):
             DockerContainerSpec(
                 image_name=NGINX_IMAGE,
                 container_name=self.container_name,
-                labels={'subprocess-test-label': 'True'}
+                labels={'subprocess-test-label': 'True'},
+                mem_reservation_mb=15
             )
         )
-        time.sleep(1)  # TODO: Race condition sensitivity?
+        time.sleep(1)  # TODO: Race condition kludge!
         r_good = requests.get(self.url)
         self.assert_in_html('Welcome to nginx', r_good.content)
 
@@ -166,11 +169,31 @@ class PathRoutingClientTests(unittest.TestCase):
         logs = self.client.logs(self.container_name).decode('utf-8')
         self.assertIn('"GET / HTTP/1.1" 200', logs)
 
+        history = self.client.history(self.container_name)
+        self.assertEqual([event[1] for event in history], ['/', '/bad-path'])
+
+    def test_multi_container_lru_killer(self):
+        self.assertEqual(len(self.client.list()), 0)
+        for i in range(3):
+            self.client.run(
+                DockerContainerSpec(
+                    image_name=NGINX_IMAGE,
+                    container_name='{}-{}'.format(self.container_name, i),
+                    mem_reservation_mb=15,
+                    labels={'subprocess-test-label': 'True'}
+                )
+            )
+        self.assertEqual(len(self.client.list()), 2)
+        # ie, one less than the number of containers started.
+        # File-system timestamps that Historian relies on only have
+        # one-second resolution, so we can't say which container will
+        # have been killed.
+
     def assert_http_verb(self, verb):
         response = requests.__dict__[verb.lower()](self.url)
         self.assert_in_html('HTTP/1.1 {} /'.format(verb), response.content)
-        # Response shouldn't be HTML, but if we get the Django error page,
-        # this will make it much more readable.
+        # Response shouldn't be HTML, but if it fails and we get the
+        # Django error page, this will make it much more readable.
 
     def test_http_echo_verbs(self):
         self.client.run(
@@ -178,10 +201,11 @@ class PathRoutingClientTests(unittest.TestCase):
                 image_name=ECHO_IMAGE,
                 container_port=8080,  # and/or set PORT envvar
                 container_name=self.container_name,
-                labels={'subprocess-test-label': 'True'}
+                labels={'subprocess-test-label': 'True'},
+                mem_reservation_mb=15
             )
         )
-        time.sleep(1)  # TODO: Race condition sensitivity?
+        time.sleep(1)  # TODO: Race condition kludge!
         # https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods
         self.assert_http_verb('GET')
         # HEAD has no body, understandably
@@ -208,7 +232,8 @@ class PathRoutingClientTests(unittest.TestCase):
                 image_name=ECHO_IMAGE,
                 container_port=8080,  # and/or set PORT envvar
                 container_name=self.container_name,
-                labels={'subprocess-test-label': 'True'}
+                labels={'subprocess-test-label': 'True'},
+                mem_reservation_mb=15
             )
         )
         self.assert_http_body('POST')
@@ -246,7 +271,7 @@ class HostRoutingClientTests(PathRoutingClientTests):
         home = 'http://localhost:' + self.port
         wait_for_server(home)
         spec = DockerClientSpec(do_input_json_envvar=True)
-        self.client = DockerClientRunWrapper(spec)
+        self.client = DockerClientRunWrapper(spec, mem_limit_mb=35)
 
     # Tests from superclass are run
 

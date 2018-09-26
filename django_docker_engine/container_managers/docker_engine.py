@@ -65,15 +65,14 @@ class DockerEngineManager(BaseManager):
             ['localunixsocket', 'localhost']
         ]
 
-    def run(self, image_name, cmd, **kwargs):
+    def run(self, image_name, **kwargs):
         """
         :param image_name:
-        :param cmd:
         :param kwargs:
         :return:
         """
         try:
-            return self._containers_client.run(image_name, cmd, **kwargs)
+            return self._containers_client.run(image_name, **kwargs)
         except docker.errors.ImageNotFound as e:
             raise PossiblyOutOfDiskSpace(e)
 

@@ -101,7 +101,8 @@ and not just have installed it via pip.)
 >>> from tests import NGINX_IMAGE
 >>> container_spec = DockerContainerSpec(
 ...     image_name=NGINX_IMAGE,
-...     container_name=container_name)
+...     container_name=container_name,
+...     mem_reservation_mb=15)
 >>> container_url = client.run(container_spec)
 >>> container_url  # doctest:+ELLIPSIS
 'http://localhost:...'

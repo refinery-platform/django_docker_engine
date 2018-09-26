@@ -44,6 +44,10 @@ class FileHistorian():
     def _path(self, container_id):
         return os.path.join(FileHistorian.DIR, container_id)
 
+    def create(self, container_id):
+        with open(self._path(container_id), 'w'):
+            pass
+
     def record(self, container_id, url):
         with open(self._path(container_id), 'a') as f:
             timestamp = datetime.now().isoformat()
