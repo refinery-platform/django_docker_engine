@@ -20,7 +20,7 @@ class FileHistorian():
         except OSError as exc:  # Python >2.5
             if exc.errno == errno.EEXIST and os.path.isdir(FileHistorian.DIR):
                 pass
-            else:
+            else:  # pragma: no cover
                 raise
 
     def _path(self, container_id):

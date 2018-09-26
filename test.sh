@@ -38,7 +38,7 @@ echo; echo 'Doctests:'
 COVERAGE_FILE=.coverage.doctest coverage report
 echo; echo 'Union:'
 coverage combine
-coverage report --fail-under 90
+coverage report --fail-under 100
 end coverage
 
 start docker

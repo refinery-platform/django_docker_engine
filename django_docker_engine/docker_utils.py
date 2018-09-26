@@ -130,7 +130,7 @@ class DockerClientWrapper(object):
         lru_sorted = self._historian.sort_lru(container_ids)
         memory_freed = 0
         while memory_freed < need_to_free:
-            if len(lru_sorted) == 0:
+            if len(lru_sorted) == 0:  # pragma: no cover
                 logger.warn('No more containers to kill, but we still do not '
                             'have the requested memory; Starting anyway!')
                 break
@@ -182,14 +182,14 @@ class DockerClientWrapper(object):
         seconds_since_start = (utc_now - utc_start).total_seconds()
         if seconds_since_start < seconds:
             return True
-        else:
+        else:  # pragma: no cover
             recent_log = container.logs(since=int(time() - seconds))
             # Logs are empty locally, but must contain something on travis?
             # Doesn't work with non-integer values:
             # https://github.com/docker/docker-py/issues/1515
             return recent_log != ''
 
-    def pull(self, image_name, version="latest"):
+    def pull(self, image_name, version="latest"):  # pragma: no cover
         self._containers_manager.pull(image_name, version=version)
 
 
@@ -263,7 +263,7 @@ class DockerClientRunWrapper(DockerClientWrapper):
         environment = {}
         if self._do_input_json_envvar:
             environment['INPUT_JSON'] = json.dumps(container_spec.input)
-        if self._input_json_url:
+        if self._input_json_url:  # pragma: no cover
             environment['INPUT_JSON_URL'] = self._input_json_url
 
         container = self._containers_manager.run(

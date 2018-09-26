@@ -21,10 +21,10 @@ from django_docker_engine.historian import FileHistorian
 from .container_managers.docker_engine import DockerEngineManagerError
 from .docker_utils import DockerClientWrapper
 
-if version_info >= (3,):
+if version_info >= (3,):  # pragma: no cover
     from http.client import BadStatusLine
     from urllib.error import HTTPError
-else:
+else:  # pragma: no cover
     from httplib import BadStatusLine
     from urllib2 import HTTPError
 
@@ -34,7 +34,7 @@ logger = logging.getLogger(__name__)
 UrlPatterns = namedtuple('UrlPatterns', ['urlpatterns'])
 
 
-class _AnonUser():
+class _AnonUser():  # pragma: no cover
     # TODO: This is a hack. Waiting for fix for
     # https://github.com/TracyWebTech/django-revproxy/issues/86
     # https://github.com/TracyWebTech/django-revproxy/pull/92
@@ -94,7 +94,7 @@ class Proxy():
 
     def _internal_proxy_view(self, request, container_url, path_url):
         # Any dependencies on the 3rd party proxy should be contained here.
-        try:
+        try:  # pragma: no cover
             view = ProxyView.as_view(
                 upstream=container_url,
                 add_remote_user=True)
@@ -107,7 +107,7 @@ class Proxy():
             return view(request)
 
     def _proxy_view(self, request, container_name, url):
-        try:
+        try:  # pragma: no cover
             client = DockerClientWrapper()
             self.historian.record(
                 client.lookup_container_id(container_name), url)
@@ -129,7 +129,7 @@ class Proxy():
                 'Container: %s, Exception: %s', container_name, e)
             view = self._please_wait_view_factory(e).as_view()
             return view(request)
-        except HTTPError as e:
+        except HTTPError as e:  # pragma: no cover
             logger.warn(e)
             return page_not_found(request, e)
             # The underlying error is not necessarily a 404,
