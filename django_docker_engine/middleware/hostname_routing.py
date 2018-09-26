@@ -3,7 +3,8 @@ import re
 from django.conf import settings
 
 
-class HostnameRoutingMiddlewareCallable():  # Django 2
+class HostnameRoutingMiddlewareCallable():  # pragma: no cover
+    # Django 2
     def __init__(self, get_response):
         self.get_response = get_response
         self.middleware = HostnameRoutingMiddleware()
@@ -19,6 +20,7 @@ class HostnameRoutingMiddleware():  # Django < 2
     DJANGO_DOCKER_HOST_SUFFIX, the subdomain is taken as the name of the
     container to route to.
     """
+    # Django < 2
 
     def process_request(self, request):
         host_suffix = settings.DJANGO_DOCKER_HOST_SUFFIX

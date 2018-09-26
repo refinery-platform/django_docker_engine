@@ -57,7 +57,7 @@ class DockerEngineManager(BaseManager):
     def _get_base_url_remote_host(self):
         remote_host_match = re.match(r'^http://([^:]+):\d+$', self._base_url)
         if remote_host_match:
-            return remote_host_match.group(1)
+            return remote_host_match.group(1)  # pragma: no cover
 
     def _is_base_url_local(self):
         return self._base_url in [
@@ -73,7 +73,7 @@ class DockerEngineManager(BaseManager):
         """
         try:
             return self._containers_client.run(image_name, **kwargs)
-        except docker.errors.ImageNotFound as e:
+        except docker.errors.ImageNotFound as e:  # pragma: no cover
             raise PossiblyOutOfDiskSpace(e)
 
     def pull(self, image_name, version="latest"):
@@ -115,9 +115,8 @@ class DockerEngineManager(BaseManager):
             host = remote_host  # pragma: no cover
         elif self._is_base_url_local():
             host = 'localhost'
-        else:
-            raise RuntimeError(
-                'Unexpected client base_url: %s', self._base_url)
+        else:  # pragma: no cover
+            raise RuntimeError('Unexpected base_url: %s', self._base_url)
         container = self._containers_client.get(container_name)
 
         port_key = self._root_label + '.port'
@@ -132,7 +131,7 @@ class DockerEngineManager(BaseManager):
 
         settings = container.attrs['NetworkSettings']
         port_infos = settings['Ports']
-        if port_infos is None:
+        if port_infos is None:  # pragma: no cover
             raise NoPortsOpen(
                 'Container {} has no ports: {}'.format(
                     container_name, settings

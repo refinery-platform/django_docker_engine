@@ -5,24 +5,6 @@ import os
 from datetime import datetime
 
 
-class NullHistorian():
-    """
-    Satisfies the Historian interface, but does nothing.
-    """
-
-    def __init__(self):
-        pass
-
-    def record(self, container_id, url):
-        pass
-
-    def list(self, container_id):
-        return []
-
-    def last_timestamp(self, container_id):
-        return 0
-
-
 class FileHistorian():
     """
     Records incoming requests to a file, and provides access to the records
@@ -38,7 +20,7 @@ class FileHistorian():
         except OSError as exc:  # Python >2.5
             if exc.errno == errno.EEXIST and os.path.isdir(FileHistorian.DIR):
                 pass
-            else:
+            else:  # pragma: no cover
                 raise
 
     def _path(self, container_id):

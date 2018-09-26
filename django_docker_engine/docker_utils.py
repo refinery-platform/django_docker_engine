@@ -182,7 +182,7 @@ class DockerClientWrapper(object):
         seconds_since_start = (utc_now - utc_start).total_seconds()
         if seconds_since_start < seconds:
             return True
-        else:
+        else:  # pragma: no cover
             recent_log = container.logs(since=int(time() - seconds))
             # Logs are empty locally, but must contain something on travis?
             # Doesn't work with non-integer values:
@@ -199,15 +199,12 @@ class DockerClientRunWrapper(DockerClientWrapper):
                  docker_client_spec,
                  manager_class=_DEFAULT_MANAGER,
                  root_label=_DEFAULT_LABEL,
-                 ssh_username=None,
                  mem_limit_mb=float('inf')):
         super(DockerClientRunWrapper, self).__init__(
             manager_class=manager_class,
             root_label=root_label
         )
         manager_kwargs = {}
-        if ssh_username:
-            manager_kwargs['ssh_username'] = ssh_username
         self._containers_manager = manager_class(root_label, **manager_kwargs)
         self.root_label = root_label
         self._do_input_json_envvar = docker_client_spec.do_input_json_envvar
@@ -246,28 +243,15 @@ class DockerClientRunWrapper(DockerClientWrapper):
             # Without a tag the SDK pulls every version; not what I expected.
             # https://github.com/docker/docker-py/issues/1510
 
-        volume_spec = []
-
         for directory in container_spec.extra_directories:
-            assert os.path.isabs(directory), \
-                "Specified path: `{}` is not absolute".format(directory)
-            volume_spec.append({'bind': directory})
-
-        volumes = {}
-        for volume in volume_spec:
-            binding = volume.copy()
-            assert not binding.get('mode'), \
-                '"mode" should not be provided on {}'.format(volume)
-            host_directory = binding.pop('host', None)
-            if host_directory:
-                # Typically for mounting user input
-                binding['mode'] = 'ro'
-                volumes[host_directory] = binding
-            else:
-                # Typically for storing data produced by the app itself
-                binding['mode'] = 'rw'
-                volume_name = self._make_volume_on_host()
-                volumes[volume_name] = binding
+            if not os.path.isabs(directory):
+                raise Exception('"{}" is not absolute'.format(directory))
+        volumes = {
+            self._make_volume_on_host(): {
+                'mode': 'rw',
+                'bind': directory
+            } for directory in container_spec.extra_directories
+        }
 
         labels = container_spec.labels
         labels.update({
@@ -279,7 +263,7 @@ class DockerClientRunWrapper(DockerClientWrapper):
         environment = {}
         if self._do_input_json_envvar:
             environment['INPUT_JSON'] = json.dumps(container_spec.input)
-        if self._input_json_url:
+        if self._input_json_url:  # pragma: no cover
             environment['INPUT_JSON_URL'] = self._input_json_url
 
         container = self._containers_manager.run(
