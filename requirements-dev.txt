@@ -18,5 +18,7 @@ PyYAML==3.13
 wheel==0.30.0
 
 # Code coverage
-codecov==2.0.15
 coverage==4.5.1
+
+# Backport of Python3 unittest features (in particular, assertLogs)
+unittest2==1.1.0

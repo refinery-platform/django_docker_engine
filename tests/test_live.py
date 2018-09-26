@@ -2,12 +2,12 @@ import re
 import socket
 import subprocess
 import time
-import unittest
 from os import mkdir
 from shutil import rmtree
 
 import mechanicalsoup
 import requests
+import unittest2 as unittest
 from bs4 import BeautifulSoup
 
 from django_docker_engine.docker_utils import (DockerClientRunWrapper,
@@ -148,6 +148,24 @@ class PathRoutingClientTests(unittest.TestCase):
         if substring not in text:
             self.fail('"{}" not found in text of html:\n{}'
                       .format(substring, text))
+
+    def test_not_enough_memory(self):
+        with self.assertLogs() as log:
+            self.client.run(
+                DockerContainerSpec(
+                    image_name=NGINX_IMAGE,
+                    container_name=self.container_name,
+                    labels={'subprocess-test-label': 'True'},
+                    mem_reservation_mb=50  # Artificially inflated
+                )
+            )
+            self.assertEqual(
+                log.output,
+                ['WARNING:django_docker_engine.docker_utils:50MB requested '
+                 '+ 0MB in use - 35MB limit = 15MB > 0',
+                 'WARNING:django_docker_engine.docker_utils:No more '
+                 'containers to kill, but we still do not have the requested '
+                 'memory; Starting anyway!'])
 
     def test_nginx_container(self):
         self.client.run(

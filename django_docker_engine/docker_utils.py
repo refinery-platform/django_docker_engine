@@ -130,7 +130,7 @@ class DockerClientWrapper(object):
         lru_sorted = self._historian.sort_lru(container_ids)
         memory_freed = 0
         while memory_freed < need_to_free:
-            if len(lru_sorted) == 0:  # pragma: no cover
+            if len(lru_sorted) == 0:
                 logger.warn('No more containers to kill, but we still do not '
                             'have the requested memory; Starting anyway!')
                 break
