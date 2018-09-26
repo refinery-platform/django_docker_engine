@@ -243,20 +243,14 @@ class DockerClientRunWrapper(DockerClientWrapper):
             # Without a tag the SDK pulls every version; not what I expected.
             # https://github.com/docker/docker-py/issues/1510
 
-        volume_spec = []
-
+        volumes = {}
         for directory in container_spec.extra_directories:
             assert os.path.isabs(directory), \
                 "Specified path: `{}` is not absolute".format(directory)
-            volume_spec.append({'bind': directory})
-
-        # TODO: Make this a dict comprehension.
-        volumes = {}
-        for volume in volume_spec:
-            binding = volume.copy()
-            binding['mode'] = 'rw'
-            volume_name = self._make_volume_on_host()
-            volumes[volume_name] = binding
+            volumes[self._make_volume_on_host()] = {
+                'mode': 'rw',
+                'bind': directory
+            }
 
         labels = container_spec.labels
         labels.update({
