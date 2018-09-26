@@ -250,21 +250,13 @@ class DockerClientRunWrapper(DockerClientWrapper):
                 "Specified path: `{}` is not absolute".format(directory)
             volume_spec.append({'bind': directory})
 
+        # TODO: Make this a dict comprehension.
         volumes = {}
         for volume in volume_spec:
             binding = volume.copy()
-            assert not binding.get('mode'), \
-                '"mode" should not be provided on {}'.format(volume)
-            host_directory = binding.pop('host', None)
-            if host_directory:
-                # Typically for mounting user input
-                binding['mode'] = 'ro'
-                volumes[host_directory] = binding
-            else:
-                # Typically for storing data produced by the app itself
-                binding['mode'] = 'rw'
-                volume_name = self._make_volume_on_host()
-                volumes[volume_name] = binding
+            binding['mode'] = 'rw'
+            volume_name = self._make_volume_on_host()
+            volumes[volume_name] = binding
 
         labels = container_spec.labels
         labels.update({
