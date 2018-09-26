@@ -30,4 +30,4 @@ mESC.genes,https://raw.githubusercontent.com/refinery-platform/django_docker_eng
 Myotube.genes,https://raw.githubusercontent.com/refinery-platform/django_docker_engine/intervene-fixtures/demo_path_routing_no_auth/upload/Myotube.genes,intervene,human?
 pro-B.genes,https://raw.githubusercontent.com/refinery-platform/django_docker_engine/intervene-fixtures/demo_path_routing_no_auth/upload/pro-B.genes,intervene,human?
 Th-cell.genes,https://raw.githubusercontent.com/refinery-platform/django_docker_engine/intervene-fixtures/demo_path_routing_no_auth/upload/Th-cell.genes,intervene,human?
-raw_data_qualimapReport.zip,https://beta.stemcellcommons.org/media/file_store/22/e3/raw_data_qualimapReport.zip,multiqc,human?
+raw_data_qualimapReport.zip,https://hsci.stemcellcommons.org/media/file_store/22/e3/raw_data_qualimapReport.zip,multiqc,human?
