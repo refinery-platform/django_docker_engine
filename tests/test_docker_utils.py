@@ -120,16 +120,13 @@ class LiveDockerTestsDirty(LiveDockerTests):
     # the same tearDown assertions that we do for other tests.
 
     def test_container_spec_with_extra_directories_bad(self):
-        with self.assertRaises(AssertionError) as context:
+        with self.assertRaises(Exception) as context:
             self.start_container({
                 'input': {'foo': 'bar'},
                 'container_input_path': '/usr/share/nginx/html/index.html',
                 'extra_directories': ["/test", "coffee"]
             })
-        self.assertEqual(
-            context.exception.args[0],
-            "Specified path: `coffee` is not absolute"
-        )
+        self.assertEqual(context.exception.args[0], '"coffee" is not absolute')
 
 
 class LiveDockerTestsClean(LiveDockerTests):

@@ -121,7 +121,7 @@ class Proxy():
                 'Container: %s, Exception: %s', container_name, e)
             view = self._please_wait_view_factory(e).as_view()
             return view(request)
-        except socket.error as e:
+        except socket.error as e:  # pragma: no cover
             if e.errno != errno.ECONNRESET:
                 raise
             logger.info(
