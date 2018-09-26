@@ -1,6 +1,6 @@
 .DS_Store
 
-.coverage
+.coverage*
 
 *.pyc
 .idea

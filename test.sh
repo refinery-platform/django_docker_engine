@@ -15,22 +15,31 @@ docker info | grep 'Operating System' \
 [ -z "`docker ps -qa`" ] \
     || die 'Kill containers before running tests: "docker ps -qa | xargs docker stop | xargs docker rm"'
 [ -z "`lsof -t -i tcp:8000`" ] \
-    || die 'Free port 80 before running tests: "lsof -t -i tcp:8000 | xargs kill"'
+    || die 'Free port 8000 before running tests: "lsof -t -i tcp:8000 | xargs kill"'
 end preflight
 
 start test
 # Travis logs were truncated, so always use "die" to avoid race condition.
 coverage run manage.py test --verbosity=2 \
-  && coverage report --fail-under 80 \
+  && mv .coverage .coverage.test \
   || die
 end test
 
 start doctest
-# Add "--append" if you want to have a single coverage.
 coverage run -m doctest *.md \
-  && coverage report --fail-under 60 \
+  && mv .coverage .coverage.doctest \
   || die
 end doctest
+
+start coverage
+echo; echo 'Tests:'
+COVERAGE_FILE=.coverage.test coverage report --fail-under 40
+echo; echo 'Doctests:'
+COVERAGE_FILE=.coverage.doctest coverage report --fail-under 40
+echo; echo 'Intersection:'
+coverage combine
+coverage report --fail-under 40
+end coverage
 
 start docker
 docker system df
