@@ -101,7 +101,7 @@ class Proxy():
             if not hasattr(request, 'user'):
                 request.user = _AnonUser()
             return view(request, path=path_url)
-        except MaxRetryError as e:
+        except MaxRetryError as e:  # pragma: no cover
             logger.info('Normal transient error: %s', e)
             view = self._please_wait_view_factory(e).as_view()
             return view(request)
