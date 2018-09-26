@@ -1,10 +1,21 @@
 # Change Log
 
-## [v.0.1.0](https://pypi.org/project/django-docker-engine/0.1.1/) (Sep 24, 2018)
+## [v.0.1.2](https://pypi.org/project/django-docker-engine/0.1.2/) (Sep 26, 2018)
+
+* Improve test coverage; Add "pragma: no cover" on the lines that are still missed.
+* Remove option for running a command within the container.
+* Remove `NullHistorian`.
+* `mem_reservation_mb` must be provided when starting a container.
+* History files are now created at the same time as the container,
+  rather than waiting for the first proxy request.
+
+
+## [v.0.1.1](https://pypi.org/project/django-docker-engine/0.1.1/) (Sep 24, 2018)
 
 * Remove the option for passing inputs via file mounting.
 * Start measuring test coverage: Minimum can be improved over time.
 * Support Python 3.7.
+
 
 ## [v.0.1.0](https://pypi.org/project/django-docker-engine/0.1.0/) (Sep 19, 2018)
 
