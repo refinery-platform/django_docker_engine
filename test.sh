@@ -36,7 +36,7 @@ echo; echo 'Tests:'
 COVERAGE_FILE=.coverage.test coverage report --fail-under 40
 echo; echo 'Doctests:'
 COVERAGE_FILE=.coverage.doctest coverage report --fail-under 40
-echo; echo 'Intersection:'
+echo; echo 'Union:'
 coverage combine
 coverage report --fail-under 40
 end coverage

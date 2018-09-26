@@ -199,15 +199,12 @@ class DockerClientRunWrapper(DockerClientWrapper):
                  docker_client_spec,
                  manager_class=_DEFAULT_MANAGER,
                  root_label=_DEFAULT_LABEL,
-                 ssh_username=None,
                  mem_limit_mb=float('inf')):
         super(DockerClientRunWrapper, self).__init__(
             manager_class=manager_class,
             root_label=root_label
         )
         manager_kwargs = {}
-        if ssh_username:
-            manager_kwargs['ssh_username'] = ssh_username
         self._containers_manager = manager_class(root_label, **manager_kwargs)
         self.root_label = root_label
         self._do_input_json_envvar = docker_client_spec.do_input_json_envvar
