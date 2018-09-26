@@ -33,12 +33,12 @@ end doctest
 
 start coverage
 echo; echo 'Tests:'
-COVERAGE_FILE=.coverage.test coverage report --fail-under 40
+COVERAGE_FILE=.coverage.test coverage report
 echo; echo 'Doctests:'
-COVERAGE_FILE=.coverage.doctest coverage report --fail-under 40
+COVERAGE_FILE=.coverage.doctest coverage report
 echo; echo 'Union:'
 coverage combine
-coverage report --fail-under 40
+coverage report --fail-under 90
 end coverage
 
 start docker
