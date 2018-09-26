@@ -189,7 +189,7 @@ class DockerClientWrapper(object):
             # https://github.com/docker/docker-py/issues/1515
             return recent_log != ''
 
-    def pull(self, image_name, version="latest"):  # pragma: no cover
+    def pull(self, image_name, version="latest"):
         self._containers_manager.pull(image_name, version=version)
 
 
