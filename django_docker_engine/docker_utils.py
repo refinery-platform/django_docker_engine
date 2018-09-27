@@ -146,7 +146,15 @@ class DockerClientWrapper(object):
                     need_to_free))
 
     def _mem_reservation_mb(self, container):
-        return int(container.labels.get(_DEFAULT_LABEL + _MEM_RESERVATION_MB))
+        mem_string = container.labels.get(_DEFAULT_LABEL + _MEM_RESERVATION_MB)
+        if mem_string is None:  # pragma: no cover
+            logger.warn(
+                'Container {} with labels {} '
+                'does not specify mem_reservation_mb'.format(
+                    container.name, container.labels
+                ))
+            return 0
+        return int(mem_string)
 
     def _total_mem_reservation_mb(self):
         containers = self.list()

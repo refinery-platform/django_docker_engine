@@ -1,5 +1,11 @@
 # Change Log
 
+## [v.0.1.3](https://pypi.org/project/django-docker-engine/0.1.3/) (Sep 27, 2018)
+
+* A running container should give its memory reservation, but if that's missing
+  we shouldn't crash.
+
+
 ## [v.0.1.2](https://pypi.org/project/django-docker-engine/0.1.2/) (Sep 26, 2018)
 
 * Improve test coverage; Add "pragma: no cover" on the lines that are still missed.
