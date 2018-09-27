@@ -2,7 +2,7 @@
 
 ## [v.0.1.3](https://pypi.org/project/django-docker-engine/0.1.3/) (Sep 27, 2018)
 
-* A running containers should give its memory reservation, but if that's missing
+* A running container should give its memory reservation, but if that's missing
   we shouldn't crash.
 
 
