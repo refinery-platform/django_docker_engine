@@ -30,6 +30,7 @@ class PossiblyOutOfDiskSpace(DockerEngineManagerError):
     # TODO: Can we find a way to determine if disk space is really the problem?
     pass
 
+
 class GetContainerTimeout(DockerEngineManagerError):
     pass
 
@@ -126,7 +127,8 @@ class DockerEngineManager(BaseManager):
             container = self._containers_client.get(container_name)
         except ReadTimeout:
             raise GetContainerTimeout(
-                "Timed out while trying to get container: {}".format(container_name)
+                "Timed out while trying to get container: {}".format(
+                    container_name)
             )
 
         port_key = self._root_label + '.port'
