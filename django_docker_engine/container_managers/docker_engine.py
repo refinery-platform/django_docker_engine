@@ -29,6 +29,7 @@ class PossiblyOutOfDiskSpace(DockerEngineManagerError):
     # TODO: Can we find a way to determine if disk space is really the problem?
     pass
 
+class GetContainerTimeout(DockerEngineManagerError):
 
 class DockerEngineManager(BaseManager):
     """
