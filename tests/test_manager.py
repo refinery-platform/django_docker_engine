@@ -92,6 +92,5 @@ class DockerEngineManagerTests(unittest.TestCase):
     def test_read_timeout_handled_when_getting_container(self):
         with mock.patch.object(self.manager._containers_client, "get",
                                side_effect=requests.ReadTimeout):
-            with self.assertRaises(GetContainerTimeout) as context:
+            with self.assertRaises(GetContainerTimeout):
                 self.manager.get_url(self.container_name)
-        self.assertIn("Timed out", context.exception.message)
