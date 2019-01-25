@@ -30,6 +30,8 @@ class PossiblyOutOfDiskSpace(DockerEngineManagerError):
     pass
 
 class GetContainerTimeout(DockerEngineManagerError):
+    pass
+
 
 class DockerEngineManager(BaseManager):
     """
