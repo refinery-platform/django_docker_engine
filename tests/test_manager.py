@@ -2,10 +2,13 @@ import re
 import unittest
 from datetime import datetime
 
+import mock
 import requests
+from requests import ReadTimeout
 
 from django_docker_engine.container_managers.docker_engine import (DockerEngineManager,
                                                                    ExpectedPortMissing,
+                                                                   GetContainerTimeout,
                                                                    MisconfiguredPort,
                                                                    NoPortLabel,
                                                                    PossiblyOutOfDiskSpace)
@@ -86,3 +89,11 @@ class DockerEngineManagerTests(unittest.TestCase):
             expected_logs_re=r'\S+Z \S+ - - \[.+\] '
             r'"GET / HTTP/1.1" 200 \d+ "-" "python-requests/.+" "-"'
         )
+
+    def test_read_timeout_handled_when_getting_container(self):
+        with mock.patch.object(
+            self.manager._containers_client, "get", side_effect=ReadTimeout
+        ):
+            with self.assertRaises(GetContainerTimeout) as context:
+                self.manager.get_url(self.container_name)
+        self.assertIn("Timed out", context.exception.message)
