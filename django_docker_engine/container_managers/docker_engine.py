@@ -1,6 +1,7 @@
 import re
 
 import docker
+from requests.exceptions import ReadTimeout
 
 from .base import BaseManager
 
@@ -120,7 +121,11 @@ class DockerEngineManager(BaseManager):
             host = 'localhost'
         else:  # pragma: no cover
             raise RuntimeError('Unexpected base_url: %s', self._base_url)
-        container = self._containers_client.get(container_name)
+
+        try:
+            container = self._containers_client.get(container_name)
+        except ReadTimeout:
+            raise GetContainerTimeout()
 
         port_key = self._root_label + '.port'
         try:
