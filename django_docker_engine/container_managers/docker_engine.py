@@ -1,6 +1,7 @@
 import re
 
 import docker
+from requests.exceptions import ReadTimeout
 
 from .base import BaseManager
 
@@ -27,6 +28,10 @@ class MisconfiguredPort(DockerEngineManagerError):
 
 class PossiblyOutOfDiskSpace(DockerEngineManagerError):
     # TODO: Can we find a way to determine if disk space is really the problem?
+    pass
+
+
+class DockerContainerClientTimeout(DockerEngineManagerError):
     pass
 
 
@@ -117,7 +122,15 @@ class DockerEngineManager(BaseManager):
             host = 'localhost'
         else:  # pragma: no cover
             raise RuntimeError('Unexpected base_url: %s', self._base_url)
-        container = self._containers_client.get(container_name)
+
+        try:
+            container = self._containers_client.get(container_name)
+        except ReadTimeout as e:
+            raise DockerContainerClientTimeout(
+                "Timed out while trying to get container: {} {}".format(
+                    container_name, e
+                )
+            )
 
         port_key = self._root_label + '.port'
         try:

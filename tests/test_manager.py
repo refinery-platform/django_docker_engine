@@ -2,14 +2,15 @@ import re
 import unittest
 from datetime import datetime
 
+import mock
 import requests
 
-from django_docker_engine.container_managers.docker_engine import (DockerEngineManager,
-                                                                   ExpectedPortMissing,
-                                                                   MisconfiguredPort,
-                                                                   NoPortLabel,
-                                                                   PossiblyOutOfDiskSpace)
 from tests import ALPINE_IMAGE, NGINX_IMAGE
+
+from django_docker_engine.container_managers.docker_engine import (  # isort:skip
+    DockerContainerClientTimeout, DockerEngineManager, ExpectedPortMissing,
+    MisconfiguredPort, NoPortLabel, PossiblyOutOfDiskSpace
+)
 
 
 class DockerEngineManagerTests(unittest.TestCase):
@@ -86,3 +87,9 @@ class DockerEngineManagerTests(unittest.TestCase):
             expected_logs_re=r'\S+Z \S+ - - \[.+\] '
             r'"GET / HTTP/1.1" 200 \d+ "-" "python-requests/.+" "-"'
         )
+
+    def test_read_timeout_handled_when_getting_container(self):
+        with mock.patch.object(self.manager._containers_client, "get",
+                               side_effect=requests.ReadTimeout):
+            with self.assertRaises(DockerContainerClientTimeout):
+                self.manager.get_url(self.container_name)
