@@ -5,13 +5,12 @@ from datetime import datetime
 import mock
 import requests
 
-from django_docker_engine.container_managers.docker_engine import (DockerContainerClientTimeout,  # noqa: E501
-                                                                   DockerEngineManager,
-                                                                   ExpectedPortMissing,
-                                                                   MisconfiguredPort,
-                                                                   NoPortLabel,
-                                                                   PossiblyOutOfDiskSpace)
 from tests import ALPINE_IMAGE, NGINX_IMAGE
+
+from django_docker_engine.container_managers.docker_engine import (  # isort:skip
+    DockerContainerClientTimeout, DockerEngineManager, ExpectedPortMissing,
+    MisconfiguredPort, NoPortLabel, PossiblyOutOfDiskSpace
+)
 
 
 class DockerEngineManagerTests(unittest.TestCase):
