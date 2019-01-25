@@ -125,7 +125,9 @@ class DockerEngineManager(BaseManager):
         try:
             container = self._containers_client.get(container_name)
         except ReadTimeout:
-            raise GetContainerTimeout()
+            raise GetContainerTimeout(
+                "Timed out while trying to get container: {}".format(container_name)
+            )
 
         port_key = self._root_label + '.port'
         try:
