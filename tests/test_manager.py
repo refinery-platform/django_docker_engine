@@ -7,7 +7,7 @@ import requests
 
 from django_docker_engine.container_managers.docker_engine import (DockerEngineManager,
                                                                    ExpectedPortMissing,
-                                                                   GetContainerTimeout,
+                                                                   DockerContainerClientTimeout,
                                                                    MisconfiguredPort,
                                                                    NoPortLabel,
                                                                    PossiblyOutOfDiskSpace)
@@ -92,5 +92,5 @@ class DockerEngineManagerTests(unittest.TestCase):
     def test_read_timeout_handled_when_getting_container(self):
         with mock.patch.object(self.manager._containers_client, "get",
                                side_effect=requests.ReadTimeout):
-            with self.assertRaises(GetContainerTimeout):
+            with self.assertRaises(DockerContainerClientTimeout):
                 self.manager.get_url(self.container_name)

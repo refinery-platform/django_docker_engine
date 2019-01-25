@@ -31,7 +31,7 @@ class PossiblyOutOfDiskSpace(DockerEngineManagerError):
     pass
 
 
-class GetContainerTimeout(DockerEngineManagerError):
+class DockerContainerClientTimeout(DockerEngineManagerError):
     pass
 
 
@@ -126,9 +126,9 @@ class DockerEngineManager(BaseManager):
         try:
             container = self._containers_client.get(container_name)
         except ReadTimeout:
-            raise GetContainerTimeout(
                 "Timed out while trying to get container: {}".format(
                     container_name)
+            raise DockerContainerClientTimeout(
             )
 
         port_key = self._root_label + '.port'
