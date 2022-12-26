@@ -15,7 +15,7 @@ requests==2.19.1
 PyYAML==3.13
 
 # Packaging up for pypi
-wheel==0.30.0
+wheel==0.38.1
 
 # Code coverage
 coverage==4.5.1
